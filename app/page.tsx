@@ -1,12 +1,12 @@
 'use client'
 
 import { useState, useEffect, useCallback, useRef } from 'react'
-import axios from 'axios'
 import { 
   Search, Filter, Calendar, Star, PlayCircle, 
   Tv, Film, Loader2, Home, TrendingUp, Clock,
   ChevronRight, ExternalLink, Eye, Bookmark,
-  Menu, X, Heart, Share2, Download
+  Menu, X, Heart, Share2, Download, LogOut,
+  Settings, Check
 } from 'lucide-react'
 import { IconContext } from 'react-icons'
 import { 
@@ -15,8 +15,9 @@ import {
   FaLaugh, FaDungeon, FaUserNinja, FaMeteor,
   FaRegHeart, FaRegBookmark, FaPlayCircle, FaPauseCircle
 } from 'react-icons/fa'
-import { LuSwords } from "react-icons/lu";
+import { LuSwords } from "react-icons/lu"
 import { GiNinjaHeroicStance, GiMagicSwirl, GiSpellBook } from 'react-icons/gi'
+import { SiMyanimelist } from 'react-icons/si'
 
 // Import shadcn components
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card'
@@ -26,7 +27,6 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Badge } from '@/components/ui/badge'
 import { Skeleton } from '@/components/ui/skeleton'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
-import { Pagination, PaginationContent, PaginationItem, PaginationLink, PaginationNext, PaginationPrevious } from '@/components/ui/pagination'
 import { ScrollArea } from '@/components/ui/scroll-area'
 import { Separator } from '@/components/ui/separator'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
@@ -42,9 +42,6 @@ import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle, SheetTr
 import { Progress } from '@/components/ui/progress'
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog'
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip'
-
-// API Base URL
-const API_BASE_URL = 'https://api.ryzumi.vip/api/otakudesu'
 
 // Types
 interface Genre {
@@ -101,6 +98,9 @@ interface Schedule {
     slug: string
   }[]
 }
+
+// API Base URL
+const API_BASE_URL = 'https://api.ryzumi.vip/api/otakudesu'
 
 // API Rate Limiter Class
 class RateLimiter {
@@ -159,10 +159,6 @@ class RateLimiter {
     if (this.queue.length > 0) {
       setTimeout(() => this.processQueue(), 1000)
     }
-  }
-
-  getQueueLength() {
-    return this.queue.length
   }
 }
 
@@ -277,6 +273,364 @@ const userData = {
   completed: 156
 }
 
+// Pagination Component
+interface PaginationProps {
+  currentPage: number
+  totalPages: number
+  onPageChange: (page: number) => void
+}
+
+function PaginationComponent({ currentPage, totalPages, onPageChange }: PaginationProps) {
+  const pages = []
+  const maxVisiblePages = 5
+  
+  if (totalPages <= maxVisiblePages) {
+    for (let i = 1; i <= totalPages; i++) {
+      pages.push(i)
+    }
+  } else {
+    let start = Math.max(1, currentPage - 2)
+    let end = Math.min(totalPages, start + maxVisiblePages - 1)
+    
+    if (end - start + 1 < maxVisiblePages) {
+      start = Math.max(1, end - maxVisiblePages + 1)
+    }
+    
+    for (let i = start; i <= end; i++) {
+      pages.push(i)
+    }
+  }
+
+  return (
+    <div className="flex items-center justify-center gap-2 mt-8">
+      <Button
+        variant="outline"
+        size="sm"
+        onClick={() => onPageChange(currentPage - 1)}
+        disabled={currentPage === 1}
+        className="gap-1"
+      >
+        <ChevronRight className="h-4 w-4 rotate-180" />
+        Previous
+      </Button>
+      
+      <div className="flex items-center gap-1">
+        {pages.map((page) => (
+          <Button
+            key={page}
+            variant={currentPage === page ? "default" : "outline"}
+            size="sm"
+            onClick={() => onPageChange(page)}
+            className="w-10 h-10"
+          >
+            {page}
+          </Button>
+        ))}
+      </div>
+      
+      <Button
+        variant="outline"
+        size="sm"
+        onClick={() => onPageChange(currentPage + 1)}
+        disabled={currentPage === totalPages}
+        className="gap-1"
+      >
+        Next
+        <ChevronRight className="h-4 w-4" />
+      </Button>
+    </div>
+  )
+}
+
+// Anime Card Component
+interface AnimeCardProps {
+  anime: Anime
+  onAnimeClick: (anime: Anime) => void
+  onWatchlistToggle: (slug: string) => void
+  isInWatchlist: boolean
+}
+
+function AnimeCard({ anime, onAnimeClick, onWatchlistToggle, isInWatchlist }: AnimeCardProps) {
+  return (
+    <Card className="group bg-gray-800/50 border-gray-700 hover:border-purple-500 transition-all duration-300 hover:scale-[1.02] overflow-hidden h-full">
+      <div className="relative overflow-hidden aspect-[2/3]">
+        <img
+          src={anime.gambar || `https://via.placeholder.com/300x400/1f2937/6d7280?text=${encodeURIComponent(anime.judul.substring(0, 20))}`}
+          alt={anime.judul}
+          className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
+        />
+        <div className="absolute inset-0 bg-gradient-to-t from-black via-black/50 to-transparent" />
+        
+        {anime.rate[1] && anime.rate[1] !== '' && (
+          <Badge className="absolute top-3 right-3 bg-gradient-to-r from-yellow-500 to-orange-500">
+            <Star className="h-3 w-3 mr-1" />
+            {anime.rate[1]}
+          </Badge>
+        )}
+
+        <Button
+          size="icon"
+          variant="secondary"
+          className="absolute top-3 left-3 bg-gray-900/80 hover:bg-gray-900"
+          onClick={(e) => {
+            e.stopPropagation()
+            onWatchlistToggle(anime.slug)
+          }}
+        >
+          {isInWatchlist ? (
+            <Heart className="h-4 w-4 fill-red-500 text-red-500" />
+          ) : (
+            <Heart className="h-4 w-4" />
+          )}
+        </Button>
+
+        <div className="absolute bottom-0 left-0 right-0 p-4 bg-gradient-to-t from-black to-transparent">
+          <div className="flex justify-between items-center">
+            <Button 
+              size="sm"
+              className="bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700"
+              onClick={(e) => {
+                e.stopPropagation()
+                onAnimeClick(anime)
+              }}
+            >
+              <PlayCircle className="h-4 w-4 mr-2" />
+              Watch
+            </Button>
+            <Button
+              size="icon"
+              variant="ghost"
+              className="text-white hover:text-purple-400"
+              onClick={(e) => {
+                e.stopPropagation()
+                onAnimeClick(anime)
+              }}
+            >
+              <ExternalLink className="h-4 w-4" />
+            </Button>
+          </div>
+        </div>
+      </div>
+
+      <CardContent className="p-4">
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <h3 
+              className="font-bold text-lg mb-2 line-clamp-2 cursor-pointer hover:text-purple-400 transition-colors"
+              onClick={() => onAnimeClick(anime)}
+            >
+              {anime.judul}
+            </h3>
+          </TooltipTrigger>
+          <TooltipContent>
+            <p>{anime.judul}</p>
+          </TooltipContent>
+        </Tooltip>
+        
+        <div className="flex items-center justify-between text-sm text-gray-400 mb-3">
+          <div className="flex items-center gap-1">
+            <PlayCircle className="h-4 w-4" />
+            <span>EP {anime.eps[0] || '?'}</span>
+          </div>
+          {anime.eps[1] && anime.eps[1] !== '' && (
+            <Badge variant="outline" className="border-purple-500 text-purple-400">
+              Total: {anime.eps[1]}
+            </Badge>
+          )}
+        </div>
+
+        <div className="flex gap-2">
+          <Button 
+            className="flex-1 bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700"
+            size="sm"
+            onClick={() => onAnimeClick(anime)}
+          >
+            <Eye className="h-4 w-4 mr-2" />
+            Details
+          </Button>
+          <Button 
+            variant="outline" 
+            className="border-gray-600 hover:bg-gray-700"
+            size="sm"
+            onClick={(e) => {
+              e.stopPropagation()
+              onWatchlistToggle(anime.slug)
+            }}
+          >
+            {isInWatchlist ? (
+              <Bookmark className="h-4 w-4 fill-current" />
+            ) : (
+              <Bookmark className="h-4 w-4" />
+            )}
+          </Button>
+        </div>
+      </CardContent>
+    </Card>
+  )
+}
+
+// Anime Detail Component
+interface AnimeDetailProps {
+  anime: AnimeDetail | null
+  loading: boolean
+  isOpen: boolean
+  onOpenChange: (open: boolean) => void
+  onWatchlistToggle: (slug: string) => void
+  isInWatchlist: boolean
+}
+
+function AnimeDetailComponent({ 
+  anime, 
+  loading, 
+  isOpen, 
+  onOpenChange,
+  onWatchlistToggle,
+  isInWatchlist 
+}: AnimeDetailProps) {
+  const formatDate = (dateString: string) => {
+    return dateString.split(',')[0]
+  }
+
+  return (
+    <Dialog open={isOpen} onOpenChange={onOpenChange}>
+      <DialogContent className="max-w-4xl bg-gray-900 border-gray-700 text-white max-h-[90vh] overflow-y-auto">
+        {loading ? (
+          <div className="flex items-center justify-center h-64">
+            <Loader2 className="h-8 w-8 animate-spin text-purple-500" />
+          </div>
+        ) : anime ? (
+          <>
+            <DialogHeader>
+              <DialogTitle className="text-2xl font-bold">
+                {anime.judul}
+              </DialogTitle>
+              <DialogDescription className="text-gray-400">
+                {anime.namaJapan}
+              </DialogDescription>
+            </DialogHeader>
+            
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mt-4">
+              <div className="space-y-4">
+                <img
+                  src={anime.gambar}
+                  alt={anime.judul}
+                  className="w-full rounded-lg"
+                />
+                
+                <div className="space-y-3">
+                  <div className="flex items-center justify-between">
+                    <Badge className="bg-gradient-to-r from-purple-600 to-pink-600">
+                      <Star className="h-3 w-3 mr-1" />
+                      {anime.skor.split(': ')[1] || 'N/A'}
+                    </Badge>
+                    <Badge variant="outline" className="border-green-500 text-green-400">
+                      {anime.status}
+                    </Badge>
+                  </div>
+                  
+                  <div className="flex gap-2">
+                    <Button className="flex-1 bg-gradient-to-r from-purple-600 to-pink-600">
+                      <PlayCircle className="h-4 w-4 mr-2" />
+                      Watch Now
+                    </Button>
+                    <Button 
+                      variant="outline" 
+                      className="border-gray-600"
+                      onClick={() => onWatchlistToggle(anime.lengkap.slug)}
+                    >
+                      <Bookmark className={`h-4 w-4 mr-2 ${isInWatchlist ? 'fill-current' : ''}`} />
+                      {isInWatchlist ? 'Saved' : 'Save'}
+                    </Button>
+                  </div>
+                </div>
+              </div>
+              
+              <div className="md:col-span-2 space-y-6">
+                <div>
+                  <h4 className="font-semibold mb-2 text-lg">Details</h4>
+                  <div className="grid grid-cols-2 gap-4 text-sm">
+                    <div>
+                      <p className="text-gray-400">Type</p>
+                      <p>{anime.tipe}</p>
+                    </div>
+                    <div>
+                      <p className="text-gray-400">Episodes</p>
+                      <p>{anime.totalEpisode}</p>
+                    </div>
+                    <div>
+                      <p className="text-gray-400">Duration</p>
+                      <p>{anime.durasi}</p>
+                    </div>
+                    <div>
+                      <p className="text-gray-400">Aired</p>
+                      <p>{anime.rilis}</p>
+                    </div>
+                    <div>
+                      <p className="text-gray-400">Studio</p>
+                      <p>{anime.studio}</p>
+                    </div>
+                    <div>
+                      <p className="text-gray-400">Producer</p>
+                      <p className="line-clamp-1">{anime.produser}</p>
+                    </div>
+                  </div>
+                </div>
+                
+                <div>
+                  <h4 className="font-semibold mb-2 text-lg">Genres</h4>
+                  <div className="flex flex-wrap gap-2">
+                    {anime.genre.split(', ').map((genre, index) => (
+                      <Badge key={index} variant="secondary" className="bg-gray-800">
+                        {genre}
+                      </Badge>
+                    ))}
+                  </div>
+                </div>
+                
+                <div>
+                  <h4 className="font-semibold mb-2 text-lg">Latest Episodes</h4>
+                  <ScrollArea className="h-48">
+                    <div className="space-y-2">
+                      {anime.episodes.slice(0, 5).map((episode, index) => (
+                        <div 
+                          key={index}
+                          className="p-3 bg-gray-800 rounded hover:bg-gray-700 cursor-pointer transition-colors"
+                        >
+                          <div className="flex justify-between items-center">
+                            <span className="font-medium">{episode.judul}</span>
+                            <span className="text-sm text-gray-400">{formatDate(episode.tanggal)}</span>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </ScrollArea>
+                </div>
+              </div>
+            </div>
+            
+            <div className="mt-6">
+              <div className="flex gap-4">
+                <Button variant="outline" className="flex-1 border-gray-600">
+                  <Download className="h-4 w-4 mr-2" />
+                  Download Batch
+                </Button>
+                <Button variant="outline" className="flex-1 border-gray-600">
+                  <Share2 className="h-4 w-4 mr-2" />
+                  Share
+                </Button>
+              </div>
+            </div>
+          </>
+        ) : (
+          <div className="text-center py-8">
+            <p className="text-gray-400">Failed to load anime details</p>
+          </div>
+        )}
+      </DialogContent>
+    </Dialog>
+  )
+}
+
 export default function KeyAnimeListApp() {
   // States
   const [genres, setGenres] = useState<Genre[]>([])
@@ -303,7 +657,6 @@ export default function KeyAnimeListApp() {
   // Initialize data
   useEffect(() => {
     loadInitialData()
-    // Load watchlist from localStorage
     const savedWatchlist = localStorage.getItem('anime-watchlist')
     if (savedWatchlist) {
       setWatchlist(JSON.parse(savedWatchlist))
@@ -383,11 +736,9 @@ export default function KeyAnimeListApp() {
           data = await apiService.getAnimeList({ type: 'complete', page: 1 })
           break
         case 'schedule':
-          // For schedule tab, we'll show today's anime
           const today = new Date().toLocaleString('id-ID', { weekday: 'long' })
           const todaySchedule = schedule.find(s => s.hari === today)
           if (todaySchedule) {
-            // Convert schedule to anime format for display
             data = todaySchedule.anime.map(a => ({
               gambar: `https://via.placeholder.com/300x400/1f2937/6d7280?text=${encodeURIComponent(a.judul)}`,
               judul: a.judul,
@@ -469,10 +820,6 @@ export default function KeyAnimeListApp() {
     return genreIcons[slug] || genreIcons.default
   }
 
-  const formatDate = (dateString: string) => {
-    return dateString.split(',')[0]
-  }
-
   return (
     <TooltipProvider>
       <IconContext.Provider value={{ size: '1.2em', className: 'inline-block' }}>
@@ -494,7 +841,7 @@ export default function KeyAnimeListApp() {
                   
                   <div className="flex items-center gap-3">
                     <div className="p-2 bg-gradient-to-r from-purple-600 via-pink-600 to-blue-600 rounded-lg">
-                      <Tv className="h-6 w-6" />
+                      <SiMyanimelist className="h-6 w-6" />
                     </div>
                     <div>
                       <h1 className="text-2xl font-bold bg-gradient-to-r from-purple-400 via-pink-400 to-blue-400 bg-clip-text text-transparent">
@@ -581,9 +928,12 @@ export default function KeyAnimeListApp() {
 
           {/* Mobile Menu */}
           <Sheet open={mobileMenuOpen} onOpenChange={setMobileMenuOpen}>
-            <SheetContent side="left" className="bg-gray-900 border-gray-800">
+            <SheetContent side="left" className="bg-gray-900 border-gray-800 w-[300px]">
               <SheetHeader>
-                <SheetTitle className="text-white">KeyAnime Menu</SheetTitle>
+                <SheetTitle className="text-white flex items-center gap-2">
+                  <SiMyanimelist className="h-5 w-5" />
+                  KeyAnime Menu
+                </SheetTitle>
               </SheetHeader>
               <div className="mt-6 space-y-4">
                 <Button variant="ghost" className="w-full justify-start gap-2">
@@ -608,7 +958,7 @@ export default function KeyAnimeListApp() {
                   <div className="relative">
                     <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
                     <Input
-                      placeholder="Search..."
+                      placeholder="Search anime..."
                       className="pl-10 bg-gray-800 border-gray-700"
                       value={searchQuery}
                       onChange={(e) => setSearchQuery(e.target.value)}
@@ -796,165 +1146,23 @@ export default function KeyAnimeListApp() {
                       <>
                         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
                           {getCurrentAnime().map((anime) => (
-                            <Card 
-                              key={anime.slug} 
-                              className="group bg-gray-800/50 border-gray-700 hover:border-purple-500 transition-all duration-300 hover:scale-[1.02] overflow-hidden"
-                            >
-                              {/* Anime Image with Overlay */}
-                              <div className="relative overflow-hidden">
-                                <img
-                                  src={anime.gambar || `https://via.placeholder.com/300x400/1f2937/6d7280?text=${encodeURIComponent(anime.judul.substring(0, 20))}`}
-                                  alt={anime.judul}
-                                  className="w-full h-64 object-cover group-hover:scale-110 transition-transform duration-500"
-                                />
-                                <div className="absolute inset-0 bg-gradient-to-t from-black via-black/50 to-transparent" />
-                                
-                                {/* Rating Badge */}
-                                {anime.rate[1] && anime.rate[1] !== '' && (
-                                  <Badge className="absolute top-3 right-3 bg-gradient-to-r from-yellow-500 to-orange-500">
-                                    <Star className="h-3 w-3 mr-1" />
-                                    {anime.rate[1]}
-                                  </Badge>
-                                )}
-
-                                {/* Watchlist Button */}
-                                <Button
-                                  size="icon"
-                                  variant="secondary"
-                                  className="absolute top-3 left-3 bg-gray-900/80 hover:bg-gray-900"
-                                  onClick={() => toggleWatchlist(anime.slug)}
-                                >
-                                  {watchlist.includes(anime.slug) ? (
-                                    <Heart className="h-4 w-4 fill-red-500 text-red-500" />
-                                  ) : (
-                                    <Heart className="h-4 w-4" />
-                                  )}
-                                </Button>
-
-                                {/* Quick Actions Overlay */}
-                                <div className="absolute bottom-0 left-0 right-0 p-4 bg-gradient-to-t from-black to-transparent">
-                                  <div className="flex justify-between items-center">
-                                    <Button 
-                                      size="sm"
-                                      className="bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700"
-                                      onClick={() => handleAnimeClick(anime)}
-                                    >
-                                      <PlayCircle className="h-4 w-4 mr-2" />
-                                      Watch
-                                    </Button>
-                                    <Button
-                                      size="icon"
-                                      variant="ghost"
-                                      className="text-white hover:text-purple-400"
-                                      onClick={() => handleAnimeClick(anime)}
-                                    >
-                                      <ExternalLink className="h-4 w-4" />
-                                    </Button>
-                                  </div>
-                                </div>
-                              </div>
-
-                              {/* Anime Info */}
-                              <CardContent className="p-4">
-                                <Tooltip>
-                                  <TooltipTrigger asChild>
-                                    <h3 
-                                      className="font-bold text-lg mb-2 line-clamp-2 cursor-pointer hover:text-purple-400 transition-colors"
-                                      onClick={() => handleAnimeClick(anime)}
-                                    >
-                                      {anime.judul}
-                                    </h3>
-                                  </TooltipTrigger>
-                                  <TooltipContent>
-                                    <p>{anime.judul}</p>
-                                  </TooltipContent>
-                                </Tooltip>
-                                
-                                <div className="flex items-center justify-between text-sm text-gray-400 mb-3">
-                                  <div className="flex items-center gap-1">
-                                    <PlayCircle className="h-4 w-4" />
-                                    <span>EP {anime.eps[0] || '?'}</span>
-                                  </div>
-                                  {anime.eps[1] && anime.eps[1] !== '' && (
-                                    <Badge variant="outline" className="border-purple-500 text-purple-400">
-                                      Total: {anime.eps[1]}
-                                    </Badge>
-                                  )}
-                                </div>
-
-                                <div className="flex gap-2">
-                                  <Button 
-                                    className="flex-1 bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700"
-                                    size="sm"
-                                    onClick={() => handleAnimeClick(anime)}
-                                  >
-                                    <Eye className="h-4 w-4 mr-2" />
-                                    Details
-                                  </Button>
-                                  <Button 
-                                    variant="outline" 
-                                    className="border-gray-600 hover:bg-gray-700"
-                                    size="sm"
-                                    onClick={() => toggleWatchlist(anime.slug)}
-                                  >
-                                    {watchlist.includes(anime.slug) ? (
-                                      <Bookmark className="h-4 w-4 fill-current" />
-                                    ) : (
-                                      <Bookmark className="h-4 w-4" />
-                                    )}
-                                  </Button>
-                                </div>
-                              </CardContent>
-                            </Card>
+                            <AnimeCard
+                              key={anime.slug}
+                              anime={anime}
+                              onAnimeClick={handleAnimeClick}
+                              onWatchlistToggle={toggleWatchlist}
+                              isInWatchlist={watchlist.includes(anime.slug)}
+                            />
                           ))}
                         </div>
 
                         {/* Pagination */}
                         {totalPages > 1 && (
-                          <div className="mt-12">
-                            <Pagination>
-                              <PaginationContent>
-                                <PaginationItem>
-                                  <PaginationPrevious 
-                                    onClick={() => currentPage > 1 && setCurrentPage(currentPage - 1)}
-                                    className={currentPage === 1 ? 'pointer-events-none opacity-50' : 'cursor-pointer'}
-                                  />
-                                </PaginationItem>
-                                
-                                {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
-                                  let pageNum
-                                  if (totalPages <= 5) {
-                                    pageNum = i + 1
-                                  } else if (currentPage <= 3) {
-                                    pageNum = i + 1
-                                  } else if (currentPage >= totalPages - 2) {
-                                    pageNum = totalPages - 4 + i
-                                  } else {
-                                    pageNum = currentPage - 2 + i
-                                  }
-                                  
-                                  return (
-                                    <PaginationItem key={pageNum}>
-                                      <PaginationLink
-                                        onClick={() => setCurrentPage(pageNum)}
-                                        isActive={currentPage === pageNum}
-                                        className="cursor-pointer hover:bg-gray-800"
-                                      >
-                                        {pageNum}
-                                      </PaginationLink>
-                                    </PaginationItem>
-                                  )
-                                })}
-                                
-                                <PaginationItem>
-                                  <PaginationNext 
-                                    onClick={() => currentPage < totalPages && setCurrentPage(currentPage + 1)}
-                                    className={currentPage === totalPages ? 'pointer-events-none opacity-50' : 'cursor-pointer'}
-                                  />
-                                </PaginationItem>
-                              </PaginationContent>
-                            </Pagination>
-                          </div>
+                          <PaginationComponent
+                            currentPage={currentPage}
+                            totalPages={totalPages}
+                            onPageChange={setCurrentPage}
+                          />
                         )}
                       </>
                     )}
@@ -1016,7 +1224,7 @@ export default function KeyAnimeListApp() {
                 <div>
                   <div className="flex items-center gap-3 mb-4">
                     <div className="p-2 bg-gradient-to-r from-purple-600 to-pink-600 rounded-lg">
-                      <Tv className="h-6 w-6" />
+                      <SiMyanimelist className="h-6 w-6" />
                     </div>
                     <div>
                       <h3 className="text-xl font-bold">KeyAnime</h3>
@@ -1063,7 +1271,7 @@ export default function KeyAnimeListApp() {
               
               <div className="text-center text-gray-400 text-sm">
                 <p className="mb-2">
-                  © 2024 KeyAnimeList • Powered by Otakudesu API • Built with Next.js & Shadcn/ui
+                  © 2026 KeyAnimeList • Powered by Otakudesu API • Built with Next.js & Shadcn/ui
                 </p>
                 <p className="text-xs">
                   API Rate Limited to 5 Requests Per Second • All anime content belongs to their respective owners
@@ -1073,140 +1281,14 @@ export default function KeyAnimeListApp() {
           </footer>
 
           {/* Anime Detail Modal */}
-          <Dialog open={isDetailOpen} onOpenChange={setIsDetailOpen}>
-            <DialogContent className="max-w-4xl bg-gray-900 border-gray-700 text-white max-h-[90vh] overflow-y-auto">
-              {loadingDetail ? (
-                <div className="flex items-center justify-center h-64">
-                  <Loader2 className="h-8 w-8 animate-spin text-purple-500" />
-                </div>
-              ) : selectedAnime ? (
-                <>
-                  <DialogHeader>
-                    <DialogTitle className="text-2xl font-bold">
-                      {selectedAnime.judul}
-                    </DialogTitle>
-                    <DialogDescription className="text-gray-400">
-                      {selectedAnime.namaJapan}
-                    </DialogDescription>
-                  </DialogHeader>
-                  
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mt-4">
-                    {/* Left Column - Image & Basic Info */}
-                    <div className="space-y-4">
-                      <img
-                        src={selectedAnime.gambar}
-                        alt={selectedAnime.judul}
-                        className="w-full rounded-lg"
-                      />
-                      
-                      <div className="space-y-3">
-                        <div className="flex items-center justify-between">
-                          <Badge className="bg-gradient-to-r from-purple-600 to-pink-600">
-                            <Star className="h-3 w-3 mr-1" />
-                            {selectedAnime.skor.split(': ')[1] || 'N/A'}
-                          </Badge>
-                          <Badge variant="outline" className="border-green-500 text-green-400">
-                            {selectedAnime.status}
-                          </Badge>
-                        </div>
-                        
-                        <div className="flex gap-2">
-                          <Button className="flex-1 bg-gradient-to-r from-purple-600 to-pink-600">
-                            <PlayCircle className="h-4 w-4 mr-2" />
-                            Watch Now
-                          </Button>
-                          <Button variant="outline" className="border-gray-600">
-                            <Bookmark className="h-4 w-4 mr-2" />
-                            Save
-                          </Button>
-                        </div>
-                      </div>
-                    </div>
-                    
-                    {/* Middle Column - Details */}
-                    <div className="md:col-span-2 space-y-6">
-                      <div>
-                        <h4 className="font-semibold mb-2 text-lg">Details</h4>
-                        <div className="grid grid-cols-2 gap-4 text-sm">
-                          <div>
-                            <p className="text-gray-400">Type</p>
-                            <p>{selectedAnime.tipe}</p>
-                          </div>
-                          <div>
-                            <p className="text-gray-400">Episodes</p>
-                            <p>{selectedAnime.totalEpisode}</p>
-                          </div>
-                          <div>
-                            <p className="text-gray-400">Duration</p>
-                            <p>{selectedAnime.durasi}</p>
-                          </div>
-                          <div>
-                            <p className="text-gray-400">Aired</p>
-                            <p>{selectedAnime.rilis}</p>
-                          </div>
-                          <div>
-                            <p className="text-gray-400">Studio</p>
-                            <p>{selectedAnime.studio}</p>
-                          </div>
-                          <div>
-                            <p className="text-gray-400">Producer</p>
-                            <p className="line-clamp-1">{selectedAnime.produser}</p>
-                          </div>
-                        </div>
-                      </div>
-                      
-                      <div>
-                        <h4 className="font-semibold mb-2 text-lg">Genres</h4>
-                        <div className="flex flex-wrap gap-2">
-                          {selectedAnime.genre.split(', ').map((genre, index) => (
-                            <Badge key={index} variant="secondary" className="bg-gray-800">
-                              {genre}
-                            </Badge>
-                          ))}
-                        </div>
-                      </div>
-                      
-                      <div>
-                        <h4 className="font-semibold mb-2 text-lg">Latest Episodes</h4>
-                        <ScrollArea className="h-48">
-                          <div className="space-y-2">
-                            {selectedAnime.episodes.slice(0, 5).map((episode, index) => (
-                              <div 
-                                key={index}
-                                className="p-3 bg-gray-800 rounded hover:bg-gray-700 cursor-pointer transition-colors"
-                              >
-                                <div className="flex justify-between items-center">
-                                  <span className="font-medium">{episode.judul}</span>
-                                  <span className="text-sm text-gray-400">{formatDate(episode.tanggal)}</span>
-                                </div>
-                              </div>
-                            ))}
-                          </div>
-                        </ScrollArea>
-                      </div>
-                    </div>
-                  </div>
-                  
-                  <div className="mt-6">
-                    <div className="flex gap-4">
-                      <Button variant="outline" className="flex-1 border-gray-600">
-                        <Download className="h-4 w-4 mr-2" />
-                        Download Batch
-                      </Button>
-                      <Button variant="outline" className="flex-1 border-gray-600">
-                        <Share2 className="h-4 w-4 mr-2" />
-                        Share
-                      </Button>
-                    </div>
-                  </div>
-                </>
-              ) : (
-                <div className="text-center py-8">
-                  <p className="text-gray-400">Failed to load anime details</p>
-                </div>
-              )}
-            </DialogContent>
-          </Dialog>
+          <AnimeDetailComponent
+            anime={selectedAnime}
+            loading={loadingDetail}
+            isOpen={isDetailOpen}
+            onOpenChange={setIsDetailOpen}
+            onWatchlistToggle={toggleWatchlist}
+            isInWatchlist={selectedAnime ? watchlist.includes(selectedAnime.lengkap.slug) : false}
+          />
 
           {/* Quick Actions Floating Button */}
           <div className="fixed bottom-6 right-6 z-50">
@@ -1245,8 +1327,3 @@ export default function KeyAnimeListApp() {
     </TooltipProvider>
   )
 }
-
-// Helper components
-function Check(props: any) { return <svg {...props} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M20 6L9 17l-5-5" /></svg> }
-function LogOut(props: any) { return <svg {...props} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4M16 17l5-5-5-5M21 12H9" /></svg> }
-function Settings(props: any) { return <svg {...props} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z" /><circle cx="12" cy="12" r="3" /></svg> }
