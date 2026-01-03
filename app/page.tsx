@@ -6,14 +6,15 @@ import {
   Tv, Film, Loader2, Home, TrendingUp, Clock,
   ChevronRight, ExternalLink, Eye, Bookmark,
   Menu, X, Heart, Share2, Download, LogOut,
-  Settings, Check
+  Settings, Check, AlertCircle, RefreshCw, ChevronLeft
 } from 'lucide-react'
 import { IconContext } from 'react-icons'
 import { 
   FaFire, FaHeart, FaMagic, FaGhost, FaRobot, 
   FaFutbol, FaGamepad, FaMusic, FaRocket, FaDragon,
   FaLaugh, FaDungeon, FaUserNinja, FaMeteor,
-  FaRegHeart, FaRegBookmark, FaPlayCircle, FaPauseCircle
+  FaRegHeart, FaRegBookmark, FaPlayCircle, FaPauseCircle,
+  FaDownload, FaExclamationTriangle
 } from 'react-icons/fa'
 import { LuSwords } from "react-icons/lu"
 import { GiNinjaHeroicStance, GiMagicSwirl, GiSpellBook } from 'react-icons/gi'
@@ -42,6 +43,8 @@ import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle, SheetTr
 import { Progress } from '@/components/ui/progress'
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog'
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip'
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
+import { Toaster, toast } from 'sonner'
 
 // Types
 interface Genre {
@@ -99,10 +102,30 @@ interface Schedule {
   }[]
 }
 
+interface EpisodeDetail {
+  judul: string
+  iframe: string
+  mirror: {
+    m360p: { nama: string; content: string }[]
+    m480p: { nama: string; content: string }[]
+    m720p: { nama: string; content: string }[]
+  }
+  download: {
+    [key: string]: { nama: string; href: string }[]
+  }
+}
+
+interface BatchDownload {
+  judul: string
+  download: {
+    [key: string]: { nama: string; href: string }[]
+  }
+}
+
 // API Base URL
 const API_BASE_URL = 'https://api.ryzumi.vip/api/otakudesu'
 
-// API Rate Limiter Class
+// Enhanced Rate Limiter
 class RateLimiter {
   private queue: Array<() => Promise<any>> = []
   private processing = false
@@ -111,15 +134,43 @@ class RateLimiter {
   private lastRequestTime = 0
   private requestCount = 0
   private resetTime = Date.now() + 1000
+  private retryAttempts = 3
 
   async request<T>(fn: () => Promise<T>): Promise<T> {
     return new Promise((resolve, reject) => {
       this.queue.push(async () => {
-        try {
-          const result = await fn()
-          resolve(result)
-        } catch (error) {
-          reject(error)
+        for (let attempt = 1; attempt <= this.retryAttempts; attempt++) {
+          try {
+            const now = Date.now()
+            if (now > this.resetTime) {
+              this.requestCount = 0
+              this.resetTime = now + 1000
+            }
+
+            const timeSinceLastRequest = now - this.lastRequestTime
+            if (timeSinceLastRequest < this.requestInterval) {
+              await new Promise(resolve => 
+                setTimeout(resolve, this.requestInterval - timeSinceLastRequest)
+              )
+            }
+
+            this.lastRequestTime = Date.now()
+            this.requestCount++
+            
+            const result = await fn()
+            resolve(result)
+            return
+          } catch (error) {
+            if (attempt === this.retryAttempts) {
+              reject(error)
+              return
+            }
+            
+            // Exponential backoff
+            await new Promise(resolve => 
+              setTimeout(resolve, Math.pow(2, attempt) * 100)
+            )
+          }
         }
       })
       this.processQueue()
@@ -131,12 +182,6 @@ class RateLimiter {
     
     this.processing = true
     
-    const now = Date.now()
-    if (now > this.resetTime) {
-      this.requestCount = 0
-      this.resetTime = now + 1000
-    }
-
     while (this.queue.length > 0 && this.requestCount < this.requestsPerSecond) {
       const now = Date.now()
       const timeSinceLastRequest = now - this.lastRequestTime
@@ -149,8 +194,6 @@ class RateLimiter {
       
       const requestFn = this.queue.shift()
       if (requestFn) {
-        this.lastRequestTime = Date.now()
-        this.requestCount++
         await requestFn()
       }
     }
@@ -164,12 +207,13 @@ class RateLimiter {
 
 const rateLimiter = new RateLimiter()
 
-// API Service
+// Complete API Service
 const apiService = {
   async getGenres(): Promise<Genre[]> {
     return rateLimiter.request(async () => {
       const response = await fetch(`${API_BASE_URL}/genre`, {
-        headers: { 'accept': 'application/json' }
+        headers: { 'accept': 'application/json' },
+        cache: 'no-cache'
       })
       if (!response.ok) throw new Error('Failed to fetch genres')
       return response.json()
@@ -189,9 +233,13 @@ const apiService = {
       if (params.page) queryParams.append('page', params.page.toString())
       if (params.search) queryParams.append('search', params.search)
 
-      const url = `${API_BASE_URL}/anime${queryParams.toString() ? '?' + queryParams.toString() : ''}`
+      const url = params.type || params.genre || params.page || params.search 
+        ? `${API_BASE_URL}/anime?${queryParams.toString()}`
+        : `${API_BASE_URL}/anime`
+
       const response = await fetch(url, {
-        headers: { 'accept': 'application/json' }
+        headers: { 'accept': 'application/json' },
+        cache: 'no-cache'
       })
       if (!response.ok) throw new Error('Failed to fetch anime list')
       return response.json()
@@ -200,8 +248,9 @@ const apiService = {
 
   async getAnimeInfo(slug: string): Promise<AnimeDetail> {
     return rateLimiter.request(async () => {
-      const response = await fetch(`${API_BASE_URL}/anime-info?slug=${slug}`, {
-        headers: { 'accept': 'application/json' }
+      const response = await fetch(`${API_BASE_URL}/anime-info?slug=${encodeURIComponent(slug)}`, {
+        headers: { 'accept': 'application/json' },
+        cache: 'no-cache'
       })
       if (!response.ok) throw new Error('Failed to fetch anime info')
       return response.json()
@@ -211,30 +260,60 @@ const apiService = {
   async getSchedule(): Promise<Schedule[]> {
     return rateLimiter.request(async () => {
       const response = await fetch(`${API_BASE_URL}/jadwal`, {
-        headers: { 'accept': 'application/json' }
+        headers: { 'accept': 'application/json' },
+        cache: 'no-cache'
       })
       if (!response.ok) throw new Error('Failed to fetch schedule')
       return response.json()
     })
   },
 
-  async getEpisode(slug: string): Promise<any> {
+  async getEpisode(slug: string): Promise<EpisodeDetail> {
     return rateLimiter.request(async () => {
-      const response = await fetch(`${API_BASE_URL}/anime/episode?slug=${slug}`, {
-        headers: { 'accept': 'application/json' }
+      const response = await fetch(`${API_BASE_URL}/anime/episode?slug=${encodeURIComponent(slug)}`, {
+        headers: { 'accept': 'application/json' },
+        cache: 'no-cache'
       })
       if (!response.ok) throw new Error('Failed to fetch episode')
       return response.json()
     })
   },
 
-  async getBatch(slug: string): Promise<any[]> {
+  async getBatch(slug: string): Promise<BatchDownload[]> {
     return rateLimiter.request(async () => {
-      const response = await fetch(`${API_BASE_URL}/download/batch?slug=${slug}`, {
-        headers: { 'accept': 'application/json' }
+      const response = await fetch(`${API_BASE_URL}/download/batch?slug=${encodeURIComponent(slug)}`, {
+        headers: { 'accept': 'application/json' },
+        cache: 'no-cache'
       })
       if (!response.ok) throw new Error('Failed to fetch batch')
       return response.json()
+    })
+  },
+
+  async getNonce(): Promise<string> {
+    return rateLimiter.request(async () => {
+      const response = await fetch(`${API_BASE_URL}/nonce`, {
+        headers: { 'accept': 'application/json' },
+        cache: 'no-cache'
+      })
+      if (!response.ok) throw new Error('Failed to fetch nonce')
+      const data = await response.json()
+      return data.data
+    })
+  },
+
+  async getIframeUrl(content: string, nonce: string): Promise<string> {
+    return rateLimiter.request(async () => {
+      const response = await fetch(
+        `${API_BASE_URL}/get-iframe?content=${encodeURIComponent(content)}&nonce=${encodeURIComponent(nonce)}`,
+        {
+          headers: { 'accept': 'application/json' },
+          cache: 'no-cache'
+        }
+      )
+      if (!response.ok) throw new Error('Failed to fetch iframe URL')
+      const data = await response.json()
+      return data.iframe
     })
   }
 }
@@ -310,7 +389,7 @@ function PaginationComponent({ currentPage, totalPages, onPageChange }: Paginati
         disabled={currentPage === 1}
         className="gap-1"
       >
-        <ChevronRight className="h-4 w-4 rotate-180" />
+        <ChevronLeft className="h-4 w-4" />
         Previous
       </Button>
       
@@ -351,13 +430,19 @@ interface AnimeCardProps {
 }
 
 function AnimeCard({ anime, onAnimeClick, onWatchlistToggle, isInWatchlist }: AnimeCardProps) {
+  const handleImageError = (e: React.SyntheticEvent<HTMLImageElement>) => {
+    e.currentTarget.src = `https://via.placeholder.com/300x400/1f2937/6d7280?text=${encodeURIComponent(anime.judul.substring(0, 20))}`
+  }
+
   return (
     <Card className="group bg-gray-800/50 border-gray-700 hover:border-purple-500 transition-all duration-300 hover:scale-[1.02] overflow-hidden h-full">
       <div className="relative overflow-hidden aspect-[2/3]">
         <img
-          src={anime.gambar || `https://via.placeholder.com/300x400/1f2937/6d7280?text=${encodeURIComponent(anime.judul.substring(0, 20))}`}
+          src={anime.gambar}
           alt={anime.judul}
           className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
+          onError={handleImageError}
+          loading="lazy"
         />
         <div className="absolute inset-0 bg-gradient-to-t from-black via-black/50 to-transparent" />
         
@@ -477,6 +562,8 @@ interface AnimeDetailProps {
   onOpenChange: (open: boolean) => void
   onWatchlistToggle: (slug: string) => void
   isInWatchlist: boolean
+  onPlayEpisode: (episodeSlug: string, episodeTitle: string) => void
+  onDownloadBatch: (batchSlug: string, batchTitle: string) => void
 }
 
 function AnimeDetailComponent({ 
@@ -485,11 +572,23 @@ function AnimeDetailComponent({
   isOpen, 
   onOpenChange,
   onWatchlistToggle,
-  isInWatchlist 
+  isInWatchlist,
+  onPlayEpisode,
+  onDownloadBatch
 }: AnimeDetailProps) {
+  const [episodesPage, setEpisodesPage] = useState(1)
+  const episodesPerPage = 5
+
   const formatDate = (dateString: string) => {
     return dateString.split(',')[0]
   }
+
+  const paginatedEpisodes = anime?.episodes.slice(
+    (episodesPage - 1) * episodesPerPage,
+    episodesPage * episodesPerPage
+  ) || []
+
+  const totalEpisodesPages = anime ? Math.ceil(anime.episodes.length / episodesPerPage) : 1
 
   return (
     <Dialog open={isOpen} onOpenChange={onOpenChange}>
@@ -515,6 +614,9 @@ function AnimeDetailComponent({
                   src={anime.gambar}
                   alt={anime.judul}
                   className="w-full rounded-lg"
+                  onError={(e) => {
+                    e.currentTarget.src = `https://via.placeholder.com/400x600/1f2937/6d7280?text=${encodeURIComponent(anime.judul.substring(0, 20))}`
+                  }}
                 />
                 
                 <div className="space-y-3">
@@ -529,10 +631,15 @@ function AnimeDetailComponent({
                   </div>
                   
                   <div className="flex gap-2">
-                    <Button className="flex-1 bg-gradient-to-r from-purple-600 to-pink-600">
-                      <PlayCircle className="h-4 w-4 mr-2" />
-                      Watch Now
-                    </Button>
+                    {anime.episodes.length > 0 && (
+                      <Button 
+                        className="flex-1 bg-gradient-to-r from-purple-600 to-pink-600"
+                        onClick={() => onPlayEpisode(anime.episodes[0].slug, anime.episodes[0].judul)}
+                      >
+                        <PlayCircle className="h-4 w-4 mr-2" />
+                        Watch Now
+                      </Button>
+                    )}
                     <Button 
                       variant="outline" 
                       className="border-gray-600"
@@ -588,42 +695,400 @@ function AnimeDetailComponent({
                 </div>
                 
                 <div>
-                  <h4 className="font-semibold mb-2 text-lg">Latest Episodes</h4>
-                  <ScrollArea className="h-48">
+                  <div className="flex justify-between items-center mb-2">
+                    <h4 className="font-semibold text-lg">Episodes ({anime.episodes.length})</h4>
+                    <Button 
+                      variant="outline" 
+                      size="sm"
+                      onClick={() => onDownloadBatch(anime.batch.slug, anime.batch.judul)}
+                    >
+                      <FaDownload className="h-4 w-4 mr-2" />
+                      Download All
+                    </Button>
+                  </div>
+                  
+                  <ScrollArea className="h-64">
                     <div className="space-y-2">
-                      {anime.episodes.slice(0, 5).map((episode, index) => (
+                      {paginatedEpisodes.map((episode, index) => (
                         <div 
                           key={index}
-                          className="p-3 bg-gray-800 rounded hover:bg-gray-700 cursor-pointer transition-colors"
+                          className="p-3 bg-gray-800 rounded hover:bg-gray-700 cursor-pointer transition-colors flex justify-between items-center"
+                          onClick={() => onPlayEpisode(episode.slug, episode.judul)}
                         >
-                          <div className="flex justify-between items-center">
-                            <span className="font-medium">{episode.judul}</span>
+                          <span className="font-medium truncate">{episode.judul}</span>
+                          <div className="flex items-center gap-3">
                             <span className="text-sm text-gray-400">{formatDate(episode.tanggal)}</span>
+                            <Button 
+                              size="sm" 
+                              variant="ghost"
+                              onClick={(e) => {
+                                e.stopPropagation()
+                                onPlayEpisode(episode.slug, episode.judul)
+                              }}
+                            >
+                              <PlayCircle className="h-4 w-4" />
+                            </Button>
                           </div>
                         </div>
                       ))}
                     </div>
                   </ScrollArea>
+                  
+                  {totalEpisodesPages > 1 && (
+                    <div className="flex justify-center gap-2 mt-4">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => setEpisodesPage(prev => Math.max(1, prev - 1))}
+                        disabled={episodesPage === 1}
+                      >
+                        <ChevronLeft className="h-4 w-4" />
+                      </Button>
+                      <span className="text-sm text-gray-400 flex items-center">
+                        Page {episodesPage} of {totalEpisodesPages}
+                      </span>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => setEpisodesPage(prev => Math.min(totalEpisodesPages, prev + 1))}
+                        disabled={episodesPage === totalEpisodesPages}
+                      >
+                        <ChevronRight className="h-4 w-4" />
+                      </Button>
+                    </div>
+                  )}
                 </div>
-              </div>
-            </div>
-            
-            <div className="mt-6">
-              <div className="flex gap-4">
-                <Button variant="outline" className="flex-1 border-gray-600">
-                  <Download className="h-4 w-4 mr-2" />
-                  Download Batch
-                </Button>
-                <Button variant="outline" className="flex-1 border-gray-600">
-                  <Share2 className="h-4 w-4 mr-2" />
-                  Share
-                </Button>
               </div>
             </div>
           </>
         ) : (
+          <Alert variant="destructive">
+            <AlertCircle className="h-4 w-4" />
+            <AlertTitle>Error</AlertTitle>
+            <AlertDescription>
+              Failed to load anime details. Please try again.
+            </AlertDescription>
+          </Alert>
+        )}
+      </DialogContent>
+    </Dialog>
+  )
+}
+
+// Video Player Component
+interface VideoPlayerProps {
+  episodeSlug: string
+  episodeTitle: string
+  isOpen: boolean
+  onOpenChange: (open: boolean) => void
+}
+
+function VideoPlayer({ episodeSlug, episodeTitle, isOpen, onOpenChange }: VideoPlayerProps) {
+  const [iframeUrl, setIframeUrl] = useState<string>('')
+  const [isLoading, setIsLoading] = useState(false)
+  const [error, setError] = useState<string>('')
+  const [quality, setQuality] = useState<'480p' | '720p'>('480p')
+  const [playerReady, setPlayerReady] = useState(false)
+
+  const loadEpisode = async () => {
+    if (!episodeSlug) return
+    
+    setIsLoading(true)
+    setError('')
+    setIframeUrl('')
+    
+    try {
+      // Get episode data
+      const episodeData = await apiService.getEpisode(episodeSlug)
+      
+      // Choose quality
+      const mirrorList = quality === '480p' 
+        ? episodeData.mirror.m480p 
+        : episodeData.mirror.m720p
+      
+      if (!mirrorList || mirrorList.length === 0) {
+        throw new Error(`No ${quality} mirror available`)
+      }
+      
+      // Get first mirror content
+      const content = mirrorList[0].content
+      if (!content) {
+        throw new Error('No video content available')
+      }
+      
+      // Get nonce and iframe URL
+      const nonce = await apiService.getNonce()
+      const iframe = await apiService.getIframeUrl(content, nonce)
+      
+      setIframeUrl(iframe)
+      setPlayerReady(true)
+      toast.success(`Playing in ${quality}`)
+      
+    } catch (err) {
+      const errorMessage = err instanceof Error ? err.message : 'Failed to load video'
+      setError(errorMessage)
+      toast.error(errorMessage)
+      console.error('Video loading error:', err)
+    } finally {
+      setIsLoading(false)
+    }
+  }
+
+  const handleOpenChange = (open: boolean) => {
+    if (!open) {
+      setIframeUrl('')
+      setError('')
+      setPlayerReady(false)
+    }
+    onOpenChange(open)
+  }
+
+  useEffect(() => {
+    if (isOpen && episodeSlug && !playerReady) {
+      loadEpisode()
+    }
+  }, [isOpen, episodeSlug, quality])
+
+  return (
+    <Dialog open={isOpen} onOpenChange={handleOpenChange}>
+      <DialogContent className="max-w-5xl bg-gray-900 border-gray-700 text-white">
+        <DialogHeader>
+          <div className="flex justify-between items-center">
+            <DialogTitle className="truncate pr-4">{episodeTitle}</DialogTitle>
+            <div className="flex items-center gap-2">
+              <Select value={quality} onValueChange={(value: '480p' | '720p') => setQuality(value)}>
+                <SelectTrigger className="w-24 bg-gray-800 border-gray-700">
+                  <SelectValue placeholder="Quality" />
+                </SelectTrigger>
+                <SelectContent className="bg-gray-800 border-gray-700">
+                  <SelectItem value="480p">480p</SelectItem>
+                  <SelectItem value="720p">720p</SelectItem>
+                </SelectContent>
+              </Select>
+              <Button 
+                variant="ghost" 
+                size="icon"
+                onClick={() => handleOpenChange(false)}
+              >
+                <X className="h-4 w-4" />
+              </Button>
+            </div>
+          </div>
+        </DialogHeader>
+
+        <div className="aspect-video bg-black rounded-lg overflow-hidden relative">
+          {isLoading ? (
+            <div className="w-full h-full flex flex-col items-center justify-center">
+              <Loader2 className="h-12 w-12 animate-spin text-purple-500 mb-4" />
+              <span className="text-gray-400">Loading video player...</span>
+            </div>
+          ) : error ? (
+            <div className="w-full h-full flex flex-col items-center justify-center p-4">
+              <FaExclamationTriangle className="h-16 w-16 text-red-500 mb-4" />
+              <div className="text-red-400 mb-4 text-center">
+                <div className="font-semibold mb-2">Error: {error}</div>
+                <div className="text-sm text-gray-400">Please try another quality or reload</div>
+              </div>
+              <div className="flex gap-2">
+                <Button 
+                  onClick={loadEpisode}
+                  className="bg-gradient-to-r from-purple-600 to-pink-600"
+                >
+                  <RefreshCw className="h-4 w-4 mr-2" />
+                  Retry
+                </Button>
+                <Button 
+                  variant="outline"
+                  onClick={() => setQuality(quality === '480p' ? '720p' : '480p')}
+                >
+                  Switch to {quality === '480p' ? '720p' : '480p'}
+                </Button>
+              </div>
+            </div>
+          ) : iframeUrl ? (
+            <iframe
+              src={iframeUrl}
+              className="w-full h-full border-0"
+              title="Anime Video Player"
+              allowFullScreen
+              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+              sandbox="allow-same-origin allow-scripts allow-popups allow-forms"
+              referrerPolicy="strict-origin-when-cross-origin"
+            />
+          ) : (
+            <div className="w-full h-full flex flex-col items-center justify-center">
+              <Button 
+                onClick={loadEpisode}
+                className="bg-gradient-to-r from-purple-600 to-pink-600"
+                size="lg"
+              >
+                <FaPlayCircle className="mr-2 h-5 w-5" />
+                Load Video Player
+              </Button>
+              <p className="text-gray-400 mt-2 text-sm">
+                Click to load the video player
+              </p>
+            </div>
+          )}
+        </div>
+
+        <div className="text-sm text-gray-400 space-y-1">
+          <p>• Use fullscreen button in player for better viewing</p>
+          <p>• Switch quality if video doesn't load properly</p>
+          <p>• Player may show ads before video starts</p>
+        </div>
+      </DialogContent>
+    </Dialog>
+  )
+}
+
+// Batch Download Component
+interface BatchDownloadProps {
+  batchSlug: string
+  batchTitle: string
+  isOpen: boolean
+  onOpenChange: (open: boolean) => void
+}
+
+function BatchDownloadComponent({ batchSlug, batchTitle, isOpen, onOpenChange }: BatchDownloadProps) {
+  const [batchData, setBatchData] = useState<BatchDownload[]>([])
+  const [isLoading, setIsLoading] = useState(false)
+  const [error, setError] = useState<string>('')
+
+  const loadBatchData = async () => {
+    if (!batchSlug) return
+    
+    setIsLoading(true)
+    setError('')
+    setBatchData([])
+    
+    try {
+      const data = await apiService.getBatch(batchSlug)
+      setBatchData(data)
+      toast.success(`Loaded ${data.length} episodes`)
+    } catch (err) {
+      const errorMessage = err instanceof Error ? err.message : 'Failed to load batch data'
+      setError(errorMessage)
+      toast.error(errorMessage)
+    } finally {
+      setIsLoading(false)
+    }
+  }
+
+  useEffect(() => {
+    if (isOpen && batchSlug) {
+      loadBatchData()
+    }
+  }, [isOpen, batchSlug])
+
+  const handleOpenChange = (open: boolean) => {
+    if (!open) {
+      setBatchData([])
+      setError('')
+    }
+    onOpenChange(open)
+  }
+
+  const qualityOptions = [
+    { key: 'd360pmp4', label: '360p MP4' },
+    { key: 'd480pmp4', label: '480p MP4' },
+    { key: 'd720pmp4', label: '720p MP4' }
+  ]
+
+  return (
+    <Dialog open={isOpen} onOpenChange={handleOpenChange}>
+      <DialogContent className="max-w-4xl bg-gray-900 border-gray-700 text-white max-h-[80vh] overflow-y-auto">
+        <DialogHeader>
+          <DialogTitle className="text-xl">{batchTitle}</DialogTitle>
+          <DialogDescription className="text-gray-400">
+            Download all episodes in batch
+          </DialogDescription>
+        </DialogHeader>
+
+        {isLoading ? (
+          <div className="flex items-center justify-center h-48">
+            <Loader2 className="h-8 w-8 animate-spin text-purple-500" />
+            <span className="ml-2">Loading download links...</span>
+          </div>
+        ) : error ? (
+          <Alert variant="destructive">
+            <AlertCircle className="h-4 w-4" />
+            <AlertTitle>Error</AlertTitle>
+            <AlertDescription>
+              {error}
+            </AlertDescription>
+            <Button 
+              onClick={loadBatchData} 
+              className="mt-2"
+              variant="outline"
+            >
+              <RefreshCw className="h-4 w-4 mr-2" />
+              Retry
+            </Button>
+          </Alert>
+        ) : batchData.length > 0 ? (
+          <div className="space-y-6">
+            {batchData.slice(0, 5).map((episode, index) => (
+              <div key={index} className="space-y-3">
+                <h4 className="font-semibold text-lg truncate">{episode.judul}</h4>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                  {qualityOptions.map((quality) => (
+                    episode.download[quality.key] && episode.download[quality.key].length > 0 && (
+                      <Card key={quality.key} className="bg-gray-800/50 border-gray-700">
+                        <CardHeader className="pb-2">
+                          <CardTitle className="text-sm font-medium">
+                            {quality.label}
+                          </CardTitle>
+                        </CardHeader>
+                        <CardContent>
+                          <div className="space-y-2">
+                            {episode.download[quality.key].slice(0, 3).map((link, linkIndex) => (
+                              <a
+                                key={linkIndex}
+                                href={link.href}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="block p-2 bg-gray-900 rounded hover:bg-gray-800 transition-colors text-sm truncate"
+                              >
+                                <div className="flex items-center justify-between">
+                                  <span>{link.nama}</span>
+                                  <FaDownload className="h-3 w-3" />
+                                </div>
+                              </a>
+                            ))}
+                          </div>
+                        </CardContent>
+                      </Card>
+                    )
+                  ))}
+                </div>
+              </div>
+            ))}
+            
+            {batchData.length > 5 && (
+              <Alert>
+                <AlertCircle className="h-4 w-4" />
+                <AlertTitle>More Episodes Available</AlertTitle>
+                <AlertDescription>
+                  Showing first 5 episodes. Total episodes: {batchData.length}
+                </AlertDescription>
+              </Alert>
+            )}
+            
+            <div className="flex gap-2">
+              <Button className="flex-1" onClick={loadBatchData}>
+                <RefreshCw className="h-4 w-4 mr-2" />
+                Refresh Links
+              </Button>
+              <Button variant="outline" onClick={() => handleOpenChange(false)}>
+                Close
+              </Button>
+            </div>
+          </div>
+        ) : (
           <div className="text-center py-8">
-            <p className="text-gray-400">Failed to load anime details</p>
+            <AlertCircle className="h-12 w-12 text-gray-500 mx-auto mb-4" />
+            <p className="text-gray-400">No batch data available</p>
           </div>
         )}
       </DialogContent>
@@ -631,6 +1096,7 @@ function AnimeDetailComponent({
   )
 }
 
+// Main App Component
 export default function KeyAnimeListApp() {
   // States
   const [genres, setGenres] = useState<Genre[]>([])
@@ -649,6 +1115,21 @@ export default function KeyAnimeListApp() {
   const [activeTab, setActiveTab] = useState<string>('trending')
   const [watchlist, setWatchlist] = useState<string[]>([])
   const [mobileMenuOpen, setMobileMenuOpen] = useState<boolean>(false)
+  const [apiError, setApiError] = useState<string>('')
+  
+  // Player states
+  const [currentEpisode, setCurrentEpisode] = useState<{
+    slug: string
+    title: string
+  } | null>(null)
+  const [isPlayerOpen, setIsPlayerOpen] = useState(false)
+  
+  // Batch download states
+  const [currentBatch, setCurrentBatch] = useState<{
+    slug: string
+    title: string
+  } | null>(null)
+  const [isBatchOpen, setIsBatchOpen] = useState(false)
   
   // Refs
   const searchTimeoutRef = useRef<NodeJS.Timeout | undefined>(undefined)
@@ -671,6 +1152,8 @@ export default function KeyAnimeListApp() {
   const loadInitialData = async () => {
     try {
       setLoading(true)
+      setApiError('')
+      
       const [genresData, animeData, scheduleData] = await Promise.all([
         apiService.getGenres(),
         apiService.getAnimeList({ page: 1 }),
@@ -682,22 +1165,35 @@ export default function KeyAnimeListApp() {
       setFilteredAnime(animeData)
       setSchedule(scheduleData)
       setTotalPages(Math.ceil(animeData.length / itemsPerPage))
+      
+      toast.success('Data loaded successfully')
     } catch (error) {
       console.error('Failed to load initial data:', error)
+      setApiError('Failed to load data. Please check your connection.')
+      toast.error('Failed to load data')
     } finally {
       setLoading(false)
     }
   }
-  
+
   const handleSearch = useCallback(async (query: string) => {
     if (searchTimeoutRef.current) {
       clearTimeout(searchTimeoutRef.current)
     }
   
     if (!query.trim()) {
-      const animeData = await apiService.getAnimeList({ page: 1 })
-      setAnimeList(animeData)
-      setFilteredAnime(animeData)
+      try {
+        setLoading(true)
+        const animeData = await apiService.getAnimeList({ page: 1 })
+        setAnimeList(animeData)
+        setFilteredAnime(animeData)
+        setCurrentPage(1)
+      } catch (error) {
+        console.error('Search failed:', error)
+        toast.error('Search failed')
+      } finally {
+        setLoading(false)
+      }
       return
     }
   
@@ -711,8 +1207,11 @@ export default function KeyAnimeListApp() {
         setAnimeList(searchResults)
         setFilteredAnime(searchResults)
         setCurrentPage(1)
+        setTotalPages(Math.ceil(searchResults.length / itemsPerPage))
+        toast.success(`Found ${searchResults.length} results`)
       } catch (error) {
         console.error('Search failed:', error)
+        toast.error('Search failed')
       } finally {
         setLoading(false)
       }
@@ -755,8 +1254,10 @@ export default function KeyAnimeListApp() {
       setFilteredAnime(data)
       setCurrentPage(1)
       setTotalPages(Math.ceil(data.length / itemsPerPage))
+      toast.success(`Loaded ${data.length} anime`)
     } catch (error) {
       console.error('Failed to load tab data:', error)
+      toast.error('Failed to load data')
     } finally {
       setLoading(false)
     }
@@ -781,8 +1282,10 @@ export default function KeyAnimeListApp() {
       setFilteredAnime(data)
       setCurrentPage(1)
       setTotalPages(Math.ceil(data.length / itemsPerPage))
+      toast.success(`Filtered: ${genreSlug === 'all' ? 'All Genres' : genreSlug}`)
     } catch (error) {
       console.error('Failed to filter by genre:', error)
+      toast.error('Filter failed')
     } finally {
       setLoading(false)
     }
@@ -795,19 +1298,41 @@ export default function KeyAnimeListApp() {
     try {
       const detail = await apiService.getAnimeInfo(anime.slug)
       setSelectedAnime(detail)
+      toast.success('Anime details loaded')
     } catch (error) {
       console.error('Failed to load anime details:', error)
+      toast.error('Failed to load details')
     } finally {
       setLoadingDetail(false)
     }
   }
 
+  const handlePlayEpisode = (episodeSlug: string, episodeTitle: string) => {
+    setCurrentEpisode({ slug: episodeSlug, title: episodeTitle })
+    setIsPlayerOpen(true)
+    toast.success('Loading video player...')
+  }
+
+  const handleDownloadBatch = (batchSlug: string, batchTitle: string) => {
+    setCurrentBatch({ slug: batchSlug, title: batchTitle })
+    setIsBatchOpen(true)
+    toast.success('Loading download links...')
+  }
+
   const toggleWatchlist = (slug: string) => {
-    setWatchlist(prev => 
-      prev.includes(slug) 
+    setWatchlist(prev => {
+      const newWatchlist = prev.includes(slug) 
         ? prev.filter(s => s !== slug)
         : [...prev, slug]
-    )
+      
+      toast.success(
+        prev.includes(slug) 
+          ? 'Removed from watchlist' 
+          : 'Added to watchlist'
+      )
+      
+      return newWatchlist
+    })
   }
 
   const getCurrentAnime = () => {
@@ -820,10 +1345,41 @@ export default function KeyAnimeListApp() {
     return genreIcons[slug] || genreIcons.default
   }
 
+  const handlePageChange = (page: number) => {
+    setCurrentPage(page)
+    window.scrollTo({ top: 0, behavior: 'smooth' })
+  }
+
+  const refreshData = async () => {
+    await loadInitialData()
+  }
+
   return (
     <TooltipProvider>
       <IconContext.Provider value={{ size: '1.2em', className: 'inline-block' }}>
         <div className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-900 to-black text-white">
+          <Toaster 
+            position="top-right"
+            toastOptions={{
+              className: 'bg-gray-800 text-white border border-gray-700',
+            }}
+          />
+          
+          {/* API Error Alert */}
+          {apiError && (
+            <Alert variant="destructive" className="sticky top-0 z-50 mx-4 mt-4 max-w-7xl">
+              <AlertCircle className="h-4 w-4" />
+              <AlertTitle>API Error</AlertTitle>
+              <AlertDescription className="flex items-center justify-between">
+                <span>{apiError}</span>
+                <Button size="sm" onClick={refreshData} className="ml-4">
+                  <RefreshCw className="h-4 w-4 mr-2" />
+                  Retry
+                </Button>
+              </AlertDescription>
+            </Alert>
+          )}
+
           {/* Navigation Header */}
           <header className="sticky top-0 z-50 bg-gray-900/95 backdrop-blur supports-[backdrop-filter]:bg-gray-900/60 border-b border-gray-800 shadow-lg">
             <div className="container mx-auto px-4">
@@ -854,21 +1410,47 @@ export default function KeyAnimeListApp() {
 
                 {/* Desktop Navigation */}
                 <nav className="hidden md:flex items-center gap-6">
-                  <Button variant="ghost" className="gap-2">
+                  <Button 
+                    variant={activeTab === 'trending' ? "default" : "ghost"} 
+                    className="gap-2"
+                    onClick={() => handleTabChange('trending')}
+                  >
                     <Home className="h-4 w-4" />
                     Home
                   </Button>
-                  <Button variant="ghost" className="gap-2">
+                  <Button 
+                    variant={activeTab === 'trending' ? "default" : "ghost"} 
+                    className="gap-2"
+                    onClick={() => handleTabChange('trending')}
+                  >
                     <TrendingUp className="h-4 w-4" />
                     Trending
                   </Button>
-                  <Button variant="ghost" className="gap-2">
+                  <Button 
+                    variant={activeTab === 'schedule' ? "default" : "ghost"} 
+                    className="gap-2"
+                    onClick={() => handleTabChange('schedule')}
+                  >
                     <Clock className="h-4 w-4" />
                     Schedule
                   </Button>
-                  <Button variant="ghost" className="gap-2">
+                  <Button 
+                    variant="ghost" 
+                    className="gap-2"
+                    onClick={() => {
+                      if (watchlist.length > 0) {
+                        const watchlistAnime = animeList.filter(a => watchlist.includes(a.slug))
+                        setAnimeList(watchlistAnime)
+                        setFilteredAnime(watchlistAnime)
+                        setActiveTab('watchlist')
+                        toast.success(`Showing ${watchlist.length} saved anime`)
+                      } else {
+                        toast.info('Your watchlist is empty')
+                      }
+                    }}
+                  >
                     <Bookmark className="h-4 w-4" />
-                    Watchlist
+                    Watchlist ({watchlist.length})
                   </Button>
                 </nav>
 
@@ -889,6 +1471,16 @@ export default function KeyAnimeListApp() {
                     />
                   </div>
 
+                  {/* Refresh Button */}
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    onClick={refreshData}
+                    title="Refresh data"
+                  >
+                    <RefreshCw className="h-4 w-4" />
+                  </Button>
+
                   {/* User Avatar */}
                   <DropdownMenu>
                     <DropdownMenuTrigger asChild>
@@ -908,16 +1500,23 @@ export default function KeyAnimeListApp() {
                       </DropdownMenuItem>
                       <DropdownMenuItem className="cursor-pointer">
                         <Bookmark className="mr-2 h-4 w-4" />
-                        <span>Watchlist ({userData.watchlist})</span>
+                        <span>Watchlist ({watchlist.length})</span>
                       </DropdownMenuItem>
                       <DropdownMenuItem className="cursor-pointer">
                         <Check className="mr-2 h-4 w-4" />
                         <span>Completed ({userData.completed})</span>
                       </DropdownMenuItem>
                       <DropdownMenuSeparator />
-                      <DropdownMenuItem className="cursor-pointer text-red-400">
+                      <DropdownMenuItem 
+                        className="cursor-pointer text-red-400"
+                        onClick={() => {
+                          setWatchlist([])
+                          localStorage.removeItem('anime-watchlist')
+                          toast.success('Watchlist cleared')
+                        }}
+                      >
                         <LogOut className="mr-2 h-4 w-4" />
-                        <span>Log out</span>
+                        <span>Clear Watchlist</span>
                       </DropdownMenuItem>
                     </DropdownMenuContent>
                   </DropdownMenu>
@@ -936,21 +1535,57 @@ export default function KeyAnimeListApp() {
                 </SheetTitle>
               </SheetHeader>
               <div className="mt-6 space-y-4">
-                <Button variant="ghost" className="w-full justify-start gap-2">
+                <Button 
+                  variant={activeTab === 'trending' ? "default" : "ghost"} 
+                  className="w-full justify-start gap-2"
+                  onClick={() => {
+                    handleTabChange('trending')
+                    setMobileMenuOpen(false)
+                  }}
+                >
                   <Home className="h-4 w-4" />
                   Home
                 </Button>
-                <Button variant="ghost" className="w-full justify-start gap-2">
+                <Button 
+                  variant={activeTab === 'trending' ? "default" : "ghost"} 
+                  className="w-full justify-start gap-2"
+                  onClick={() => {
+                    handleTabChange('trending')
+                    setMobileMenuOpen(false)
+                  }}
+                >
                   <TrendingUp className="h-4 w-4" />
                   Trending
                 </Button>
-                <Button variant="ghost" className="w-full justify-start gap-2">
+                <Button 
+                  variant={activeTab === 'schedule' ? "default" : "ghost"} 
+                  className="w-full justify-start gap-2"
+                  onClick={() => {
+                    handleTabChange('schedule')
+                    setMobileMenuOpen(false)
+                  }}
+                >
                   <Clock className="h-4 w-4" />
                   Schedule
                 </Button>
-                <Button variant="ghost" className="w-full justify-start gap-2">
+                <Button 
+                  variant="ghost" 
+                  className="w-full justify-start gap-2"
+                  onClick={() => {
+                    if (watchlist.length > 0) {
+                      const watchlistAnime = animeList.filter(a => watchlist.includes(a.slug))
+                      setAnimeList(watchlistAnime)
+                      setFilteredAnime(watchlistAnime)
+                      setActiveTab('watchlist')
+                      setMobileMenuOpen(false)
+                      toast.success(`Showing ${watchlist.length} saved anime`)
+                    } else {
+                      toast.info('Your watchlist is empty')
+                    }
+                  }}
+                >
                   <Bookmark className="h-4 w-4" />
-                  Watchlist
+                  Watchlist ({watchlist.length})
                 </Button>
                 
                 {/* Mobile Search */}
@@ -962,6 +1597,12 @@ export default function KeyAnimeListApp() {
                       className="pl-10 bg-gray-800 border-gray-700"
                       value={searchQuery}
                       onChange={(e) => setSearchQuery(e.target.value)}
+                      onKeyDown={(e) => {
+                        if (e.key === 'Enter') {
+                          handleSearch(searchQuery)
+                          setMobileMenuOpen(false)
+                        }
+                      }}
                     />
                   </div>
                 </div>
@@ -996,9 +1637,9 @@ export default function KeyAnimeListApp() {
                     <div className="space-y-2">
                       <div className="flex justify-between text-sm">
                         <span className="text-gray-400">Watchlist</span>
-                        <span className="text-purple-400">{userData.watchlist}</span>
+                        <span className="text-purple-400">{watchlist.length}</span>
                       </div>
-                      <Progress value={userData.watchlist} className="h-2" />
+                      <Progress value={watchlist.length} className="h-2" />
                     </div>
                   </CardContent>
                 </Card>
@@ -1058,7 +1699,14 @@ export default function KeyAnimeListApp() {
                                 key={idx}
                                 className="p-2 bg-gray-900/50 rounded hover:bg-gray-900 cursor-pointer transition-colors"
                                 onClick={() => {
-                                  // Navigate to anime
+                                  handleAnimeClick({
+                                    gambar: `https://via.placeholder.com/300x400/1f2937/6d7280?text=${encodeURIComponent(anime.judul)}`,
+                                    judul: anime.judul,
+                                    slug: anime.slug,
+                                    eps: ['', ''],
+                                    rate: ['', ''],
+                                    type: 'ongoing'
+                                  })
                                 }}
                               >
                                 <p className="text-sm truncate">{anime.judul}</p>
@@ -1096,17 +1744,32 @@ export default function KeyAnimeListApp() {
                       </TabsTrigger>
                     </TabsList>
 
-                    {/* Type Filter */}
-                    <Select value={selectedType} onValueChange={setSelectedType}>
-                      <SelectTrigger className="w-[180px] bg-gray-800 border-gray-700">
-                        <SelectValue placeholder="Filter by type" />
-                      </SelectTrigger>
-                      <SelectContent className="bg-gray-800 border-gray-700">
-                        <SelectItem value="all">All Types</SelectItem>
-                        <SelectItem value="complete">Complete</SelectItem>
-                        <SelectItem value="ongoing">Ongoing</SelectItem>
-                      </SelectContent>
-                    </Select>
+                    <div className="flex gap-2">
+                      {/* Type Filter */}
+                      <Select value={selectedType} onValueChange={setSelectedType}>
+                        <SelectTrigger className="w-[140px] bg-gray-800 border-gray-700">
+                          <SelectValue placeholder="Filter type" />
+                        </SelectTrigger>
+                        <SelectContent className="bg-gray-800 border-gray-700">
+                          <SelectItem value="all">All Types</SelectItem>
+                          <SelectItem value="complete">Complete</SelectItem>
+                          <SelectItem value="ongoing">Ongoing</SelectItem>
+                        </SelectContent>
+                      </Select>
+
+                      {/* Sort Options */}
+                      <Select defaultValue="popular">
+                        <SelectTrigger className="w-[140px] bg-gray-800 border-gray-700">
+                          <SelectValue placeholder="Sort by" />
+                        </SelectTrigger>
+                        <SelectContent className="bg-gray-800 border-gray-700">
+                          <SelectItem value="popular">Popular</SelectItem>
+                          <SelectItem value="latest">Latest</SelectItem>
+                          <SelectItem value="rating">Rating</SelectItem>
+                          <SelectItem value="title">Title A-Z</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
                   </div>
 
                   <TabsContent value={activeTab} className="mt-6">
@@ -1161,7 +1824,7 @@ export default function KeyAnimeListApp() {
                           <PaginationComponent
                             currentPage={currentPage}
                             totalPages={totalPages}
-                            onPageChange={setCurrentPage}
+                            onPageChange={handlePageChange}
                           />
                         )}
                       </>
@@ -1170,49 +1833,66 @@ export default function KeyAnimeListApp() {
                 </Tabs>
 
                 {/* Featured Anime Section */}
-                <div className="mt-12">
-                  <h2 className="text-2xl font-bold mb-6 flex items-center gap-2">
-                    <FaFire className="text-orange-500" />
-                    Featured This Week
-                  </h2>
-                  <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                    {animeList.slice(0, 2).map((anime) => (
-                      <Card key={anime.slug} className="bg-gradient-to-r from-gray-800 to-gray-900 border-gray-700 overflow-hidden">
-                        <div className="flex flex-col md:flex-row">
-                          <div className="md:w-1/3">
-                            <img
-                              src={anime.gambar}
-                              alt={anime.judul}
-                              className="w-full h-48 md:h-full object-cover"
-                            />
-                          </div>
-                          <div className="md:w-2/3 p-6">
-                            <h3 className="text-xl font-bold mb-2">{anime.judul}</h3>
-                            <p className="text-gray-400 mb-4 line-clamp-2">
-                              Popular anime with high ratings and great reviews
-                            </p>
-                            <div className="flex items-center gap-4">
-                              <Badge className="bg-gradient-to-r from-purple-600 to-pink-600">
-                                <Star className="h-3 w-3 mr-1" />
-                                {anime.rate[1] || '8.5'}
-                              </Badge>
-                              <span className="text-sm text-gray-400">
-                                EP {anime.eps[0] || '12'} • {anime.type || 'TV'}
-                              </span>
+                {animeList.length > 0 && activeTab === 'trending' && (
+                  <div className="mt-12">
+                    <h2 className="text-2xl font-bold mb-6 flex items-center gap-2">
+                      <FaFire className="text-orange-500" />
+                      Featured This Week
+                    </h2>
+                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                      {animeList.slice(0, 2).map((anime) => (
+                        <Card key={anime.slug} className="bg-gradient-to-r from-gray-800 to-gray-900 border-gray-700 overflow-hidden">
+                          <div className="flex flex-col md:flex-row">
+                            <div className="md:w-1/3">
+                              <img
+                                src={anime.gambar}
+                                alt={anime.judul}
+                                className="w-full h-48 md:h-full object-cover"
+                                onError={(e) => {
+                                  e.currentTarget.src = `https://via.placeholder.com/400x600/1f2937/6d7280?text=${encodeURIComponent(anime.judul.substring(0, 20))}`
+                                }}
+                              />
                             </div>
-                            <Button 
-                              className="mt-4 bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700"
-                              onClick={() => handleAnimeClick(anime)}
-                            >
-                              <PlayCircle className="h-4 w-4 mr-2" />
-                              Watch Now
-                            </Button>
+                            <div className="md:w-2/3 p-6">
+                              <h3 className="text-xl font-bold mb-2">{anime.judul}</h3>
+                              <p className="text-gray-400 mb-4 line-clamp-2">
+                                Popular anime with high ratings and great reviews
+                              </p>
+                              <div className="flex items-center gap-4">
+                                <Badge className="bg-gradient-to-r from-purple-600 to-pink-600">
+                                  <Star className="h-3 w-3 mr-1" />
+                                  {anime.rate[1] || '8.5'}
+                                </Badge>
+                                <span className="text-sm text-gray-400">
+                                  EP {anime.eps[0] || '12'} • {anime.type || 'TV'}
+                                </span>
+                              </div>
+                              <div className="flex gap-2 mt-4">
+                                <Button 
+                                  className="flex-1 bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700"
+                                  onClick={() => handleAnimeClick(anime)}
+                                >
+                                  <PlayCircle className="h-4 w-4 mr-2" />
+                                  Watch Now
+                                </Button>
+                                <Button 
+                                  variant="outline"
+                                  onClick={() => toggleWatchlist(anime.slug)}
+                                >
+                                  {watchlist.includes(anime.slug) ? (
+                                    <Heart className="h-4 w-4 fill-current" />
+                                  ) : (
+                                    <Heart className="h-4 w-4" />
+                                  )}
+                                </Button>
+                              </div>
+                            </div>
                           </div>
-                        </div>
-                      </Card>
-                    ))}
+                        </Card>
+                      ))}
+                    </div>
                   </div>
-                </div>
+                )}
               </div>
             </div>
           </main>
@@ -1288,7 +1968,29 @@ export default function KeyAnimeListApp() {
             onOpenChange={setIsDetailOpen}
             onWatchlistToggle={toggleWatchlist}
             isInWatchlist={selectedAnime ? watchlist.includes(selectedAnime.lengkap.slug) : false}
+            onPlayEpisode={handlePlayEpisode}
+            onDownloadBatch={handleDownloadBatch}
           />
+
+          {/* Video Player */}
+          {currentEpisode && (
+            <VideoPlayer
+              episodeSlug={currentEpisode.slug}
+              episodeTitle={currentEpisode.title}
+              isOpen={isPlayerOpen}
+              onOpenChange={setIsPlayerOpen}
+            />
+          )}
+
+          {/* Batch Download Modal */}
+          {currentBatch && (
+            <BatchDownloadComponent
+              batchSlug={currentBatch.slug}
+              batchTitle={currentBatch.title}
+              isOpen={isBatchOpen}
+              onOpenChange={setIsBatchOpen}
+            />
+          )}
 
           {/* Quick Actions Floating Button */}
           <div className="fixed bottom-6 right-6 z-50">
@@ -1302,22 +2004,35 @@ export default function KeyAnimeListApp() {
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end" className="bg-gray-800 border-gray-700 w-48">
-                <DropdownMenuItem className="cursor-pointer">
-                  <Home className="mr-2 h-4 w-4" />
-                  <span>Home</span>
+                <DropdownMenuItem 
+                  className="cursor-pointer"
+                  onClick={refreshData}
+                >
+                  <RefreshCw className="mr-2 h-4 w-4" />
+                  <span>Refresh Data</span>
                 </DropdownMenuItem>
-                <DropdownMenuItem className="cursor-pointer">
-                  <TrendingUp className="mr-2 h-4 w-4" />
-                  <span>Trending</span>
-                </DropdownMenuItem>
-                <DropdownMenuItem className="cursor-pointer">
-                  <Clock className="mr-2 h-4 w-4" />
-                  <span>Schedule</span>
+                <DropdownMenuItem 
+                  className="cursor-pointer"
+                  onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
+                >
+                  <ChevronRight className="mr-2 h-4 w-4 rotate-90" />
+                  <span>Scroll to Top</span>
                 </DropdownMenuItem>
                 <DropdownMenuSeparator />
-                <DropdownMenuItem className="cursor-pointer">
-                  <Settings className="mr-2 h-4 w-4" />
-                  <span>Settings</span>
+                <DropdownMenuItem 
+                  className="cursor-pointer"
+                  onClick={() => {
+                    if (watchlist.length > 0) {
+                      const watchlistAnime = animeList.filter(a => watchlist.includes(a.slug))
+                      setAnimeList(watchlistAnime)
+                      setFilteredAnime(watchlistAnime)
+                      setActiveTab('watchlist')
+                      toast.success(`Showing ${watchlist.length} saved anime`)
+                    }
+                  }}
+                >
+                  <Bookmark className="mr-2 h-4 w-4" />
+                  <span>View Watchlist</span>
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
