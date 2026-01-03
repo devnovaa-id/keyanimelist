@@ -12,9 +12,10 @@ import { IconContext } from 'react-icons'
 import { 
   FaFire, FaHeart, FaMagic, FaGhost, FaRobot, 
   FaFutbol, FaGamepad, FaMusic, FaRocket, FaDragon,
-  FaSwords, FaLaugh, FaDungeon, FaUserNinja, FaMeteor,
+  FaLaugh, FaDungeon, FaUserNinja, FaMeteor,
   FaRegHeart, FaRegBookmark, FaPlayCircle, FaPauseCircle
 } from 'react-icons/fa'
+import { LuSwords } from "react-icons/lu";
 import { GiNinjaHeroicStance, GiMagicSwirl, GiSpellBook } from 'react-icons/gi'
 
 // Import shadcn components
@@ -244,7 +245,7 @@ const apiService = {
 
 // Genre Icons Mapping
 const genreIcons: Record<string, React.ReactNode> = {
-  'action': <FaSwords className="text-red-500" />,
+  'action': <LuSwords className="text-red-500" />,
   'adventure': <FaDragon className="text-green-500" />,
   'fantasy': <GiMagicSwirl className="text-purple-500" />,
   'comedy': <FaLaugh className="text-yellow-500" />,
@@ -296,7 +297,7 @@ export default function KeyAnimeListApp() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState<boolean>(false)
   
   // Refs
-  const searchTimeoutRef = useRef<NodeJS.Timeout>()
+  const searchTimeoutRef = useRef<NodeJS.Timeout | undefined>(undefined)
   const itemsPerPage = 12
 
   // Initialize data
@@ -334,19 +335,19 @@ export default function KeyAnimeListApp() {
       setLoading(false)
     }
   }
-
+  
   const handleSearch = useCallback(async (query: string) => {
     if (searchTimeoutRef.current) {
       clearTimeout(searchTimeoutRef.current)
     }
-
+  
     if (!query.trim()) {
       const animeData = await apiService.getAnimeList({ page: 1 })
       setAnimeList(animeData)
       setFilteredAnime(animeData)
       return
     }
-
+  
     searchTimeoutRef.current = setTimeout(async () => {
       try {
         setLoading(true)
