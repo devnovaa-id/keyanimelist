@@ -126,199 +126,6 @@ interface BatchDownload {
 // API Base URL
 const API_BASE_URL = 'https://api.ryzumi.vip/api/otakudesu'
 
-// Enhanced Rate Limiter
-class RateLimiter {
-  private queue: Array<() => Promise<any>> = []
-  private processing = false
-  private requestsPerSecond = 5
-  private requestInterval = 1000 / this.requestsPerSecond
-  private lastRequestTime = 0
-  private requestCount = 0
-  private resetTime = Date.now() + 1000
-  private retryAttempts = 3
-
-  async request<T>(fn: () => Promise<T>): Promise<T> {
-    return new Promise((resolve, reject) => {
-      this.queue.push(async () => {
-        for (let attempt = 1; attempt <= this.retryAttempts; attempt++) {
-          try {
-            const now = Date.now()
-            if (now > this.resetTime) {
-              this.requestCount = 0
-              this.resetTime = now + 1000
-            }
-
-            const timeSinceLastRequest = now - this.lastRequestTime
-            if (timeSinceLastRequest < this.requestInterval) {
-              await new Promise(resolve => 
-                setTimeout(resolve, this.requestInterval - timeSinceLastRequest)
-              )
-            }
-
-            this.lastRequestTime = Date.now()
-            this.requestCount++
-            
-            const result = await fn()
-            resolve(result)
-            return
-          } catch (error) {
-            if (attempt === this.retryAttempts) {
-              reject(error)
-              return
-            }
-            
-            // Exponential backoff
-            await new Promise(resolve => 
-              setTimeout(resolve, Math.pow(2, attempt) * 100)
-            )
-          }
-        }
-      })
-      this.processQueue()
-    })
-  }
-
-  private async processQueue() {
-    if (this.processing || this.queue.length === 0) return
-    
-    this.processing = true
-    
-    while (this.queue.length > 0 && this.requestCount < this.requestsPerSecond) {
-      const now = Date.now()
-      const timeSinceLastRequest = now - this.lastRequestTime
-      
-      if (timeSinceLastRequest < this.requestInterval) {
-        await new Promise(resolve => 
-          setTimeout(resolve, this.requestInterval - timeSinceLastRequest)
-        )
-      }
-      
-      const requestFn = this.queue.shift()
-      if (requestFn) {
-        await requestFn()
-      }
-    }
-    
-    this.processing = false
-    if (this.queue.length > 0) {
-      setTimeout(() => this.processQueue(), 1000)
-    }
-  }
-}
-
-const rateLimiter = new RateLimiter()
-
-// Complete API Service
-const apiService = {
-  async getGenres(): Promise<Genre[]> {
-    return rateLimiter.request(async () => {
-      const response = await fetch(`${API_BASE_URL}/genre`, {
-        headers: { 'accept': 'application/json' },
-        cache: 'no-cache'
-      })
-      if (!response.ok) throw new Error('Failed to fetch genres')
-      return response.json()
-    })
-  },
-
-  async getAnimeList(params: {
-    type?: 'complete' | 'ongoing'
-    genre?: string
-    page?: number
-    search?: string
-  } = {}): Promise<Anime[]> {
-    return rateLimiter.request(async () => {
-      const queryParams = new URLSearchParams()
-      if (params.type) queryParams.append('type', params.type)
-      if (params.genre) queryParams.append('genre', params.genre)
-      if (params.page) queryParams.append('page', params.page.toString())
-      if (params.search) queryParams.append('search', params.search)
-
-      const url = params.type || params.genre || params.page || params.search 
-        ? `${API_BASE_URL}/anime?${queryParams.toString()}`
-        : `${API_BASE_URL}/anime`
-
-      const response = await fetch(url, {
-        headers: { 'accept': 'application/json' },
-        cache: 'no-cache'
-      })
-      if (!response.ok) throw new Error('Failed to fetch anime list')
-      return response.json()
-    })
-  },
-
-  async getAnimeInfo(slug: string): Promise<AnimeDetail> {
-    return rateLimiter.request(async () => {
-      const response = await fetch(`${API_BASE_URL}/anime-info?slug=${encodeURIComponent(slug)}`, {
-        headers: { 'accept': 'application/json' },
-        cache: 'no-cache'
-      })
-      if (!response.ok) throw new Error('Failed to fetch anime info')
-      return response.json()
-    })
-  },
-
-  async getSchedule(): Promise<Schedule[]> {
-    return rateLimiter.request(async () => {
-      const response = await fetch(`${API_BASE_URL}/jadwal`, {
-        headers: { 'accept': 'application/json' },
-        cache: 'no-cache'
-      })
-      if (!response.ok) throw new Error('Failed to fetch schedule')
-      return response.json()
-    })
-  },
-
-  async getEpisode(slug: string): Promise<EpisodeDetail> {
-    return rateLimiter.request(async () => {
-      const response = await fetch(`${API_BASE_URL}/anime/episode?slug=${encodeURIComponent(slug)}`, {
-        headers: { 'accept': 'application/json' },
-        cache: 'no-cache'
-      })
-      if (!response.ok) throw new Error('Failed to fetch episode')
-      return response.json()
-    })
-  },
-
-  async getBatch(slug: string): Promise<BatchDownload[]> {
-    return rateLimiter.request(async () => {
-      const response = await fetch(`${API_BASE_URL}/download/batch?slug=${encodeURIComponent(slug)}`, {
-        headers: { 'accept': 'application/json' },
-        cache: 'no-cache'
-      })
-      if (!response.ok) throw new Error('Failed to fetch batch')
-      return response.json()
-    })
-  },
-
-  async getNonce(): Promise<string> {
-    return rateLimiter.request(async () => {
-      const response = await fetch(`${API_BASE_URL}/nonce`, {
-        headers: { 'accept': 'application/json' },
-        cache: 'no-cache'
-      })
-      if (!response.ok) throw new Error('Failed to fetch nonce')
-      const data = await response.json()
-      return data.data
-    })
-  },
-
-  async getIframeUrl(content: string, nonce: string): Promise<string> {
-    return rateLimiter.request(async () => {
-      const response = await fetch(
-        `${API_BASE_URL}/get-iframe?content=${encodeURIComponent(content)}&nonce=${encodeURIComponent(nonce)}`,
-        {
-          headers: { 'accept': 'application/json' },
-          cache: 'no-cache'
-        }
-      )
-      if (!response.ok) throw new Error('Failed to fetch iframe URL')
-      const data = await response.json()
-      return data.iframe
-    })
-  }
-}
-
 // Genre Icons Mapping dengan warna cerah
 const genreIcons: Record<string, React.ReactNode> = {
   'action': <LuSwords className="text-red-600" />,
@@ -431,18 +238,31 @@ interface AnimeCardProps {
 }
 
 function AnimeCard({ anime, onAnimeClick, onWatchlistToggle, isInWatchlist }: AnimeCardProps) {
+  const [imageLoaded, setImageLoaded] = useState(false)
+  const [imageError, setImageError] = useState(false)
+
   const handleImageError = (e: React.SyntheticEvent<HTMLImageElement>) => {
     e.currentTarget.src = `https://via.placeholder.com/300x400/f8fafc/e2e8f0?text=${encodeURIComponent(anime.judul.substring(0, 20))}`
+    setImageError(true)
+    setImageLoaded(true)
+  }
+
+  const handleImageLoad = () => {
+    setImageLoaded(true)
   }
 
   return (
     <Card className="group bg-white border border-gray-200 hover:border-purple-400 hover:shadow-lg transition-all duration-300 hover:scale-[1.02] overflow-hidden h-full shadow-sm">
       <div className="relative overflow-hidden aspect-[2/3]">
+        {!imageLoaded && !imageError && (
+          <Skeleton className="absolute inset-0 w-full h-full bg-gray-200 animate-pulse" />
+        )}
         <img
           src={anime.gambar}
           alt={anime.judul}
-          className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
+          className={`w-full h-full object-cover group-hover:scale-110 transition-transform duration-500 ${!imageLoaded ? 'opacity-0' : 'opacity-100'}`}
           onError={handleImageError}
+          onLoad={handleImageLoad}
           loading="lazy"
         />
         <div className="absolute inset-0 bg-gradient-to-t from-black/20 via-transparent to-transparent" />
@@ -804,7 +624,7 @@ function VideoPlayer({ episodeSlug, episodeTitle, isOpen, onOpenChange }: VideoP
     
     try {
       // Get episode data
-      const episodeData = await apiService.getEpisode(episodeSlug)
+      const episodeData = await fetchEpisode(episodeSlug)
       
       // Choose quality
       const mirrorList = quality === '480p' 
@@ -822,8 +642,8 @@ function VideoPlayer({ episodeSlug, episodeTitle, isOpen, onOpenChange }: VideoP
       }
       
       // Get nonce and iframe URL
-      const nonce = await apiService.getNonce()
-      const iframe = await apiService.getIframeUrl(content, nonce)
+      const nonce = await fetchNonce()
+      const iframe = await fetchIframeUrl(content, nonce)
       
       setIframeUrl(iframe)
       setPlayerReady(true)
@@ -970,7 +790,7 @@ function BatchDownloadComponent({ batchSlug, batchTitle, isOpen, onOpenChange }:
     setBatchData([])
     
     try {
-      const data = await apiService.getBatch(batchSlug)
+      const data = await fetchBatch(batchSlug)
       setBatchData(data)
       toast.success(`Loaded ${data.length} episodes`)
     } catch (err) {
@@ -1110,6 +930,123 @@ function BatchDownloadComponent({ batchSlug, batchTitle, isOpen, onOpenChange }:
   )
 }
 
+// API Functions (without complex rate limiter)
+const fetchWithTimeout = async (url: string, options: RequestInit = {}, timeout = 10000) => {
+  const controller = new AbortController()
+  const timeoutId = setTimeout(() => controller.abort(), timeout)
+  
+  try {
+    const response = await fetch(url, {
+      ...options,
+      signal: controller.signal
+    })
+    clearTimeout(timeoutId)
+    
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`)
+    }
+    
+    return response.json()
+  } catch (error) {
+    clearTimeout(timeoutId)
+    throw error
+  }
+}
+
+const fetchGenres = async (): Promise<Genre[]> => {
+  try {
+    const data = await fetchWithTimeout(`${API_BASE_URL}/genre`, {
+      headers: { 'accept': 'application/json' }
+    })
+    return data || []
+  } catch (error) {
+    console.error('Error fetching genres:', error)
+    return []
+  }
+}
+
+const fetchAnimeList = async (params: {
+  type?: 'complete' | 'ongoing'
+  genre?: string
+  page?: number
+  search?: string
+} = {}): Promise<Anime[]> => {
+  try {
+    const queryParams = new URLSearchParams()
+    if (params.type) queryParams.append('type', params.type)
+    if (params.genre) queryParams.append('genre', params.genre)
+    if (params.page) queryParams.append('page', params.page.toString())
+    if (params.search) queryParams.append('search', params.search)
+
+    const url = params.type || params.genre || params.page || params.search 
+      ? `${API_BASE_URL}/anime?${queryParams.toString()}`
+      : `${API_BASE_URL}/anime`
+
+    const data = await fetchWithTimeout(url, {
+      headers: { 'accept': 'application/json' }
+    })
+    return data || []
+  } catch (error) {
+    console.error('Error fetching anime list:', error)
+    return []
+  }
+}
+
+const fetchAnimeInfo = async (slug: string): Promise<AnimeDetail | null> => {
+  try {
+    const data = await fetchWithTimeout(`${API_BASE_URL}/anime-info?slug=${encodeURIComponent(slug)}`, {
+      headers: { 'accept': 'application/json' }
+    })
+    return data
+  } catch (error) {
+    console.error('Error fetching anime info:', error)
+    return null
+  }
+}
+
+const fetchSchedule = async (): Promise<Schedule[]> => {
+  try {
+    const data = await fetchWithTimeout(`${API_BASE_URL}/jadwal`, {
+      headers: { 'accept': 'application/json' }
+    })
+    return data || []
+  } catch (error) {
+    console.error('Error fetching schedule:', error)
+    return []
+  }
+}
+
+const fetchEpisode = async (slug: string): Promise<EpisodeDetail> => {
+  const data = await fetchWithTimeout(`${API_BASE_URL}/anime/episode?slug=${encodeURIComponent(slug)}`, {
+    headers: { 'accept': 'application/json' }
+  })
+  return data
+}
+
+const fetchBatch = async (slug: string): Promise<BatchDownload[]> => {
+  const data = await fetchWithTimeout(`${API_BASE_URL}/download/batch?slug=${encodeURIComponent(slug)}`, {
+    headers: { 'accept': 'application/json' }
+  })
+  return data
+}
+
+const fetchNonce = async (): Promise<string> => {
+  const data = await fetchWithTimeout(`${API_BASE_URL}/nonce`, {
+    headers: { 'accept': 'application/json' }
+  })
+  return data.data
+}
+
+const fetchIframeUrl = async (content: string, nonce: string): Promise<string> => {
+  const data = await fetchWithTimeout(
+    `${API_BASE_URL}/get-iframe?content=${encodeURIComponent(content)}&nonce=${encodeURIComponent(nonce)}`,
+    {
+      headers: { 'accept': 'application/json' }
+    }
+  )
+  return data.iframe
+}
+
 // Main App Component - Light Theme
 export default function KeyAnimeListApp() {
   // States
@@ -1130,6 +1067,7 @@ export default function KeyAnimeListApp() {
   const [watchlist, setWatchlist] = useState<string[]>([])
   const [mobileMenuOpen, setMobileMenuOpen] = useState<boolean>(false)
   const [apiError, setApiError] = useState<string>('')
+  const [initialLoadComplete, setInitialLoadComplete] = useState<boolean>(false)
   
   // Player states
   const [currentEpisode, setCurrentEpisode] = useState<{
@@ -1151,16 +1089,23 @@ export default function KeyAnimeListApp() {
 
   // Initialize data
   useEffect(() => {
-    loadInitialData()
     const savedWatchlist = localStorage.getItem('anime-watchlist')
     if (savedWatchlist) {
-      setWatchlist(JSON.parse(savedWatchlist))
+      try {
+        setWatchlist(JSON.parse(savedWatchlist))
+      } catch (e) {
+        console.error('Error parsing watchlist:', e)
+      }
     }
+    
+    loadInitialData()
   }, [])
 
   // Save watchlist to localStorage
   useEffect(() => {
-    localStorage.setItem('anime-watchlist', JSON.stringify(watchlist))
+    if (watchlist.length > 0) {
+      localStorage.setItem('anime-watchlist', JSON.stringify(watchlist))
+    }
   }, [watchlist])
 
   const loadInitialData = async () => {
@@ -1168,22 +1113,50 @@ export default function KeyAnimeListApp() {
       setLoading(true)
       setApiError('')
       
-      const [genresData, animeData, scheduleData] = await Promise.all([
-        apiService.getGenres(),
-        apiService.getAnimeList({ page: 1 }),
-        apiService.getSchedule()
+      // Use Promise.allSettled to handle individual errors
+      const [genresResult, animeResult, scheduleResult] = await Promise.allSettled([
+        fetchGenres(),
+        fetchAnimeList({ page: 1 }),
+        fetchSchedule()
       ])
       
-      setGenres(genresData)
-      setAnimeList(animeData)
-      setFilteredAnime(animeData)
-      setSchedule(scheduleData)
-      setTotalPages(Math.ceil(animeData.length / itemsPerPage))
+      let errors = []
       
-      toast.success('Data loaded successfully')
+      if (genresResult.status === 'fulfilled') {
+        setGenres(genresResult.value)
+      } else {
+        errors.push('Failed to load genres')
+        console.error('Failed to load genres:', genresResult.reason)
+      }
+      
+      if (animeResult.status === 'fulfilled') {
+        const animeData = animeResult.value
+        setAnimeList(animeData)
+        setFilteredAnime(animeData)
+        setTotalPages(Math.ceil(animeData.length / itemsPerPage) || 1)
+      } else {
+        errors.push('Failed to load anime list')
+        console.error('Failed to load anime list:', animeResult.reason)
+      }
+      
+      if (scheduleResult.status === 'fulfilled') {
+        setSchedule(scheduleResult.value)
+      } else {
+        errors.push('Failed to load schedule')
+        console.error('Failed to load schedule:', scheduleResult.reason)
+      }
+      
+      if (errors.length > 0) {
+        setApiError(errors.join(', '))
+        toast.error('Some data failed to load')
+      } else {
+        toast.success('Data loaded successfully')
+      }
+      
+      setInitialLoadComplete(true)
     } catch (error) {
-      console.error('Failed to load initial data:', error)
-      setApiError('Failed to load data. Please check your connection.')
+      console.error('Unexpected error in loadInitialData:', error)
+      setApiError('Failed to load initial data')
       toast.error('Failed to load data')
     } finally {
       setLoading(false)
@@ -1198,10 +1171,11 @@ export default function KeyAnimeListApp() {
     if (!query.trim()) {
       try {
         setLoading(true)
-        const animeData = await apiService.getAnimeList({ page: 1 })
+        const animeData = await fetchAnimeList({ page: 1 })
         setAnimeList(animeData)
         setFilteredAnime(animeData)
         setCurrentPage(1)
+        setTotalPages(Math.ceil(animeData.length / itemsPerPage) || 1)
       } catch (error) {
         console.error('Search failed:', error)
         toast.error('Search failed')
@@ -1214,14 +1188,14 @@ export default function KeyAnimeListApp() {
     searchTimeoutRef.current = setTimeout(async () => {
       try {
         setLoading(true)
-        const searchResults = await apiService.getAnimeList({
+        const searchResults = await fetchAnimeList({
           search: query,
           type: selectedType !== 'all' ? selectedType as 'complete' | 'ongoing' : undefined
         })
         setAnimeList(searchResults)
         setFilteredAnime(searchResults)
         setCurrentPage(1)
-        setTotalPages(Math.ceil(searchResults.length / itemsPerPage))
+        setTotalPages(Math.ceil(searchResults.length / itemsPerPage) || 1)
         toast.success(`Found ${searchResults.length} results`)
       } catch (error) {
         console.error('Search failed:', error)
@@ -1240,13 +1214,13 @@ export default function KeyAnimeListApp() {
       let data: Anime[] = []
       switch(tab) {
         case 'trending':
-          data = await apiService.getAnimeList({ page: 1 })
+          data = await fetchAnimeList({ page: 1 })
           break
         case 'ongoing':
-          data = await apiService.getAnimeList({ type: 'ongoing', page: 1 })
+          data = await fetchAnimeList({ type: 'ongoing', page: 1 })
           break
         case 'complete':
-          data = await apiService.getAnimeList({ type: 'complete', page: 1 })
+          data = await fetchAnimeList({ type: 'complete', page: 1 })
           break
         case 'schedule':
           const today = new Date().toLocaleString('id-ID', { weekday: 'long' })
@@ -1267,7 +1241,7 @@ export default function KeyAnimeListApp() {
       setAnimeList(data)
       setFilteredAnime(data)
       setCurrentPage(1)
-      setTotalPages(Math.ceil(data.length / itemsPerPage))
+      setTotalPages(Math.ceil(data.length / itemsPerPage) || 1)
       toast.success(`Loaded ${data.length} anime`)
     } catch (error) {
       console.error('Failed to load tab data:', error)
@@ -1284,9 +1258,9 @@ export default function KeyAnimeListApp() {
     try {
       let data: Anime[] = []
       if (genreSlug === 'all') {
-        data = await apiService.getAnimeList({ page: 1 })
+        data = await fetchAnimeList({ page: 1 })
       } else {
-        data = await apiService.getAnimeList({ 
+        data = await fetchAnimeList({ 
           genre: genreSlug,
           type: selectedType !== 'all' ? selectedType as 'complete' | 'ongoing' : undefined
         })
@@ -1295,7 +1269,7 @@ export default function KeyAnimeListApp() {
       setAnimeList(data)
       setFilteredAnime(data)
       setCurrentPage(1)
-      setTotalPages(Math.ceil(data.length / itemsPerPage))
+      setTotalPages(Math.ceil(data.length / itemsPerPage) || 1)
       toast.success(`Filtered: ${genreSlug === 'all' ? 'All Genres' : genreSlug}`)
     } catch (error) {
       console.error('Failed to filter by genre:', error)
@@ -1310,9 +1284,13 @@ export default function KeyAnimeListApp() {
     setIsDetailOpen(true)
     
     try {
-      const detail = await apiService.getAnimeInfo(anime.slug)
+      const detail = await fetchAnimeInfo(anime.slug)
       setSelectedAnime(detail)
-      toast.success('Anime details loaded')
+      if (detail) {
+        toast.success('Anime details loaded')
+      } else {
+        toast.error('Failed to load details')
+      }
     } catch (error) {
       console.error('Failed to load anime details:', error)
       toast.error('Failed to load details')
@@ -1367,6 +1345,61 @@ export default function KeyAnimeListApp() {
   const refreshData = async () => {
     await loadInitialData()
   }
+
+  // Fallback anime data jika API tidak merespon
+  const fallbackAnimeData: Anime[] = [
+    {
+      gambar: "https://via.placeholder.com/300x400/f8fafc/e2e8f0?text=One+Piece",
+      judul: "One Piece",
+      slug: "one-piece",
+      eps: ["1000+", "Ongoing"],
+      rate: ["", "9.0"],
+      type: "ongoing"
+    },
+    {
+      gambar: "https://via.placeholder.com/300x400/f8fafc/e2e8f0?text=Naruto",
+      judul: "Naruto Shippuden",
+      slug: "naruto-shippuden",
+      eps: ["500", "Complete"],
+      rate: ["", "8.5"],
+      type: "complete"
+    },
+    {
+      gambar: "https://via.placeholder.com/300x400/f8fafc/e2e8f0?text=Attack+on+Titan",
+      judul: "Attack on Titan",
+      slug: "attack-on-titan",
+      eps: ["75", "Complete"],
+      rate: ["", "9.2"],
+      type: "complete"
+    },
+    {
+      gambar: "https://via.placeholder.com/300x400/f8fafc/e2e8f0?text=My+Hero+Academia",
+      judul: "My Hero Academia",
+      slug: "my-hero-academia",
+      eps: ["100+", "Ongoing"],
+      rate: ["", "8.0"],
+      type: "ongoing"
+    },
+    {
+      gambar: "https://via.placeholder.com/300x400/f8fafc/e2e8f0?text=Demon+Slayer",
+      judul: "Demon Slayer",
+      slug: "demon-slayer",
+      eps: ["55", "Ongoing"],
+      rate: ["", "8.8"],
+      type: "ongoing"
+    },
+    {
+      gambar: "https://via.placeholder.com/300x400/f8fafc/e2e8f0?text=Jujutsu+Kaisen",
+      judul: "Jujutsu Kaisen",
+      slug: "jujutsu-kaisen",
+      eps: ["47", "Ongoing"],
+      rate: ["", "8.7"],
+      type: "ongoing"
+    }
+  ]
+
+  const displayAnime = initialLoadComplete && animeList.length === 0 ? fallbackAnimeData : getCurrentAnime()
+  const displayTotalPages = Math.max(1, totalPages)
 
   return (
     <TooltipProvider>
@@ -1705,31 +1738,37 @@ export default function KeyAnimeListApp() {
                   </CardHeader>
                   <CardContent>
                     <ScrollArea className="h-[300px]">
-                      {schedule.map((day, index) => (
-                        <div key={index} className="mb-4">
-                          <h4 className="font-semibold text-purple-600 mb-2">{day.hari}</h4>
-                          <div className="space-y-2">
-                            {day.anime.slice(0, 3).map((anime, idx) => (
-                              <div 
-                                key={idx}
-                                className="p-2 bg-gray-50 rounded hover:bg-gray-100 cursor-pointer transition-colors border border-gray-200"
-                                onClick={() => {
-                                  handleAnimeClick({
-                                    gambar: `https://via.placeholder.com/300x400/f8fafc/e2e8f0?text=${encodeURIComponent(anime.judul)}`,
-                                    judul: anime.judul,
-                                    slug: anime.slug,
-                                    eps: ['', ''],
-                                    rate: ['', ''],
-                                    type: 'ongoing'
-                                  })
-                                }}
-                              >
-                                <p className="text-sm truncate text-gray-800">{anime.judul}</p>
-                              </div>
-                            ))}
+                      {schedule.length > 0 ? (
+                        schedule.map((day, index) => (
+                          <div key={index} className="mb-4">
+                            <h4 className="font-semibold text-purple-600 mb-2">{day.hari}</h4>
+                            <div className="space-y-2">
+                              {day.anime.slice(0, 3).map((anime, idx) => (
+                                <div 
+                                  key={idx}
+                                  className="p-2 bg-gray-50 rounded hover:bg-gray-100 cursor-pointer transition-colors border border-gray-200"
+                                  onClick={() => {
+                                    handleAnimeClick({
+                                      gambar: `https://via.placeholder.com/300x400/f8fafc/e2e8f0?text=${encodeURIComponent(anime.judul)}`,
+                                      judul: anime.judul,
+                                      slug: anime.slug,
+                                      eps: ['', ''],
+                                      rate: ['', ''],
+                                      type: 'ongoing'
+                                    })
+                                  }}
+                                >
+                                  <p className="text-sm truncate text-gray-800">{anime.judul}</p>
+                                </div>
+                              ))}
+                            </div>
                           </div>
+                        ))
+                      ) : (
+                        <div className="text-center py-4 text-gray-500">
+                          No schedule data available
                         </div>
-                      ))}
+                      )}
                     </ScrollArea>
                   </CardContent>
                 </Card>
@@ -1804,40 +1843,41 @@ export default function KeyAnimeListApp() {
                     {loading ? (
                       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
                         {Array.from({ length: 8 }).map((_, i) => (
-                          <Card key={i} className="bg-white border-gray-200 animate-pulse">
+                          <Card key={i} className="bg-white border-gray-200">
                             <Skeleton className="h-48 w-full rounded-t-lg bg-gray-200" />
                             <CardContent className="p-4">
                               <Skeleton className="h-6 w-3/4 mb-2 bg-gray-200" />
                               <Skeleton className="h-4 w-1/2 bg-gray-200" />
+                              <div className="flex gap-2 mt-4">
+                                <Skeleton className="h-9 flex-1 bg-gray-200" />
+                                <Skeleton className="h-9 w-9 bg-gray-200" />
+                              </div>
                             </CardContent>
                           </Card>
                         ))}
                       </div>
-                    ) : filteredAnime.length === 0 ? (
-                      <div className="text-center py-16">
-                        <div className="inline-flex items-center justify-center w-20 h-20 rounded-full bg-gray-100 mb-6 border border-gray-300">
-                          <Search className="h-10 w-10 text-gray-400" />
-                        </div>
-                        <h3 className="text-2xl font-bold mb-2 text-gray-900">No anime found</h3>
-                        <p className="text-gray-600 mb-6">Try adjusting your search or filter criteria</p>
-                        <Button 
-                          onClick={() => {
-                            setSearchQuery('')
-                            setSelectedGenre('all')
-                            setSelectedType('all')
-                            loadInitialData()
-                          }}
-                          className="bg-gradient-to-r from-purple-500 to-pink-500 text-white hover:from-purple-600 hover:to-pink-600"
-                        >
-                          Reset Filters
-                        </Button>
+                    ) : filteredAnime.length === 0 && !initialLoadComplete ? (
+                      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+                        {Array.from({ length: 6 }).map((_, i) => (
+                          <Card key={i} className="bg-white border-gray-200">
+                            <Skeleton className="h-48 w-full rounded-t-lg bg-gray-200" />
+                            <CardContent className="p-4">
+                              <Skeleton className="h-6 w-3/4 mb-2 bg-gray-200" />
+                              <Skeleton className="h-4 w-1/2 bg-gray-200" />
+                              <div className="flex gap-2 mt-4">
+                                <Skeleton className="h-9 flex-1 bg-gray-200" />
+                                <Skeleton className="h-9 w-9 bg-gray-200" />
+                              </div>
+                            </CardContent>
+                          </Card>
+                        ))}
                       </div>
                     ) : (
                       <>
                         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-                          {getCurrentAnime().map((anime) => (
+                          {displayAnime.map((anime, index) => (
                             <AnimeCard
-                              key={anime.slug}
+                              key={`${anime.slug}-${index}`}
                               anime={anime}
                               onAnimeClick={handleAnimeClick}
                               onWatchlistToggle={toggleWatchlist}
@@ -1847,10 +1887,10 @@ export default function KeyAnimeListApp() {
                         </div>
 
                         {/* Pagination */}
-                        {totalPages > 1 && (
+                        {displayTotalPages > 1 && (
                           <PaginationComponent
                             currentPage={currentPage}
-                            totalPages={totalPages}
+                            totalPages={displayTotalPages}
                             onPageChange={handlePageChange}
                           />
                         )}
