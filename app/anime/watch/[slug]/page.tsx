@@ -1,5 +1,3 @@
-export const dynamic = 'force-dynamic';
-
 import { getEpisodeDetail, getAnimeDetail, getLatestAnime } from '@/lib/api';
 import VideoPlayer from '@/components/VideoPlayer';
 import DownloadLinks from '@/components/DownloadLinks';
