@@ -6,7 +6,8 @@ import {
   Tv, Film, Loader2, Home, TrendingUp, Clock,
   ChevronRight, ExternalLink, Eye, Bookmark,
   Menu, X, Heart, Share2, Download, LogOut,
-  Settings, Check, AlertCircle, RefreshCw, ChevronLeft
+  Settings, Check, AlertCircle, RefreshCw, ChevronLeft,
+  ChevronDown, ChevronUp, Plus, MoreVertical
 } from 'lucide-react'
 import { IconContext } from 'react-icons'
 import { 
@@ -318,29 +319,29 @@ const apiService = {
   }
 }
 
-// Genre Icons Mapping
+// Genre Icons Mapping dengan warna cerah
 const genreIcons: Record<string, React.ReactNode> = {
-  'action': <LuSwords className="text-red-500" />,
-  'adventure': <FaDragon className="text-green-500" />,
-  'fantasy': <GiMagicSwirl className="text-purple-500" />,
-  'comedy': <FaLaugh className="text-yellow-500" />,
-  'horror': <FaGhost className="text-gray-500" />,
-  'mecha': <FaRobot className="text-blue-500" />,
-  'sports': <FaFutbol className="text-orange-500" />,
-  'game': <FaGamepad className="text-indigo-500" />,
-  'music': <FaMusic className="text-pink-500" />,
-  'sci-fi': <FaRocket className="text-cyan-500" />,
-  'demons': <FaMeteor className="text-red-600" />,
-  'drama': <FaHeart className="text-rose-500" />,
-  'magic': <GiSpellBook className="text-violet-500" />,
-  'supernatural': <FaMagic className="text-blue-400" />,
-  'shounen': <GiNinjaHeroicStance className="text-orange-400" />,
-  'shoujo': <FaRegHeart className="text-pink-400" />,
+  'action': <LuSwords className="text-red-600" />,
+  'adventure': <FaDragon className="text-green-600" />,
+  'fantasy': <GiMagicSwirl className="text-purple-600" />,
+  'comedy': <FaLaugh className="text-yellow-600" />,
+  'horror': <FaGhost className="text-gray-600" />,
+  'mecha': <FaRobot className="text-blue-600" />,
+  'sports': <FaFutbol className="text-orange-600" />,
+  'game': <FaGamepad className="text-indigo-600" />,
+  'music': <FaMusic className="text-pink-600" />,
+  'sci-fi': <FaRocket className="text-cyan-600" />,
+  'demons': <FaMeteor className="text-red-700" />,
+  'drama': <FaHeart className="text-rose-600" />,
+  'magic': <GiSpellBook className="text-violet-600" />,
+  'supernatural': <FaMagic className="text-blue-500" />,
+  'shounen': <GiNinjaHeroicStance className="text-orange-500" />,
+  'shoujo': <FaRegHeart className="text-pink-500" />,
   'seinen': <FaUserNinja className="text-gray-700" />,
-  'josei': <FaRegBookmark className="text-rose-400" />,
-  'slice-of-life': <FaPlayCircle className="text-emerald-500" />,
-  'psychological': <FaPauseCircle className="text-purple-600" />,
-  'default': <FaFire className="text-gray-400" />
+  'josei': <FaRegBookmark className="text-rose-500" />,
+  'slice-of-life': <FaPlayCircle className="text-emerald-600" />,
+  'psychological': <FaPauseCircle className="text-purple-700" />,
+  'default': <FaFire className="text-gray-500" />
 }
 
 // Sample user data for demo
@@ -387,7 +388,7 @@ function PaginationComponent({ currentPage, totalPages, onPageChange }: Paginati
         size="sm"
         onClick={() => onPageChange(currentPage - 1)}
         disabled={currentPage === 1}
-        className="gap-1"
+        className="gap-1 border-gray-300 hover:bg-gray-100"
       >
         <ChevronLeft className="h-4 w-4" />
         Previous
@@ -400,7 +401,7 @@ function PaginationComponent({ currentPage, totalPages, onPageChange }: Paginati
             variant={currentPage === page ? "default" : "outline"}
             size="sm"
             onClick={() => onPageChange(page)}
-            className="w-10 h-10"
+            className="w-10 h-10 border-gray-300 hover:bg-gray-100"
           >
             {page}
           </Button>
@@ -412,7 +413,7 @@ function PaginationComponent({ currentPage, totalPages, onPageChange }: Paginati
         size="sm"
         onClick={() => onPageChange(currentPage + 1)}
         disabled={currentPage === totalPages}
-        className="gap-1"
+        className="gap-1 border-gray-300 hover:bg-gray-100"
       >
         Next
         <ChevronRight className="h-4 w-4" />
@@ -421,7 +422,7 @@ function PaginationComponent({ currentPage, totalPages, onPageChange }: Paginati
   )
 }
 
-// Anime Card Component
+// Anime Card Component - Light Theme
 interface AnimeCardProps {
   anime: Anime
   onAnimeClick: (anime: Anime) => void
@@ -431,11 +432,11 @@ interface AnimeCardProps {
 
 function AnimeCard({ anime, onAnimeClick, onWatchlistToggle, isInWatchlist }: AnimeCardProps) {
   const handleImageError = (e: React.SyntheticEvent<HTMLImageElement>) => {
-    e.currentTarget.src = `https://via.placeholder.com/300x400/1f2937/6d7280?text=${encodeURIComponent(anime.judul.substring(0, 20))}`
+    e.currentTarget.src = `https://via.placeholder.com/300x400/f8fafc/e2e8f0?text=${encodeURIComponent(anime.judul.substring(0, 20))}`
   }
 
   return (
-    <Card className="group bg-gray-800/50 border-gray-700 hover:border-purple-500 transition-all duration-300 hover:scale-[1.02] overflow-hidden h-full">
+    <Card className="group bg-white border border-gray-200 hover:border-purple-400 hover:shadow-lg transition-all duration-300 hover:scale-[1.02] overflow-hidden h-full shadow-sm">
       <div className="relative overflow-hidden aspect-[2/3]">
         <img
           src={anime.gambar}
@@ -444,11 +445,11 @@ function AnimeCard({ anime, onAnimeClick, onWatchlistToggle, isInWatchlist }: An
           onError={handleImageError}
           loading="lazy"
         />
-        <div className="absolute inset-0 bg-gradient-to-t from-black via-black/50 to-transparent" />
+        <div className="absolute inset-0 bg-gradient-to-t from-black/20 via-transparent to-transparent" />
         
         {anime.rate[1] && anime.rate[1] !== '' && (
-          <Badge className="absolute top-3 right-3 bg-gradient-to-r from-yellow-500 to-orange-500">
-            <Star className="h-3 w-3 mr-1" />
+          <Badge className="absolute top-3 right-3 bg-gradient-to-r from-yellow-400 to-orange-500 text-white border-0">
+            <Star className="h-3 w-3 mr-1 fill-white" />
             {anime.rate[1]}
           </Badge>
         )}
@@ -456,7 +457,7 @@ function AnimeCard({ anime, onAnimeClick, onWatchlistToggle, isInWatchlist }: An
         <Button
           size="icon"
           variant="secondary"
-          className="absolute top-3 left-3 bg-gray-900/80 hover:bg-gray-900"
+          className="absolute top-3 left-3 bg-white/90 hover:bg-white shadow-md"
           onClick={(e) => {
             e.stopPropagation()
             onWatchlistToggle(anime.slug)
@@ -465,15 +466,15 @@ function AnimeCard({ anime, onAnimeClick, onWatchlistToggle, isInWatchlist }: An
           {isInWatchlist ? (
             <Heart className="h-4 w-4 fill-red-500 text-red-500" />
           ) : (
-            <Heart className="h-4 w-4" />
+            <Heart className="h-4 w-4 text-gray-600" />
           )}
         </Button>
 
-        <div className="absolute bottom-0 left-0 right-0 p-4 bg-gradient-to-t from-black to-transparent">
+        <div className="absolute bottom-0 left-0 right-0 p-4 bg-gradient-to-t from-black/50 to-transparent">
           <div className="flex justify-between items-center">
             <Button 
               size="sm"
-              className="bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700"
+              className="bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 text-white shadow-md"
               onClick={(e) => {
                 e.stopPropagation()
                 onAnimeClick(anime)
@@ -484,14 +485,14 @@ function AnimeCard({ anime, onAnimeClick, onWatchlistToggle, isInWatchlist }: An
             </Button>
             <Button
               size="icon"
-              variant="ghost"
-              className="text-white hover:text-purple-400"
+              variant="secondary"
+              className="bg-white/90 hover:bg-white shadow-md"
               onClick={(e) => {
                 e.stopPropagation()
                 onAnimeClick(anime)
               }}
             >
-              <ExternalLink className="h-4 w-4" />
+              <ExternalLink className="h-4 w-4 text-gray-700" />
             </Button>
           </div>
         </div>
@@ -501,7 +502,7 @@ function AnimeCard({ anime, onAnimeClick, onWatchlistToggle, isInWatchlist }: An
         <Tooltip>
           <TooltipTrigger asChild>
             <h3 
-              className="font-bold text-lg mb-2 line-clamp-2 cursor-pointer hover:text-purple-400 transition-colors"
+              className="font-bold text-lg mb-2 line-clamp-2 cursor-pointer hover:text-purple-600 transition-colors text-gray-800"
               onClick={() => onAnimeClick(anime)}
             >
               {anime.judul}
@@ -512,13 +513,13 @@ function AnimeCard({ anime, onAnimeClick, onWatchlistToggle, isInWatchlist }: An
           </TooltipContent>
         </Tooltip>
         
-        <div className="flex items-center justify-between text-sm text-gray-400 mb-3">
+        <div className="flex items-center justify-between text-sm text-gray-600 mb-3">
           <div className="flex items-center gap-1">
             <PlayCircle className="h-4 w-4" />
             <span>EP {anime.eps[0] || '?'}</span>
           </div>
           {anime.eps[1] && anime.eps[1] !== '' && (
-            <Badge variant="outline" className="border-purple-500 text-purple-400">
+            <Badge variant="outline" className="border-purple-400 text-purple-600 bg-purple-50">
               Total: {anime.eps[1]}
             </Badge>
           )}
@@ -526,7 +527,7 @@ function AnimeCard({ anime, onAnimeClick, onWatchlistToggle, isInWatchlist }: An
 
         <div className="flex gap-2">
           <Button 
-            className="flex-1 bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700"
+            className="flex-1 bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 text-white"
             size="sm"
             onClick={() => onAnimeClick(anime)}
           >
@@ -535,7 +536,7 @@ function AnimeCard({ anime, onAnimeClick, onWatchlistToggle, isInWatchlist }: An
           </Button>
           <Button 
             variant="outline" 
-            className="border-gray-600 hover:bg-gray-700"
+            className="border-gray-300 hover:bg-gray-50 text-gray-700"
             size="sm"
             onClick={(e) => {
               e.stopPropagation()
@@ -543,7 +544,7 @@ function AnimeCard({ anime, onAnimeClick, onWatchlistToggle, isInWatchlist }: An
             }}
           >
             {isInWatchlist ? (
-              <Bookmark className="h-4 w-4 fill-current" />
+              <Bookmark className="h-4 w-4 fill-purple-500 text-purple-500" />
             ) : (
               <Bookmark className="h-4 w-4" />
             )}
@@ -554,7 +555,7 @@ function AnimeCard({ anime, onAnimeClick, onWatchlistToggle, isInWatchlist }: An
   )
 }
 
-// Anime Detail Component
+// Anime Detail Component - Light Theme
 interface AnimeDetailProps {
   anime: AnimeDetail | null
   loading: boolean
@@ -592,7 +593,7 @@ function AnimeDetailComponent({
 
   return (
     <Dialog open={isOpen} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-4xl bg-gray-900 border-gray-700 text-white max-h-[90vh] overflow-y-auto">
+      <DialogContent className="max-w-4xl bg-white border-gray-200 text-gray-800 max-h-[90vh] overflow-y-auto">
         {loading ? (
           <div className="flex items-center justify-center h-64">
             <Loader2 className="h-8 w-8 animate-spin text-purple-500" />
@@ -600,10 +601,10 @@ function AnimeDetailComponent({
         ) : anime ? (
           <>
             <DialogHeader>
-              <DialogTitle className="text-2xl font-bold">
+              <DialogTitle className="text-2xl font-bold text-gray-900">
                 {anime.judul}
               </DialogTitle>
-              <DialogDescription className="text-gray-400">
+              <DialogDescription className="text-gray-600">
                 {anime.namaJapan}
               </DialogDescription>
             </DialogHeader>
@@ -613,19 +614,19 @@ function AnimeDetailComponent({
                 <img
                   src={anime.gambar}
                   alt={anime.judul}
-                  className="w-full rounded-lg"
+                  className="w-full rounded-lg shadow-md"
                   onError={(e) => {
-                    e.currentTarget.src = `https://via.placeholder.com/400x600/1f2937/6d7280?text=${encodeURIComponent(anime.judul.substring(0, 20))}`
+                    e.currentTarget.src = `https://via.placeholder.com/400x600/f8fafc/e2e8f0?text=${encodeURIComponent(anime.judul.substring(0, 20))}`
                   }}
                 />
                 
                 <div className="space-y-3">
                   <div className="flex items-center justify-between">
-                    <Badge className="bg-gradient-to-r from-purple-600 to-pink-600">
-                      <Star className="h-3 w-3 mr-1" />
+                    <Badge className="bg-gradient-to-r from-purple-500 to-pink-500 text-white">
+                      <Star className="h-3 w-3 mr-1 fill-white" />
                       {anime.skor.split(': ')[1] || 'N/A'}
                     </Badge>
-                    <Badge variant="outline" className="border-green-500 text-green-400">
+                    <Badge variant="outline" className="border-green-500 text-green-600 bg-green-50">
                       {anime.status}
                     </Badge>
                   </div>
@@ -633,7 +634,7 @@ function AnimeDetailComponent({
                   <div className="flex gap-2">
                     {anime.episodes.length > 0 && (
                       <Button 
-                        className="flex-1 bg-gradient-to-r from-purple-600 to-pink-600"
+                        className="flex-1 bg-gradient-to-r from-purple-500 to-pink-500 text-white hover:from-purple-600 hover:to-pink-600"
                         onClick={() => onPlayEpisode(anime.episodes[0].slug, anime.episodes[0].judul)}
                       >
                         <PlayCircle className="h-4 w-4 mr-2" />
@@ -642,10 +643,10 @@ function AnimeDetailComponent({
                     )}
                     <Button 
                       variant="outline" 
-                      className="border-gray-600"
+                      className="border-gray-300 hover:bg-gray-50"
                       onClick={() => onWatchlistToggle(anime.lengkap.slug)}
                     >
-                      <Bookmark className={`h-4 w-4 mr-2 ${isInWatchlist ? 'fill-current' : ''}`} />
+                      <Bookmark className={`h-4 w-4 mr-2 ${isInWatchlist ? 'fill-purple-500 text-purple-500' : ''}`} />
                       {isInWatchlist ? 'Saved' : 'Save'}
                     </Button>
                   </div>
@@ -654,40 +655,40 @@ function AnimeDetailComponent({
               
               <div className="md:col-span-2 space-y-6">
                 <div>
-                  <h4 className="font-semibold mb-2 text-lg">Details</h4>
+                  <h4 className="font-semibold mb-2 text-lg text-gray-900">Details</h4>
                   <div className="grid grid-cols-2 gap-4 text-sm">
                     <div>
-                      <p className="text-gray-400">Type</p>
-                      <p>{anime.tipe}</p>
+                      <p className="text-gray-600">Type</p>
+                      <p className="text-gray-800">{anime.tipe}</p>
                     </div>
                     <div>
-                      <p className="text-gray-400">Episodes</p>
-                      <p>{anime.totalEpisode}</p>
+                      <p className="text-gray-600">Episodes</p>
+                      <p className="text-gray-800">{anime.totalEpisode}</p>
                     </div>
                     <div>
-                      <p className="text-gray-400">Duration</p>
-                      <p>{anime.durasi}</p>
+                      <p className="text-gray-600">Duration</p>
+                      <p className="text-gray-800">{anime.durasi}</p>
                     </div>
                     <div>
-                      <p className="text-gray-400">Aired</p>
-                      <p>{anime.rilis}</p>
+                      <p className="text-gray-600">Aired</p>
+                      <p className="text-gray-800">{anime.rilis}</p>
                     </div>
                     <div>
-                      <p className="text-gray-400">Studio</p>
-                      <p>{anime.studio}</p>
+                      <p className="text-gray-600">Studio</p>
+                      <p className="text-gray-800">{anime.studio}</p>
                     </div>
                     <div>
-                      <p className="text-gray-400">Producer</p>
-                      <p className="line-clamp-1">{anime.produser}</p>
+                      <p className="text-gray-600">Producer</p>
+                      <p className="text-gray-800 line-clamp-1">{anime.produser}</p>
                     </div>
                   </div>
                 </div>
                 
                 <div>
-                  <h4 className="font-semibold mb-2 text-lg">Genres</h4>
+                  <h4 className="font-semibold mb-2 text-lg text-gray-900">Genres</h4>
                   <div className="flex flex-wrap gap-2">
                     {anime.genre.split(', ').map((genre, index) => (
-                      <Badge key={index} variant="secondary" className="bg-gray-800">
+                      <Badge key={index} variant="secondary" className="bg-gray-100 text-gray-700 hover:bg-gray-200">
                         {genre}
                       </Badge>
                     ))}
@@ -696,10 +697,11 @@ function AnimeDetailComponent({
                 
                 <div>
                   <div className="flex justify-between items-center mb-2">
-                    <h4 className="font-semibold text-lg">Episodes ({anime.episodes.length})</h4>
+                    <h4 className="font-semibold text-lg text-gray-900">Episodes ({anime.episodes.length})</h4>
                     <Button 
                       variant="outline" 
                       size="sm"
+                      className="border-gray-300 hover:bg-gray-50"
                       onClick={() => onDownloadBatch(anime.batch.slug, anime.batch.judul)}
                     >
                       <FaDownload className="h-4 w-4 mr-2" />
@@ -712,15 +714,16 @@ function AnimeDetailComponent({
                       {paginatedEpisodes.map((episode, index) => (
                         <div 
                           key={index}
-                          className="p-3 bg-gray-800 rounded hover:bg-gray-700 cursor-pointer transition-colors flex justify-between items-center"
+                          className="p-3 bg-gray-50 rounded hover:bg-gray-100 cursor-pointer transition-colors flex justify-between items-center border border-gray-200"
                           onClick={() => onPlayEpisode(episode.slug, episode.judul)}
                         >
-                          <span className="font-medium truncate">{episode.judul}</span>
+                          <span className="font-medium truncate text-gray-800">{episode.judul}</span>
                           <div className="flex items-center gap-3">
-                            <span className="text-sm text-gray-400">{formatDate(episode.tanggal)}</span>
+                            <span className="text-sm text-gray-600">{formatDate(episode.tanggal)}</span>
                             <Button 
                               size="sm" 
                               variant="ghost"
+                              className="text-gray-600 hover:text-purple-600"
                               onClick={(e) => {
                                 e.stopPropagation()
                                 onPlayEpisode(episode.slug, episode.judul)
@@ -739,17 +742,19 @@ function AnimeDetailComponent({
                       <Button
                         variant="outline"
                         size="sm"
+                        className="border-gray-300 hover:bg-gray-50"
                         onClick={() => setEpisodesPage(prev => Math.max(1, prev - 1))}
                         disabled={episodesPage === 1}
                       >
                         <ChevronLeft className="h-4 w-4" />
                       </Button>
-                      <span className="text-sm text-gray-400 flex items-center">
+                      <span className="text-sm text-gray-600 flex items-center">
                         Page {episodesPage} of {totalEpisodesPages}
                       </span>
                       <Button
                         variant="outline"
                         size="sm"
+                        className="border-gray-300 hover:bg-gray-50"
                         onClick={() => setEpisodesPage(prev => Math.min(totalEpisodesPages, prev + 1))}
                         disabled={episodesPage === totalEpisodesPages}
                       >
@@ -762,7 +767,7 @@ function AnimeDetailComponent({
             </div>
           </>
         ) : (
-          <Alert variant="destructive">
+          <Alert variant="destructive" className="bg-red-50 border-red-200 text-red-800">
             <AlertCircle className="h-4 w-4" />
             <AlertTitle>Error</AlertTitle>
             <AlertDescription>
@@ -775,7 +780,7 @@ function AnimeDetailComponent({
   )
 }
 
-// Video Player Component
+// Video Player Component - Light Theme
 interface VideoPlayerProps {
   episodeSlug: string
   episodeTitle: string
@@ -851,16 +856,16 @@ function VideoPlayer({ episodeSlug, episodeTitle, isOpen, onOpenChange }: VideoP
 
   return (
     <Dialog open={isOpen} onOpenChange={handleOpenChange}>
-      <DialogContent className="max-w-5xl bg-gray-900 border-gray-700 text-white">
+      <DialogContent className="max-w-5xl bg-white border-gray-200 text-gray-800">
         <DialogHeader>
           <div className="flex justify-between items-center">
-            <DialogTitle className="truncate pr-4">{episodeTitle}</DialogTitle>
+            <DialogTitle className="truncate pr-4 text-gray-900">{episodeTitle}</DialogTitle>
             <div className="flex items-center gap-2">
               <Select value={quality} onValueChange={(value: '480p' | '720p') => setQuality(value)}>
-                <SelectTrigger className="w-24 bg-gray-800 border-gray-700">
+                <SelectTrigger className="w-24 bg-white border-gray-300">
                   <SelectValue placeholder="Quality" />
                 </SelectTrigger>
-                <SelectContent className="bg-gray-800 border-gray-700">
+                <SelectContent className="bg-white border-gray-300">
                   <SelectItem value="480p">480p</SelectItem>
                   <SelectItem value="720p">720p</SelectItem>
                 </SelectContent>
@@ -868,6 +873,7 @@ function VideoPlayer({ episodeSlug, episodeTitle, isOpen, onOpenChange }: VideoP
               <Button 
                 variant="ghost" 
                 size="icon"
+                className="text-gray-600 hover:text-gray-900"
                 onClick={() => handleOpenChange(false)}
               >
                 <X className="h-4 w-4" />
@@ -876,29 +882,30 @@ function VideoPlayer({ episodeSlug, episodeTitle, isOpen, onOpenChange }: VideoP
           </div>
         </DialogHeader>
 
-        <div className="aspect-video bg-black rounded-lg overflow-hidden relative">
+        <div className="aspect-video bg-black rounded-lg overflow-hidden relative shadow-md">
           {isLoading ? (
             <div className="w-full h-full flex flex-col items-center justify-center">
               <Loader2 className="h-12 w-12 animate-spin text-purple-500 mb-4" />
-              <span className="text-gray-400">Loading video player...</span>
+              <span className="text-gray-600">Loading video player...</span>
             </div>
           ) : error ? (
             <div className="w-full h-full flex flex-col items-center justify-center p-4">
               <FaExclamationTriangle className="h-16 w-16 text-red-500 mb-4" />
-              <div className="text-red-400 mb-4 text-center">
+              <div className="text-red-600 mb-4 text-center">
                 <div className="font-semibold mb-2">Error: {error}</div>
-                <div className="text-sm text-gray-400">Please try another quality or reload</div>
+                <div className="text-sm text-gray-600">Please try another quality or reload</div>
               </div>
               <div className="flex gap-2">
                 <Button 
                   onClick={loadEpisode}
-                  className="bg-gradient-to-r from-purple-600 to-pink-600"
+                  className="bg-gradient-to-r from-purple-500 to-pink-500 text-white hover:from-purple-600 hover:to-pink-600"
                 >
                   <RefreshCw className="h-4 w-4 mr-2" />
                   Retry
                 </Button>
                 <Button 
                   variant="outline"
+                  className="border-gray-300 hover:bg-gray-50"
                   onClick={() => setQuality(quality === '480p' ? '720p' : '480p')}
                 >
                   Switch to {quality === '480p' ? '720p' : '480p'}
@@ -919,20 +926,20 @@ function VideoPlayer({ episodeSlug, episodeTitle, isOpen, onOpenChange }: VideoP
             <div className="w-full h-full flex flex-col items-center justify-center">
               <Button 
                 onClick={loadEpisode}
-                className="bg-gradient-to-r from-purple-600 to-pink-600"
+                className="bg-gradient-to-r from-purple-500 to-pink-500 text-white hover:from-purple-600 hover:to-pink-600"
                 size="lg"
               >
                 <FaPlayCircle className="mr-2 h-5 w-5" />
                 Load Video Player
               </Button>
-              <p className="text-gray-400 mt-2 text-sm">
+              <p className="text-gray-600 mt-2 text-sm">
                 Click to load the video player
               </p>
             </div>
           )}
         </div>
 
-        <div className="text-sm text-gray-400 space-y-1">
+        <div className="text-sm text-gray-600 space-y-1">
           <p>• Use fullscreen button in player for better viewing</p>
           <p>• Switch quality if video doesn't load properly</p>
           <p>• Player may show ads before video starts</p>
@@ -942,7 +949,7 @@ function VideoPlayer({ episodeSlug, episodeTitle, isOpen, onOpenChange }: VideoP
   )
 }
 
-// Batch Download Component
+// Batch Download Component - Light Theme
 interface BatchDownloadProps {
   batchSlug: string
   batchTitle: string
@@ -997,10 +1004,10 @@ function BatchDownloadComponent({ batchSlug, batchTitle, isOpen, onOpenChange }:
 
   return (
     <Dialog open={isOpen} onOpenChange={handleOpenChange}>
-      <DialogContent className="max-w-4xl bg-gray-900 border-gray-700 text-white max-h-[80vh] overflow-y-auto">
+      <DialogContent className="max-w-4xl bg-white border-gray-200 text-gray-800 max-h-[80vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle className="text-xl">{batchTitle}</DialogTitle>
-          <DialogDescription className="text-gray-400">
+          <DialogTitle className="text-xl text-gray-900">{batchTitle}</DialogTitle>
+          <DialogDescription className="text-gray-600">
             Download all episodes in batch
           </DialogDescription>
         </DialogHeader>
@@ -1008,10 +1015,10 @@ function BatchDownloadComponent({ batchSlug, batchTitle, isOpen, onOpenChange }:
         {isLoading ? (
           <div className="flex items-center justify-center h-48">
             <Loader2 className="h-8 w-8 animate-spin text-purple-500" />
-            <span className="ml-2">Loading download links...</span>
+            <span className="ml-2 text-gray-600">Loading download links...</span>
           </div>
         ) : error ? (
-          <Alert variant="destructive">
+          <Alert variant="destructive" className="bg-red-50 border-red-200 text-red-800">
             <AlertCircle className="h-4 w-4" />
             <AlertTitle>Error</AlertTitle>
             <AlertDescription>
@@ -1019,7 +1026,7 @@ function BatchDownloadComponent({ batchSlug, batchTitle, isOpen, onOpenChange }:
             </AlertDescription>
             <Button 
               onClick={loadBatchData} 
-              className="mt-2"
+              className="mt-2 border-red-300 hover:bg-red-50"
               variant="outline"
             >
               <RefreshCw className="h-4 w-4 mr-2" />
@@ -1030,13 +1037,13 @@ function BatchDownloadComponent({ batchSlug, batchTitle, isOpen, onOpenChange }:
           <div className="space-y-6">
             {batchData.slice(0, 5).map((episode, index) => (
               <div key={index} className="space-y-3">
-                <h4 className="font-semibold text-lg truncate">{episode.judul}</h4>
+                <h4 className="font-semibold text-lg truncate text-gray-900">{episode.judul}</h4>
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
                   {qualityOptions.map((quality) => (
                     episode.download[quality.key] && episode.download[quality.key].length > 0 && (
-                      <Card key={quality.key} className="bg-gray-800/50 border-gray-700">
+                      <Card key={quality.key} className="bg-gray-50 border-gray-200">
                         <CardHeader className="pb-2">
-                          <CardTitle className="text-sm font-medium">
+                          <CardTitle className="text-sm font-medium text-gray-900">
                             {quality.label}
                           </CardTitle>
                         </CardHeader>
@@ -1048,11 +1055,11 @@ function BatchDownloadComponent({ batchSlug, batchTitle, isOpen, onOpenChange }:
                                 href={link.href}
                                 target="_blank"
                                 rel="noopener noreferrer"
-                                className="block p-2 bg-gray-900 rounded hover:bg-gray-800 transition-colors text-sm truncate"
+                                className="block p-2 bg-white rounded hover:bg-gray-100 transition-colors text-sm truncate border border-gray-200"
                               >
                                 <div className="flex items-center justify-between">
-                                  <span>{link.nama}</span>
-                                  <FaDownload className="h-3 w-3" />
+                                  <span className="text-gray-800">{link.nama}</span>
+                                  <FaDownload className="h-3 w-3 text-gray-600" />
                                 </div>
                               </a>
                             ))}
@@ -1066,7 +1073,7 @@ function BatchDownloadComponent({ batchSlug, batchTitle, isOpen, onOpenChange }:
             ))}
             
             {batchData.length > 5 && (
-              <Alert>
+              <Alert className="bg-blue-50 border-blue-200 text-blue-800">
                 <AlertCircle className="h-4 w-4" />
                 <AlertTitle>More Episodes Available</AlertTitle>
                 <AlertDescription>
@@ -1076,19 +1083,26 @@ function BatchDownloadComponent({ batchSlug, batchTitle, isOpen, onOpenChange }:
             )}
             
             <div className="flex gap-2">
-              <Button className="flex-1" onClick={loadBatchData}>
+              <Button 
+                className="flex-1 bg-gradient-to-r from-purple-500 to-pink-500 text-white hover:from-purple-600 hover:to-pink-600"
+                onClick={loadBatchData}
+              >
                 <RefreshCw className="h-4 w-4 mr-2" />
                 Refresh Links
               </Button>
-              <Button variant="outline" onClick={() => handleOpenChange(false)}>
+              <Button 
+                variant="outline" 
+                className="border-gray-300 hover:bg-gray-50"
+                onClick={() => handleOpenChange(false)}
+              >
                 Close
               </Button>
             </div>
           </div>
         ) : (
           <div className="text-center py-8">
-            <AlertCircle className="h-12 w-12 text-gray-500 mx-auto mb-4" />
-            <p className="text-gray-400">No batch data available</p>
+            <AlertCircle className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+            <p className="text-gray-600">No batch data available</p>
           </div>
         )}
       </DialogContent>
@@ -1096,7 +1110,7 @@ function BatchDownloadComponent({ batchSlug, batchTitle, isOpen, onOpenChange }:
   )
 }
 
-// Main App Component
+// Main App Component - Light Theme
 export default function KeyAnimeListApp() {
   // States
   const [genres, setGenres] = useState<Genre[]>([])
@@ -1239,7 +1253,7 @@ export default function KeyAnimeListApp() {
           const todaySchedule = schedule.find(s => s.hari === today)
           if (todaySchedule) {
             data = todaySchedule.anime.map(a => ({
-              gambar: `https://via.placeholder.com/300x400/1f2937/6d7280?text=${encodeURIComponent(a.judul)}`,
+              gambar: `https://via.placeholder.com/300x400/f8fafc/e2e8f0?text=${encodeURIComponent(a.judul)}`,
               judul: a.judul,
               slug: a.slug,
               eps: ['', ''],
@@ -1357,22 +1371,22 @@ export default function KeyAnimeListApp() {
   return (
     <TooltipProvider>
       <IconContext.Provider value={{ size: '1.2em', className: 'inline-block' }}>
-        <div className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-900 to-black text-white">
+        <div className="min-h-screen bg-gradient-to-br from-white via-gray-50 to-gray-100 text-gray-800">
           <Toaster 
             position="top-right"
             toastOptions={{
-              className: 'bg-gray-800 text-white border border-gray-700',
+              className: 'bg-white text-gray-800 border border-gray-200 shadow-lg',
             }}
           />
           
           {/* API Error Alert */}
           {apiError && (
-            <Alert variant="destructive" className="sticky top-0 z-50 mx-4 mt-4 max-w-7xl">
+            <Alert variant="destructive" className="sticky top-0 z-50 mx-4 mt-4 max-w-7xl bg-red-50 border-red-200 text-red-800">
               <AlertCircle className="h-4 w-4" />
               <AlertTitle>API Error</AlertTitle>
               <AlertDescription className="flex items-center justify-between">
                 <span>{apiError}</span>
-                <Button size="sm" onClick={refreshData} className="ml-4">
+                <Button size="sm" onClick={refreshData} className="ml-4 bg-red-100 hover:bg-red-200 text-red-800 border-red-300">
                   <RefreshCw className="h-4 w-4 mr-2" />
                   Retry
                 </Button>
@@ -1380,8 +1394,8 @@ export default function KeyAnimeListApp() {
             </Alert>
           )}
 
-          {/* Navigation Header */}
-          <header className="sticky top-0 z-50 bg-gray-900/95 backdrop-blur supports-[backdrop-filter]:bg-gray-900/60 border-b border-gray-800 shadow-lg">
+          {/* Navigation Header - Light Theme */}
+          <header className="sticky top-0 z-50 bg-white/95 backdrop-blur supports-[backdrop-filter]:bg-white/60 border-b border-gray-200 shadow-sm">
             <div className="container mx-auto px-4">
               <div className="flex items-center justify-between h-16">
                 {/* Logo */}
@@ -1389,30 +1403,30 @@ export default function KeyAnimeListApp() {
                   <Button 
                     variant="ghost" 
                     size="icon" 
-                    className="md:hidden"
+                    className="md:hidden text-gray-600 hover:text-gray-900"
                     onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
                   >
                     {mobileMenuOpen ? <X /> : <Menu />}
                   </Button>
                   
                   <div className="flex items-center gap-3">
-                    <div className="p-2 bg-gradient-to-r from-purple-600 via-pink-600 to-blue-600 rounded-lg">
-                      <SiMyanimelist className="h-6 w-6" />
+                    <div className="p-2 bg-gradient-to-r from-purple-500 via-pink-500 to-blue-500 rounded-lg shadow-sm">
+                      <SiMyanimelist className="h-6 w-6 text-white" />
                     </div>
                     <div>
-                      <h1 className="text-2xl font-bold bg-gradient-to-r from-purple-400 via-pink-400 to-blue-400 bg-clip-text text-transparent">
+                      <h1 className="text-2xl font-bold bg-gradient-to-r from-purple-600 via-pink-600 to-blue-600 bg-clip-text text-transparent">
                         KeyAnime
                       </h1>
-                      <p className="text-xs text-gray-400">Your Anime Collection</p>
+                      <p className="text-xs text-gray-500">Your Anime Collection</p>
                     </div>
                   </div>
                 </div>
 
                 {/* Desktop Navigation */}
-                <nav className="hidden md:flex items-center gap-6">
+                <nav className="hidden md:flex items-center gap-4">
                   <Button 
                     variant={activeTab === 'trending' ? "default" : "ghost"} 
-                    className="gap-2"
+                    className="gap-2 bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600"
                     onClick={() => handleTabChange('trending')}
                   >
                     <Home className="h-4 w-4" />
@@ -1436,7 +1450,7 @@ export default function KeyAnimeListApp() {
                   </Button>
                   <Button 
                     variant="ghost" 
-                    className="gap-2"
+                    className="gap-2 text-gray-600 hover:text-gray-900"
                     onClick={() => {
                       if (watchlist.length > 0) {
                         const watchlistAnime = animeList.filter(a => watchlist.includes(a.slug))
@@ -1462,7 +1476,7 @@ export default function KeyAnimeListApp() {
                     <Input
                       type="search"
                       placeholder="Search anime..."
-                      className="pl-10 w-64 bg-gray-800 border-gray-700"
+                      className="pl-10 w-64 bg-gray-50 border-gray-300 focus:border-purple-400"
                       value={searchQuery}
                       onChange={(e) => {
                         setSearchQuery(e.target.value)
@@ -1475,6 +1489,7 @@ export default function KeyAnimeListApp() {
                   <Button
                     variant="ghost"
                     size="icon"
+                    className="text-gray-600 hover:text-gray-900"
                     onClick={refreshData}
                     title="Refresh data"
                   >
@@ -1484,31 +1499,31 @@ export default function KeyAnimeListApp() {
                   {/* User Avatar */}
                   <DropdownMenu>
                     <DropdownMenuTrigger asChild>
-                      <Button variant="ghost" className="relative h-10 w-10 rounded-full">
+                      <Button variant="ghost" className="relative h-10 w-10 rounded-full border border-gray-300 hover:border-gray-400">
                         <Avatar>
                           <AvatarImage src={userData.avatar} />
-                          <AvatarFallback>AL</AvatarFallback>
+                          <AvatarFallback className="bg-gradient-to-r from-purple-100 to-pink-100 text-gray-700">AL</AvatarFallback>
                         </Avatar>
                       </Button>
                     </DropdownMenuTrigger>
-                    <DropdownMenuContent align="end" className="w-56 bg-gray-800 border-gray-700">
-                      <DropdownMenuLabel>My Account</DropdownMenuLabel>
+                    <DropdownMenuContent align="end" className="w-56 bg-white border-gray-200">
+                      <DropdownMenuLabel className="text-gray-900">My Account</DropdownMenuLabel>
                       <DropdownMenuSeparator />
-                      <DropdownMenuItem className="cursor-pointer">
+                      <DropdownMenuItem className="cursor-pointer text-gray-700 hover:bg-gray-50">
                         <Eye className="mr-2 h-4 w-4" />
                         <span>Watching ({userData.watching})</span>
                       </DropdownMenuItem>
-                      <DropdownMenuItem className="cursor-pointer">
+                      <DropdownMenuItem className="cursor-pointer text-gray-700 hover:bg-gray-50">
                         <Bookmark className="mr-2 h-4 w-4" />
                         <span>Watchlist ({watchlist.length})</span>
                       </DropdownMenuItem>
-                      <DropdownMenuItem className="cursor-pointer">
+                      <DropdownMenuItem className="cursor-pointer text-gray-700 hover:bg-gray-50">
                         <Check className="mr-2 h-4 w-4" />
                         <span>Completed ({userData.completed})</span>
                       </DropdownMenuItem>
                       <DropdownMenuSeparator />
                       <DropdownMenuItem 
-                        className="cursor-pointer text-red-400"
+                        className="cursor-pointer text-red-600 hover:bg-red-50"
                         onClick={() => {
                           setWatchlist([])
                           localStorage.removeItem('anime-watchlist')
@@ -1527,9 +1542,9 @@ export default function KeyAnimeListApp() {
 
           {/* Mobile Menu */}
           <Sheet open={mobileMenuOpen} onOpenChange={setMobileMenuOpen}>
-            <SheetContent side="left" className="bg-gray-900 border-gray-800 w-[300px]">
+            <SheetContent side="left" className="bg-white border-gray-200 w-[300px]">
               <SheetHeader>
-                <SheetTitle className="text-white flex items-center gap-2">
+                <SheetTitle className="text-gray-900 flex items-center gap-2">
                   <SiMyanimelist className="h-5 w-5" />
                   KeyAnime Menu
                 </SheetTitle>
@@ -1537,7 +1552,7 @@ export default function KeyAnimeListApp() {
               <div className="mt-6 space-y-4">
                 <Button 
                   variant={activeTab === 'trending' ? "default" : "ghost"} 
-                  className="w-full justify-start gap-2"
+                  className="w-full justify-start gap-2 bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600"
                   onClick={() => {
                     handleTabChange('trending')
                     setMobileMenuOpen(false)
@@ -1570,7 +1585,7 @@ export default function KeyAnimeListApp() {
                 </Button>
                 <Button 
                   variant="ghost" 
-                  className="w-full justify-start gap-2"
+                  className="w-full justify-start gap-2 text-gray-600"
                   onClick={() => {
                     if (watchlist.length > 0) {
                       const watchlistAnime = animeList.filter(a => watchlist.includes(a.slug))
@@ -1594,7 +1609,7 @@ export default function KeyAnimeListApp() {
                     <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
                     <Input
                       placeholder="Search anime..."
-                      className="pl-10 bg-gray-800 border-gray-700"
+                      className="pl-10 bg-gray-50 border-gray-300"
                       value={searchQuery}
                       onChange={(e) => setSearchQuery(e.target.value)}
                       onKeyDown={(e) => {
@@ -1612,42 +1627,42 @@ export default function KeyAnimeListApp() {
 
           <main className="container mx-auto px-4 py-8">
             <div className="flex flex-col lg:flex-row gap-8">
-              {/* Sidebar */}
+              {/* Sidebar - Light Theme */}
               <aside className="lg:w-1/4 space-y-6">
                 {/* Quick Stats */}
-                <Card className="bg-gradient-to-br from-gray-800 to-gray-900 border-gray-700">
+                <Card className="bg-gradient-to-br from-white to-gray-50 border-gray-200 shadow-sm">
                   <CardHeader className="pb-3">
-                    <CardTitle className="text-lg">My Stats</CardTitle>
+                    <CardTitle className="text-lg text-gray-900">My Stats</CardTitle>
                   </CardHeader>
                   <CardContent className="space-y-4">
                     <div className="space-y-2">
                       <div className="flex justify-between text-sm">
-                        <span className="text-gray-400">Watching</span>
-                        <span className="text-green-400">{userData.watching}</span>
+                        <span className="text-gray-600">Watching</span>
+                        <span className="text-green-600 font-semibold">{userData.watching}</span>
                       </div>
-                      <Progress value={userData.watching} className="h-2" />
+                      <Progress value={userData.watching} className="h-2 bg-gray-200" />
                     </div>
                     <div className="space-y-2">
                       <div className="flex justify-between text-sm">
-                        <span className="text-gray-400">Completed</span>
-                        <span className="text-blue-400">{userData.completed}</span>
+                        <span className="text-gray-600">Completed</span>
+                        <span className="text-blue-600 font-semibold">{userData.completed}</span>
                       </div>
-                      <Progress value={userData.completed / 2} className="h-2" />
+                      <Progress value={userData.completed / 2} className="h-2 bg-gray-200" />
                     </div>
                     <div className="space-y-2">
                       <div className="flex justify-between text-sm">
-                        <span className="text-gray-400">Watchlist</span>
-                        <span className="text-purple-400">{watchlist.length}</span>
+                        <span className="text-gray-600">Watchlist</span>
+                        <span className="text-purple-600 font-semibold">{watchlist.length}</span>
                       </div>
-                      <Progress value={watchlist.length} className="h-2" />
+                      <Progress value={watchlist.length} className="h-2 bg-gray-200" />
                     </div>
                   </CardContent>
                 </Card>
 
                 {/* Genre Filter */}
-                <Card className="bg-gray-800/50 border-gray-700">
+                <Card className="bg-white border-gray-200 shadow-sm">
                   <CardHeader>
-                    <CardTitle className="flex items-center gap-2">
+                    <CardTitle className="flex items-center gap-2 text-gray-900">
                       <Filter className="h-5 w-5" />
                       Genres
                     </CardTitle>
@@ -1657,18 +1672,18 @@ export default function KeyAnimeListApp() {
                       <div className="space-y-2">
                         <Button
                           variant={selectedGenre === 'all' ? 'default' : 'ghost'}
-                          className="w-full justify-start gap-2"
+                          className="w-full justify-start gap-2 bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600"
                           onClick={() => handleGenreFilter('all')}
                         >
-                          <FaFire className="text-orange-500" />
-                          All Genres
+                          <FaFire className="text-white" />
+                          <span className="text-white">All Genres</span>
                         </Button>
                         
                         {genres.slice(0, 20).map((genre) => (
                           <Button
                             key={genre.slug}
                             variant={selectedGenre === genre.slug ? 'default' : 'ghost'}
-                            className="w-full justify-start gap-2"
+                            className="w-full justify-start gap-2 text-gray-700 hover:text-gray-900"
                             onClick={() => handleGenreFilter(genre.slug)}
                           >
                             {getGenreIcon(genre.slug)}
@@ -1681,9 +1696,9 @@ export default function KeyAnimeListApp() {
                 </Card>
 
                 {/* Today's Schedule */}
-                <Card className="bg-gray-800/50 border-gray-700">
+                <Card className="bg-white border-gray-200 shadow-sm">
                   <CardHeader>
-                    <CardTitle className="flex items-center gap-2">
+                    <CardTitle className="flex items-center gap-2 text-gray-900">
                       <Calendar className="h-5 w-5" />
                       Today's Schedule
                     </CardTitle>
@@ -1692,15 +1707,15 @@ export default function KeyAnimeListApp() {
                     <ScrollArea className="h-[300px]">
                       {schedule.map((day, index) => (
                         <div key={index} className="mb-4">
-                          <h4 className="font-semibold text-purple-300 mb-2">{day.hari}</h4>
+                          <h4 className="font-semibold text-purple-600 mb-2">{day.hari}</h4>
                           <div className="space-y-2">
                             {day.anime.slice(0, 3).map((anime, idx) => (
                               <div 
                                 key={idx}
-                                className="p-2 bg-gray-900/50 rounded hover:bg-gray-900 cursor-pointer transition-colors"
+                                className="p-2 bg-gray-50 rounded hover:bg-gray-100 cursor-pointer transition-colors border border-gray-200"
                                 onClick={() => {
                                   handleAnimeClick({
-                                    gambar: `https://via.placeholder.com/300x400/1f2937/6d7280?text=${encodeURIComponent(anime.judul)}`,
+                                    gambar: `https://via.placeholder.com/300x400/f8fafc/e2e8f0?text=${encodeURIComponent(anime.judul)}`,
                                     judul: anime.judul,
                                     slug: anime.slug,
                                     eps: ['', ''],
@@ -1709,7 +1724,7 @@ export default function KeyAnimeListApp() {
                                   })
                                 }}
                               >
-                                <p className="text-sm truncate">{anime.judul}</p>
+                                <p className="text-sm truncate text-gray-800">{anime.judul}</p>
                               </div>
                             ))}
                           </div>
@@ -1722,23 +1737,35 @@ export default function KeyAnimeListApp() {
 
               {/* Main Content */}
               <div className="lg:w-3/4">
-                {/* Tabs */}
+                {/* Tabs - Light Theme */}
                 <Tabs value={activeTab} onValueChange={handleTabChange} className="mb-8">
                   <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
-                    <TabsList className="bg-gray-800 border-gray-700">
-                      <TabsTrigger value="trending" className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-purple-600 data-[state=active]:to-pink-600">
+                    <TabsList className="bg-gray-100 border-gray-300">
+                      <TabsTrigger 
+                        value="trending" 
+                        className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-purple-500 data-[state=active]:to-pink-500 data-[state=active]:text-white"
+                      >
                         <TrendingUp className="h-4 w-4 mr-2" />
                         Trending
                       </TabsTrigger>
-                      <TabsTrigger value="ongoing" className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-blue-600 data-[state=active]:to-cyan-600">
+                      <TabsTrigger 
+                        value="ongoing" 
+                        className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-blue-500 data-[state=active]:to-cyan-500 data-[state=active]:text-white"
+                      >
                         <PlayCircle className="h-4 w-4 mr-2" />
                         Ongoing
                       </TabsTrigger>
-                      <TabsTrigger value="complete" className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-green-600 data-[state=active]:to-emerald-600">
+                      <TabsTrigger 
+                        value="complete" 
+                        className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-green-500 data-[state=active]:to-emerald-500 data-[state=active]:text-white"
+                      >
                         <Film className="h-4 w-4 mr-2" />
                         Complete
                       </TabsTrigger>
-                      <TabsTrigger value="schedule" className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-orange-600 data-[state=active]:to-yellow-600">
+                      <TabsTrigger 
+                        value="schedule" 
+                        className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-orange-500 data-[state=active]:to-yellow-500 data-[state=active]:text-white"
+                      >
                         <Calendar className="h-4 w-4 mr-2" />
                         Schedule
                       </TabsTrigger>
@@ -1747,10 +1774,10 @@ export default function KeyAnimeListApp() {
                     <div className="flex gap-2">
                       {/* Type Filter */}
                       <Select value={selectedType} onValueChange={setSelectedType}>
-                        <SelectTrigger className="w-[140px] bg-gray-800 border-gray-700">
+                        <SelectTrigger className="w-[140px] bg-white border-gray-300">
                           <SelectValue placeholder="Filter type" />
                         </SelectTrigger>
-                        <SelectContent className="bg-gray-800 border-gray-700">
+                        <SelectContent className="bg-white border-gray-300">
                           <SelectItem value="all">All Types</SelectItem>
                           <SelectItem value="complete">Complete</SelectItem>
                           <SelectItem value="ongoing">Ongoing</SelectItem>
@@ -1759,10 +1786,10 @@ export default function KeyAnimeListApp() {
 
                       {/* Sort Options */}
                       <Select defaultValue="popular">
-                        <SelectTrigger className="w-[140px] bg-gray-800 border-gray-700">
+                        <SelectTrigger className="w-[140px] bg-white border-gray-300">
                           <SelectValue placeholder="Sort by" />
                         </SelectTrigger>
-                        <SelectContent className="bg-gray-800 border-gray-700">
+                        <SelectContent className="bg-white border-gray-300">
                           <SelectItem value="popular">Popular</SelectItem>
                           <SelectItem value="latest">Latest</SelectItem>
                           <SelectItem value="rating">Rating</SelectItem>
@@ -1777,22 +1804,22 @@ export default function KeyAnimeListApp() {
                     {loading ? (
                       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
                         {Array.from({ length: 8 }).map((_, i) => (
-                          <Card key={i} className="bg-gray-800 border-gray-700 animate-pulse">
-                            <Skeleton className="h-48 w-full rounded-t-lg" />
+                          <Card key={i} className="bg-white border-gray-200 animate-pulse">
+                            <Skeleton className="h-48 w-full rounded-t-lg bg-gray-200" />
                             <CardContent className="p-4">
-                              <Skeleton className="h-6 w-3/4 mb-2" />
-                              <Skeleton className="h-4 w-1/2" />
+                              <Skeleton className="h-6 w-3/4 mb-2 bg-gray-200" />
+                              <Skeleton className="h-4 w-1/2 bg-gray-200" />
                             </CardContent>
                           </Card>
                         ))}
                       </div>
                     ) : filteredAnime.length === 0 ? (
                       <div className="text-center py-16">
-                        <div className="inline-flex items-center justify-center w-20 h-20 rounded-full bg-gray-800 mb-6">
+                        <div className="inline-flex items-center justify-center w-20 h-20 rounded-full bg-gray-100 mb-6 border border-gray-300">
                           <Search className="h-10 w-10 text-gray-400" />
                         </div>
-                        <h3 className="text-2xl font-bold mb-2">No anime found</h3>
-                        <p className="text-gray-400 mb-6">Try adjusting your search or filter criteria</p>
+                        <h3 className="text-2xl font-bold mb-2 text-gray-900">No anime found</h3>
+                        <p className="text-gray-600 mb-6">Try adjusting your search or filter criteria</p>
                         <Button 
                           onClick={() => {
                             setSearchQuery('')
@@ -1800,7 +1827,7 @@ export default function KeyAnimeListApp() {
                             setSelectedType('all')
                             loadInitialData()
                           }}
-                          className="bg-gradient-to-r from-purple-600 to-pink-600"
+                          className="bg-gradient-to-r from-purple-500 to-pink-500 text-white hover:from-purple-600 hover:to-pink-600"
                         >
                           Reset Filters
                         </Button>
@@ -1835,13 +1862,13 @@ export default function KeyAnimeListApp() {
                 {/* Featured Anime Section */}
                 {animeList.length > 0 && activeTab === 'trending' && (
                   <div className="mt-12">
-                    <h2 className="text-2xl font-bold mb-6 flex items-center gap-2">
+                    <h2 className="text-2xl font-bold mb-6 flex items-center gap-2 text-gray-900">
                       <FaFire className="text-orange-500" />
                       Featured This Week
                     </h2>
                     <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                       {animeList.slice(0, 2).map((anime) => (
-                        <Card key={anime.slug} className="bg-gradient-to-r from-gray-800 to-gray-900 border-gray-700 overflow-hidden">
+                        <Card key={anime.slug} className="bg-gradient-to-r from-white to-gray-50 border-gray-200 shadow-md hover:shadow-lg transition-shadow overflow-hidden">
                           <div className="flex flex-col md:flex-row">
                             <div className="md:w-1/3">
                               <img
@@ -1849,27 +1876,27 @@ export default function KeyAnimeListApp() {
                                 alt={anime.judul}
                                 className="w-full h-48 md:h-full object-cover"
                                 onError={(e) => {
-                                  e.currentTarget.src = `https://via.placeholder.com/400x600/1f2937/6d7280?text=${encodeURIComponent(anime.judul.substring(0, 20))}`
+                                  e.currentTarget.src = `https://via.placeholder.com/400x600/f8fafc/e2e8f0?text=${encodeURIComponent(anime.judul.substring(0, 20))}`
                                 }}
                               />
                             </div>
                             <div className="md:w-2/3 p-6">
-                              <h3 className="text-xl font-bold mb-2">{anime.judul}</h3>
-                              <p className="text-gray-400 mb-4 line-clamp-2">
+                              <h3 className="text-xl font-bold mb-2 text-gray-900">{anime.judul}</h3>
+                              <p className="text-gray-600 mb-4 line-clamp-2">
                                 Popular anime with high ratings and great reviews
                               </p>
                               <div className="flex items-center gap-4">
-                                <Badge className="bg-gradient-to-r from-purple-600 to-pink-600">
-                                  <Star className="h-3 w-3 mr-1" />
+                                <Badge className="bg-gradient-to-r from-purple-500 to-pink-500 text-white">
+                                  <Star className="h-3 w-3 mr-1 fill-white" />
                                   {anime.rate[1] || '8.5'}
                                 </Badge>
-                                <span className="text-sm text-gray-400">
+                                <span className="text-sm text-gray-500">
                                   EP {anime.eps[0] || '12'} • {anime.type || 'TV'}
                                 </span>
                               </div>
                               <div className="flex gap-2 mt-4">
                                 <Button 
-                                  className="flex-1 bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700"
+                                  className="flex-1 bg-gradient-to-r from-purple-500 to-pink-500 text-white hover:from-purple-600 hover:to-pink-600"
                                   onClick={() => handleAnimeClick(anime)}
                                 >
                                   <PlayCircle className="h-4 w-4 mr-2" />
@@ -1877,10 +1904,11 @@ export default function KeyAnimeListApp() {
                                 </Button>
                                 <Button 
                                   variant="outline"
+                                  className="border-gray-300 hover:bg-gray-50"
                                   onClick={() => toggleWatchlist(anime.slug)}
                                 >
                                   {watchlist.includes(anime.slug) ? (
-                                    <Heart className="h-4 w-4 fill-current" />
+                                    <Heart className="h-4 w-4 fill-red-500 text-red-500" />
                                   ) : (
                                     <Heart className="h-4 w-4" />
                                   )}
@@ -1897,63 +1925,63 @@ export default function KeyAnimeListApp() {
             </div>
           </main>
 
-          {/* Footer */}
-          <footer className="bg-gray-900 border-t border-gray-800 mt-12">
+          {/* Footer - Light Theme */}
+          <footer className="bg-gray-50 border-t border-gray-200 mt-12">
             <div className="container mx-auto px-4 py-8">
               <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
                 <div>
                   <div className="flex items-center gap-3 mb-4">
-                    <div className="p-2 bg-gradient-to-r from-purple-600 to-pink-600 rounded-lg">
-                      <SiMyanimelist className="h-6 w-6" />
+                    <div className="p-2 bg-gradient-to-r from-purple-500 to-pink-500 rounded-lg shadow-sm">
+                      <SiMyanimelist className="h-6 w-6 text-white" />
                     </div>
                     <div>
-                      <h3 className="text-xl font-bold">KeyAnime</h3>
-                      <p className="text-sm text-gray-400">Your anime companion</p>
+                      <h3 className="text-xl font-bold text-gray-900">KeyAnime</h3>
+                      <p className="text-sm text-gray-600">Your anime companion</p>
                     </div>
                   </div>
-                  <p className="text-gray-400 text-sm">
+                  <p className="text-gray-600 text-sm">
                     Discover, watch, and track your favorite anime series all in one place.
                   </p>
                 </div>
                 
                 <div>
-                  <h4 className="font-semibold mb-4">Quick Links</h4>
-                  <ul className="space-y-2 text-gray-400">
-                    <li><a href="#" className="hover:text-purple-400 transition-colors">Browse Anime</a></li>
-                    <li><a href="#" className="hover:text-purple-400 transition-colors">Top Rated</a></li>
-                    <li><a href="#" className="hover:text-purple-400 transition-colors">Seasonal</a></li>
-                    <li><a href="#" className="hover:text-purple-400 transition-colors">Schedule</a></li>
+                  <h4 className="font-semibold mb-4 text-gray-900">Quick Links</h4>
+                  <ul className="space-y-2 text-gray-600">
+                    <li><a href="#" className="hover:text-purple-600 transition-colors">Browse Anime</a></li>
+                    <li><a href="#" className="hover:text-purple-600 transition-colors">Top Rated</a></li>
+                    <li><a href="#" className="hover:text-purple-600 transition-colors">Seasonal</a></li>
+                    <li><a href="#" className="hover:text-purple-600 transition-colors">Schedule</a></li>
                   </ul>
                 </div>
                 
                 <div>
-                  <h4 className="font-semibold mb-4">Community</h4>
-                  <ul className="space-y-2 text-gray-400">
-                    <li><a href="#" className="hover:text-purple-400 transition-colors">Forums</a></li>
-                    <li><a href="#" className="hover:text-purple-400 transition-colors">Reviews</a></li>
-                    <li><a href="#" className="hover:text-purple-400 transition-colors">Recommendations</a></li>
-                    <li><a href="#" className="hover:text-purple-400 transition-colors">Discord</a></li>
+                  <h4 className="font-semibold mb-4 text-gray-900">Community</h4>
+                  <ul className="space-y-2 text-gray-600">
+                    <li><a href="#" className="hover:text-purple-600 transition-colors">Forums</a></li>
+                    <li><a href="#" className="hover:text-purple-600 transition-colors">Reviews</a></li>
+                    <li><a href="#" className="hover:text-purple-600 transition-colors">Recommendations</a></li>
+                    <li><a href="#" className="hover:text-purple-600 transition-colors">Discord</a></li>
                   </ul>
                 </div>
                 
                 <div>
-                  <h4 className="font-semibold mb-4">Legal</h4>
-                  <ul className="space-y-2 text-gray-400">
-                    <li><a href="#" className="hover:text-purple-400 transition-colors">Terms of Service</a></li>
-                    <li><a href="#" className="hover:text-purple-400 transition-colors">Privacy Policy</a></li>
-                    <li><a href="#" className="hover:text-purple-400 transition-colors">DMCA</a></li>
-                    <li><a href="#" className="hover:text-purple-400 transition-colors">Contact</a></li>
+                  <h4 className="font-semibold mb-4 text-gray-900">Legal</h4>
+                  <ul className="space-y-2 text-gray-600">
+                    <li><a href="#" className="hover:text-purple-600 transition-colors">Terms of Service</a></li>
+                    <li><a href="#" className="hover:text-purple-600 transition-colors">Privacy Policy</a></li>
+                    <li><a href="#" className="hover:text-purple-600 transition-colors">DMCA</a></li>
+                    <li><a href="#" className="hover:text-purple-600 transition-colors">Contact</a></li>
                   </ul>
                 </div>
               </div>
               
-              <Separator className="my-8 bg-gray-800" />
+              <Separator className="my-8 bg-gray-300" />
               
-              <div className="text-center text-gray-400 text-sm">
+              <div className="text-center text-gray-600 text-sm">
                 <p className="mb-2">
                   © 2026 KeyAnimeList • Powered by Otakudesu API • Built with Next.js & Shadcn/ui
                 </p>
-                <p className="text-xs">
+                <p className="text-xs text-gray-500">
                   API Rate Limited to 5 Requests Per Second • All anime content belongs to their respective owners
                 </p>
               </div>
@@ -1998,29 +2026,29 @@ export default function KeyAnimeListApp() {
               <DropdownMenuTrigger asChild>
                 <Button 
                   size="icon" 
-                  className="h-12 w-12 rounded-full bg-gradient-to-r from-purple-600 to-pink-600 shadow-lg hover:shadow-xl"
+                  className="h-12 w-12 rounded-full bg-gradient-to-r from-purple-500 to-pink-500 shadow-lg hover:shadow-xl text-white"
                 >
-                  <Menu className="h-5 w-5" />
+                  <MoreVertical className="h-5 w-5" />
                 </Button>
               </DropdownMenuTrigger>
-              <DropdownMenuContent align="end" className="bg-gray-800 border-gray-700 w-48">
+              <DropdownMenuContent align="end" className="bg-white border-gray-200 w-48">
                 <DropdownMenuItem 
-                  className="cursor-pointer"
+                  className="cursor-pointer text-gray-700 hover:bg-gray-50"
                   onClick={refreshData}
                 >
                   <RefreshCw className="mr-2 h-4 w-4" />
                   <span>Refresh Data</span>
                 </DropdownMenuItem>
                 <DropdownMenuItem 
-                  className="cursor-pointer"
+                  className="cursor-pointer text-gray-700 hover:bg-gray-50"
                   onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
                 >
-                  <ChevronRight className="mr-2 h-4 w-4 rotate-90" />
+                  <ChevronUp className="mr-2 h-4 w-4" />
                   <span>Scroll to Top</span>
                 </DropdownMenuItem>
                 <DropdownMenuSeparator />
                 <DropdownMenuItem 
-                  className="cursor-pointer"
+                  className="cursor-pointer text-gray-700 hover:bg-gray-50"
                   onClick={() => {
                     if (watchlist.length > 0) {
                       const watchlistAnime = animeList.filter(a => watchlist.includes(a.slug))
