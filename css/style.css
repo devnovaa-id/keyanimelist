@@ -1723,3 +1723,48 @@ body.light-mode .hero-dot {
 body.light-mode .hero-dot.active {
     background: var(--primary-color);
 }
+
+/* Profile Page Improvements */
+.profile-card {
+    animation: fadeIn 0.5s ease;
+}
+
+.user-avatar-large {
+    animation: pulse 2s infinite;
+}
+
+.stat-item {
+    transition: all 0.3s ease;
+    border: 1px solid transparent;
+}
+
+.stat-item:hover {
+    border-color: var(--primary-color);
+    transform: translateY(-3px);
+}
+
+.setting-item:hover {
+    background: rgba(255, 255, 255, 0.1) !important;
+    border-color: var(--primary-color) !important;
+}
+
+.setting-item:active {
+    transform: scale(0.98);
+}
+
+/* Responsive adjustments for profile */
+@media (max-width: 576px) {
+    .user-avatar-large {
+        width: 60px !important;
+        height: 60px !important;
+        font-size: 1.5rem !important;
+    }
+    
+    .stat-item {
+        padding: 12px !important;
+    }
+    
+    .stat-item div:first-child {
+        font-size: 1.5rem !important;
+    }
+}

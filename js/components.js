@@ -142,14 +142,9 @@ class Components {
                     ${day.animeList?.map(anime => `
                         <div class="schedule-item" style="padding: 10px; border-bottom: 1px solid rgba(255,255,255,0.1);">
                             <a href="#/anime/${anime.animeId}" style="color: var(--light-color); text-decoration: none; display: block;">
-                                <div style="display: flex; align-items: center; gap: 10px;">
-                                    <div style="width: 40px; height: 40px; border-radius: 5px; overflow: hidden; flex-shrink: 0;">
-                                        <img src="${this.utils.getImageUrl(anime.poster)}" alt="${anime.title}" style="width: 100%; height: 100%; object-fit: cover;">
-                                    </div>
-                                    <div>
-                                        <div style="font-weight: 500; font-size: 0.9rem;">${anime.title}</div>
-                                        ${anime.time ? `<div style="font-size: 0.8rem; color: rgba(255,255,255,0.6);">${anime.time}</div>` : ''}
-                                    </div>
+                                <div>
+                                    <div style="font-weight: 500; font-size: 0.9rem; margin-bottom: 5px;">${anime.title}</div>
+                                    ${anime.time ? `<div style="font-size: 0.8rem; color: rgba(255,255,255,0.6);">${anime.time}</div>` : ''}
                                 </div>
                             </a>
                         </div>

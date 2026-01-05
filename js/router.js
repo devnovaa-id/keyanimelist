@@ -913,100 +913,131 @@ class Router {
         content.innerHTML = `
             <div class="mobile-detail-page">
                 <div class="detail-header">
+                    <button class="back-btn" onclick="window.history.back()">
+                        <i class="fas fa-arrow-left"></i>
+                    </button>
                     <h4><i class="fas fa-user"></i> Profil</h4>
                 </div>
                 
-                <div class="anime-detail-mobile">
-                    <div class="detail-poster" style="background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));">
-                        <div style="display: flex; justify-content: center; align-items: center; height: 100%;">
-                            <div class="user-avatar" style="width: 100px; height: 100px; font-size: 2.5rem;">
+                <div class="anime-detail-mobile" style="margin-top: 10px;">
+                    <!-- Profile Card -->
+                    <div class="profile-card" style="background: var(--card-bg); border-radius: var(--card-radius); padding: 20px; margin-bottom: 20px;">
+                        <div style="display: flex; align-items: center; gap: 15px; margin-bottom: 20px;">
+                            <div class="user-avatar-large" style="width: 70px; height: 70px; border-radius: 50%; background: linear-gradient(135deg, var(--primary-color), var(--secondary-color)); display: flex; align-items: center; justify-content: center; font-size: 1.8rem; color: white;">
                                 <i class="fas fa-user"></i>
+                            </div>
+                            <div>
+                                <h1 style="font-size: 1.3rem; font-weight: 600; margin-bottom: 5px;">Anime Lover</h1>
+                                <div style="display: flex; align-items: center; gap: 10px; color: rgba(255,255,255,0.7); font-size: 0.9rem;">
+                                    <span><i class="fas fa-crown" style="color: #FFD700;"></i> Premium</span>
+                                    <span><i class="fas fa-calendar"></i> Bergabung 2026</span>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Stats Section -->
+                        <div class="stats-section" style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 20px;">
+                            <div class="stat-item" style="background: rgba(255,255,255,0.05); border-radius: 10px; padding: 15px; text-align: center;">
+                                <div style="font-size: 1.8rem; color: var(--primary-color); font-weight: 600;">${favorites.length}</div>
+                                <div style="font-size: 0.85rem; color: rgba(255,255,255,0.7);">Favorit</div>
+                            </div>
+                            <div class="stat-item" style="background: rgba(255,255,255,0.05); border-radius: 10px; padding: 15px; text-align: center;">
+                                <div style="font-size: 1.8rem; color: var(--accent-color); font-weight: 600;">${history.length}</div>
+                                <div style="font-size: 0.85rem; color: rgba(255,255,255,0.7);">Ditonton</div>
                             </div>
                         </div>
                     </div>
                     
-                    <div class="detail-info">
-                        <h1 class="detail-title">Anime Lover</h1>
-                        
-                        <div class="detail-meta">
-                            <span><i class="fas fa-crown"></i> Premium Member</span>
-                            <span><i class="fas fa-calendar"></i> Bergabung 2024</span>
+                    <!-- Quick Actions -->
+                    <div class="quick-actions" style="background: var(--card-bg); border-radius: var(--card-radius); padding: 20px; margin-bottom: 20px;">
+                        <h5 style="font-size: 1rem; color: var(--primary-color); margin-bottom: 15px; display: flex; align-items: center; gap: 10px;">
+                            <i class="fas fa-bolt"></i> Aksi Cepat
+                        </h5>
+                        <div style="display: flex; gap: 10px; flex-wrap: wrap;">
+                            <button class="card-btn watch" onclick="router.navigateTo('/favorites')" style="flex: 1; min-width: 120px;">
+                                <i class="fas fa-heart"></i> Favorit
+                            </button>
+                            <button class="card-btn detail" onclick="router.navigateTo('/history')" style="flex: 1; min-width: 120px;">
+                                <i class="fas fa-history"></i> Riwayat
+                            </button>
                         </div>
+                    </div>
+                    
+                    <!-- Settings Section -->
+                    <div class="settings-section" style="background: var(--card-bg); border-radius: var(--card-radius); padding: 20px; margin-bottom: 20px;">
+                        <h5 style="font-size: 1rem; color: var(--primary-color); margin-bottom: 15px; display: flex; align-items: center; gap: 10px;">
+                            <i class="fas fa-cog"></i> Pengaturan
+                        </h5>
                         
-                        <div class="stats-grid" style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin: 20px 0;">
-                            <div class="stat-card" style="background: rgba(255, 255, 255, 0.05); padding: 15px; border-radius: 10px; text-align: center;">
-                                <div style="font-size: 1.5rem; color: var(--primary-color);">
-                                    <i class="fas fa-heart"></i>
-                                </div>
-                                <div style="font-size: 1.8rem; font-weight: bold; margin: 5px 0;">${favorites.length}</div>
-                                <div style="font-size: 0.8rem; opacity: 0.7;">Favorit</div>
-                            </div>
-                            <div class="stat-card" style="background: rgba(255, 255, 255, 0.05); padding: 15px; border-radius: 10px; text-align: center;">
-                                <div style="font-size: 1.5rem; color: var(--accent-color);">
-                                    <i class="fas fa-history"></i>
-                                </div>
-                                <div style="font-size: 1.8rem; font-weight: bold; margin: 5px 0;">${history.length}</div>
-                                <div style="font-size: 0.8rem; opacity: 0.7;">Ditonton</div>
-                            </div>
-                        </div>
-                        
-                        <div class="detail-synopsis">
-                            <h6>Pengaturan</h6>
-                            <div class="settings-list">
-                                <button class="episode-card" onclick="utils.toggleTheme()">
-                                    <div class="episode-number">
+                        <div class="settings-list" style="display: flex; flex-direction: column; gap: 10px;">
+                            <button class="setting-item" onclick="utils.toggleTheme()" style="background: rgba(255,255,255,0.05); border: 1px solid var(--card-border); border-radius: 10px; padding: 15px; display: flex; align-items: center; justify-content: space-between; width: 100%; color: var(--light-color); transition: all 0.3s ease;">
+                                <div style="display: flex; align-items: center; gap: 12px;">
+                                    <div style="width: 36px; height: 36px; border-radius: 8px; background: var(--primary-color); display: flex; align-items: center; justify-content: center;">
                                         <i class="fas fa-${utils.theme === 'dark' ? 'moon' : 'sun'}"></i>
                                     </div>
-                                    <div class="episode-info">
-                                        <div class="episode-title">Tema ${utils.theme === 'dark' ? 'Gelap' : 'Terang'}</div>
-                                        <div class="episode-date">Ubah tampilan aplikasi</div>
+                                    <div style="text-align: left;">
+                                        <div style="font-weight: 500; font-size: 0.95rem;">Tema ${utils.theme === 'dark' ? 'Gelap' : 'Terang'}</div>
+                                        <div style="font-size: 0.8rem; color: rgba(255,255,255,0.6);">Ubah tampilan aplikasi</div>
                                     </div>
-                                    <div class="episode-play">
-                                        <i class="fas fa-toggle-${utils.theme === 'dark' ? 'on' : 'off'}"></i>
-                                    </div>
-                                </button>
-                                
-                                <button class="episode-card" onclick="api.clearCache(); utils.showToast('Cache dibersihkan', 'success')">
-                                    <div class="episode-number">
+                                </div>
+                                <i class="fas fa-chevron-right" style="color: rgba(255,255,255,0.5);"></i>
+                            </button>
+                            
+                            <button class="setting-item" onclick="api.clearCache(); utils.showToast('Cache dibersihkan', 'success')" style="background: rgba(255,255,255,0.05); border: 1px solid var(--card-border); border-radius: 10px; padding: 15px; display: flex; align-items: center; justify-content: space-between; width: 100%; color: var(--light-color); transition: all 0.3s ease;">
+                                <div style="display: flex; align-items: center; gap: 12px;">
+                                    <div style="width: 36px; height: 36px; border-radius: 8px; background: var(--accent-color); display: flex; align-items: center; justify-content: center;">
                                         <i class="fas fa-broom"></i>
                                     </div>
-                                    <div class="episode-info">
-                                        <div class="episode-title">Bersihkan Cache</div>
-                                        <div class="episode-date">Hapus data sementara</div>
+                                    <div style="text-align: left;">
+                                        <div style="font-weight: 500; font-size: 0.95rem;">Bersihkan Cache</div>
+                                        <div style="font-size: 0.8rem; color: rgba(255,255,255,0.6);">Hapus data sementara</div>
                                     </div>
-                                    <div class="episode-play">
-                                        <i class="fas fa-chevron-right"></i>
-                                    </div>
-                                </button>
-                                
-                                <button class="episode-card" onclick="if(confirm('Hapus semua data aplikasi?')){localStorage.clear(); location.reload();}">
-                                    <div class="episode-number">
+                                </div>
+                                <i class="fas fa-chevron-right" style="color: rgba(255,255,255,0.5);"></i>
+                            </button>
+                            
+                            <button class="setting-item" onclick="if(confirm('Hapus semua data aplikasi? (favorit, riwayat, dll)')){localStorage.clear(); location.reload();}" style="background: rgba(255,255,255,0.05); border: 1px solid var(--card-border); border-radius: 10px; padding: 15px; display: flex; align-items: center; justify-content: space-between; width: 100%; color: var(--light-color); transition: all 0.3s ease;">
+                                <div style="display: flex; align-items: center; gap: 12px;">
+                                    <div style="width: 36px; height: 36px; border-radius: 8px; background: #ff4757; display: flex; align-items: center; justify-content: center;">
                                         <i class="fas fa-trash"></i>
                                     </div>
-                                    <div class="episode-info">
-                                        <div class="episode-title">Reset Aplikasi</div>
-                                        <div class="episode-date">Hapus semua data lokal</div>
+                                    <div style="text-align: left;">
+                                        <div style="font-weight: 500; font-size: 0.95rem;">Reset Aplikasi</div>
+                                        <div style="font-size: 0.8rem; color: rgba(255,255,255,0.6);">Hapus semua data lokal</div>
                                     </div>
-                                    <div class="episode-play">
-                                        <i class="fas fa-chevron-right"></i>
-                                    </div>
-                                </button>
-                            </div>
+                                </div>
+                                <i class="fas fa-chevron-right" style="color: rgba(255,255,255,0.5);"></i>
+                            </button>
                         </div>
-                        
-                        <div class="developer-info" style="margin-top: 30px; padding-top: 20px; border-top: 1px solid rgba(255,255,255,0.1); text-align: center;">
-                            <div style="color: var(--accent-color); margin-bottom: 5px;">
-                                <i class="fas fa-code"></i>
-                                <span>this.key@devnova.icu</span>
-                            </div>
-                            <div style="font-size: 0.8rem; color: rgba(255,255,255,0.5);">
-                                KeyAnime v2.0 • Made with <i class="fas fa-heart" style="color: var(--primary-color);"></i>
-                            </div>
+                    </div>
+                    
+                    <!-- Developer Info -->
+                    <div class="developer-info" style="background: var(--card-bg); border-radius: var(--card-radius); padding: 20px; text-align: center;">
+                        <div style="color: var(--accent-color); margin-bottom: 10px; display: flex; align-items: center; justify-content: center; gap: 10px; font-size: 0.95rem;">
+                            <i class="fas fa-code"></i>
+                            <span>this.key@devnova.icu</span>
+                        </div>
+                        <div style="font-size: 0.85rem; color: rgba(255,255,255,0.5);">
+                            KeyAnime v2.0 • Made with <i class="fas fa-heart" style="color: var(--primary-color);"></i> for Anime Lovers
                         </div>
                     </div>
                 </div>
             </div>
         `;
+        
+        // Add hover effects for setting items
+        setTimeout(() => {
+            document.querySelectorAll('.setting-item').forEach(item => {
+                item.addEventListener('mouseenter', () => {
+                    item.style.transform = 'translateX(5px)';
+                    item.style.background = 'rgba(255,255,255,0.08)';
+                });
+                item.addEventListener('mouseleave', () => {
+                    item.style.transform = 'translateX(0)';
+                    item.style.background = 'rgba(255,255,255,0.05)';
+                });
+            });
+        }, 100);
     }
 
     // Video player loading
