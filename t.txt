@@ -1,0 +1,1666 @@
+index.html
+
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>KeyAnimeList - Temukan Anime Favoritmu</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="css/responsive.css">
+    <link rel="icon" href="assets/favicon.ico" type="image/x-icon">
+</head>
+<body>
+    <!-- Loading Overlay -->
+    <div id="loading-overlay">
+        <div class="spinner-border text-primary" role="status">
+            <span class="visually-hidden">Loading...</span>
+        </div>
+        <p class="mt-3">Memuat...</p>
+    </div>
+
+    <!-- Navigation -->
+    <nav class="navbar navbar-expand-lg navbar-dark fixed-top">
+        <div class="container">
+            <a class="navbar-brand" href="#/">
+                <i class="fas fa-key"></i> KeyAnimeList
+            </a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav me-auto">
+                    <li class="nav-item">
+                        <a class="nav-link" href="#/ongoing">
+                            <i class="fas fa-play-circle"></i> Ongoing
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="#/complete">
+                            <i class="fas fa-check-circle"></i> Complete
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="#/genre">
+                            <i class="fas fa-tags"></i> Genre
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="#/schedule">
+                            <i class="fas fa-calendar-alt"></i> Jadwal
+                        </a>
+                    </li>
+                </ul>
+                <form class="d-flex search-form" id="search-form">
+                    <div class="input-group">
+                        <input type="text" class="form-control" id="search-input" placeholder="Cari anime...">
+                        <button class="btn btn-primary" type="submit">
+                            <i class="fas fa-search"></i>
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <main class="container mt-5 pt-4" id="app-content">
+        <!-- Content will be loaded here dynamically -->
+    </main>
+
+    <!-- Footer -->
+    <footer class="footer mt-5">
+        <div class="container">
+            <div class="row">
+                <div class="col-md-6">
+                    <h5><i class="fas fa-key"></i> KeyAnimeList</h5>
+                    <p>Temukan dan nikmati anime favoritmu dengan mudah dan cepat.</p>
+                </div>
+                <div class="col-md-6 text-md-end">
+                    <p>&copy; 2026 KeyAnimeList. All rights reserved.</p>
+                    <p>Powered by <a href="https://api.ryzumi.vip" target="_blank">Ryzumi API</a></p>
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Scripts -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="js/utils.js"></script>
+    <script src="js/api.js"></script>
+    <script src="js/components.js"></script>
+    <script src="js/router.js"></script>
+    <script src="js/app.js"></script>
+</body>
+</html>
+
+css/style.css
+
+:root {
+    --primary-color: #3498db;
+    --secondary-color: #2c3e50;
+    --accent-color: #e74c3c;
+    --light-color: #ecf0f1;
+    --dark-color: #1a1a2e;
+    --success-color: #2ecc71;
+    --warning-color: #f39c12;
+}
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+    color: var(--light-color);
+    min-height: 100vh;
+    padding-top: 70px;
+}
+
+/* Navigation */
+.navbar {
+    background: linear-gradient(135deg, var(--secondary-color) 0%, var(--dark-color) 100%);
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+    padding: 15px 0;
+    transition: all 0.3s ease;
+}
+
+.navbar-brand {
+    font-size: 1.8rem;
+    font-weight: bold;
+    color: var(--primary-color) !important;
+}
+
+.navbar-brand i {
+    margin-right: 10px;
+}
+
+.nav-link {
+    color: var(--light-color) !important;
+    font-weight: 500;
+    transition: color 0.3s ease;
+    margin: 0 5px;
+    padding: 10px 15px !important;
+    border-radius: 8px;
+}
+
+.nav-link:hover {
+    color: var(--primary-color) !important;
+    background: rgba(52, 152, 219, 0.1);
+}
+
+.search-form {
+    width: 300px;
+}
+
+/* Main Content */
+main {
+    animation: fadeIn 0.5s ease;
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* Anime Cards */
+.anime-card {
+    background: linear-gradient(145deg, rgba(255, 255, 255, 0.1), rgba(255, 255, 255, 0.05));
+    border-radius: 15px;
+    overflow: hidden;
+    transition: all 0.3s ease;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    height: 100%;
+}
+
+.anime-card:hover {
+    transform: translateY(-10px);
+    box-shadow: 0 15px 30px rgba(0, 0, 0, 0.4);
+    border-color: var(--primary-color);
+}
+
+.card-img-top {
+    height: 300px;
+    object-fit: cover;
+    width: 100%;
+    transition: transform 0.5s ease;
+}
+
+.anime-card:hover .card-img-top {
+    transform: scale(1.05);
+}
+
+.card-body {
+    padding: 20px;
+}
+
+.card-title {
+    font-size: 1.1rem;
+    font-weight: 600;
+    color: var(--light-color);
+    margin-bottom: 10px;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+}
+
+.anime-meta {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: 15px;
+}
+
+.episode-badge, .rating-badge {
+    padding: 5px 10px;
+    border-radius: 20px;
+    font-size: 0.85rem;
+    font-weight: 500;
+}
+
+.episode-badge {
+    background: var(--primary-color);
+    color: white;
+}
+
+.rating-badge {
+    background: var(--warning-color);
+    color: var(--dark-color);
+}
+
+/* Genre Tags */
+.genre-tag {
+    display: inline-block;
+    padding: 5px 15px;
+    margin: 5px;
+    background: rgba(52, 152, 219, 0.2);
+    border: 1px solid var(--primary-color);
+    border-radius: 20px;
+    color: var(--light-color);
+    font-size: 0.9rem;
+    transition: all 0.3s ease;
+    cursor: pointer;
+}
+
+.genre-tag:hover {
+    background: var(--primary-color);
+    transform: scale(1.05);
+}
+
+/* Loading Overlay */
+#loading-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(26, 26, 46, 0.95);
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    z-index: 9999;
+    transition: opacity 0.3s ease;
+}
+
+#loading-overlay .spinner-border {
+    width: 4rem;
+    height: 4rem;
+}
+
+/* Pagination */
+.pagination {
+    justify-content: center;
+    margin-top: 30px;
+}
+
+.page-link {
+    background: rgba(255, 255, 255, 0.1);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    color: var(--light-color);
+    margin: 0 5px;
+    border-radius: 8px !important;
+}
+
+.page-link:hover {
+    background: var(--primary-color);
+    border-color: var(--primary-color);
+    color: white;
+}
+
+.page-item.active .page-link {
+    background: var(--primary-color);
+    border-color: var(--primary-color);
+}
+
+/* Detail Page */
+.anime-detail {
+    background: linear-gradient(145deg, rgba(255, 255, 255, 0.1), rgba(255, 255, 255, 0.05));
+    border-radius: 15px;
+    padding: 30px;
+    margin-bottom: 30px;
+}
+
+.anime-poster {
+    border-radius: 10px;
+    overflow: hidden;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+}
+
+.anime-info {
+    padding: 20px;
+}
+
+.info-item {
+    margin-bottom: 15px;
+    padding-bottom: 15px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.info-label {
+    font-weight: 600;
+    color: var(--primary-color);
+    margin-right: 10px;
+}
+
+/* Episode List */
+.episode-list {
+    max-height: 500px;
+    overflow-y: auto;
+}
+
+.episode-item {
+    background: rgba(255, 255, 255, 0.05);
+    border-radius: 10px;
+    padding: 15px;
+    margin-bottom: 10px;
+    transition: all 0.3s ease;
+    border: 1px solid transparent;
+}
+
+.episode-item:hover {
+    background: rgba(52, 152, 219, 0.1);
+    border-color: var(--primary-color);
+    transform: translateX(5px);
+}
+
+/* Watch Page */
+.video-container {
+    background: #000;
+    border-radius: 10px;
+    overflow: hidden;
+    position: relative;
+    padding-bottom: 56.25%;
+    height: 0;
+}
+
+.video-container iframe {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    border: none;
+}
+
+.quality-selector {
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 10px;
+    padding: 20px;
+    margin-top: 20px;
+}
+
+.quality-btn {
+    margin: 5px;
+    padding: 10px 20px;
+    border: 2px solid var(--primary-color);
+    background: transparent;
+    color: var(--light-color);
+    border-radius: 8px;
+    transition: all 0.3s ease;
+}
+
+.quality-btn:hover, .quality-btn.active {
+    background: var(--primary-color);
+    color: white;
+}
+
+/* Footer */
+.footer {
+    background: var(--dark-color);
+    padding: 40px 0;
+    margin-top: 50px;
+    border-top: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+/* Scrollbar Styling */
+::-webkit-scrollbar {
+    width: 10px;
+}
+
+::-webkit-scrollbar-track {
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 10px;
+}
+
+::-webkit-scrollbar-thumb {
+    background: var(--primary-color);
+    border-radius: 10px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: #2980b9;
+}
+
+/* Responsive Adjustments */
+@media (max-width: 768px) {
+    .navbar-collapse {
+        background: var(--dark-color);
+        padding: 20px;
+        border-radius: 10px;
+        margin-top: 10px;
+    }
+    
+    .search-form {
+        width: 100%;
+        margin-top: 15px;
+    }
+    
+    .card-img-top {
+        height: 250px;
+    }
+}
+
+css/responsive.css
+
+/* Extra small devices (phones, 576px and down) */
+@media (max-width: 576px) {
+    body {
+        padding-top: 60px;
+    }
+    
+    .navbar-brand {
+        font-size: 1.4rem;
+    }
+    
+    .card-img-top {
+        height: 200px;
+    }
+    
+    .anime-card {
+        margin-bottom: 20px;
+    }
+    
+    .anime-detail {
+        padding: 15px;
+    }
+    
+    .video-container {
+        margin-bottom: 20px;
+    }
+    
+    .quality-selector .btn-group {
+        flex-wrap: wrap;
+        justify-content: center;
+    }
+    
+    .quality-btn {
+        margin: 3px;
+        padding: 8px 15px;
+        font-size: 0.9rem;
+    }
+}
+
+/* Small devices (landscape phones, 576px and up) */
+@media (min-width: 576px) and (max-width: 768px) {
+    .card-img-top {
+        height: 250px;
+    }
+    
+    .anime-card .card-title {
+        font-size: 1rem;
+    }
+}
+
+/* Medium devices (tablets, 768px and up) */
+@media (min-width: 768px) and (max-width: 992px) {
+    .card-img-top {
+        height: 280px;
+    }
+}
+
+/* Large devices (desktops, 992px and up) */
+@media (min-width: 992px) and (max-width: 1200px) {
+    .container {
+        max-width: 960px;
+    }
+}
+
+/* Extra large devices (large desktops, 1200px and up) */
+@media (min-width: 1200px) {
+    .container {
+        max-width: 1140px;
+    }
+}
+
+/* Print styles */
+@media print {
+    .navbar, .footer, .search-form, .pagination {
+        display: none;
+    }
+    
+    body {
+        background: white;
+        color: black;
+        padding-top: 0;
+    }
+    
+    .anime-card {
+        break-inside: avoid;
+        box-shadow: none;
+        border: 1px solid #ddd;
+    }
+}
+
+/* Dark mode adjustments */
+@media (prefers-color-scheme: dark) {
+    :root {
+        --light-color: #f8f9fa;
+        --dark-color: #121212;
+    }
+}
+
+/* High contrast mode */
+@media (prefers-contrast: high) {
+    :root {
+        --primary-color: #0066cc;
+        --secondary-color: #004080;
+    }
+    
+    .anime-card {
+        border: 2px solid var(--primary-color);
+    }
+}
+
+/* Reduced motion */
+@media (prefers-reduced-motion: reduce) {
+    * {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+    }
+    
+    .anime-card:hover {
+        transform: none;
+    }
+}
+
+js/api.js
+
+class AnimeAPI {
+    constructor() {
+        this.baseURL = 'https://api.ryzumi.vip/api/otakudesu';
+        this.cache = new Map();
+        this.cacheDuration = 5 * 60 * 1000; // 5 minutes cache
+    }
+
+    async request(endpoint, options = {}) {
+        const cacheKey = endpoint + JSON.stringify(options);
+        const cached = this.cache.get(cacheKey);
+        
+        if (cached && Date.now() - cached.timestamp < this.cacheDuration) {
+            return cached.data;
+        }
+
+        try {
+            const response = await fetch(`${this.baseURL}${endpoint}`, {
+                ...options,
+                headers: {
+                    'accept': 'application/json',
+                    ...options.headers
+                }
+            });
+
+            if (!response.ok) {
+                throw new Error(`API Error: ${response.status}`);
+            }
+
+            const data = await response.json();
+            
+            // Cache the response
+            this.cache.set(cacheKey, {
+                data,
+                timestamp: Date.now()
+            });
+
+            return data;
+        } catch (error) {
+            console.error('API Request Failed:', error);
+            throw error;
+        }
+    }
+
+    // Get anime list with pagination and filtering
+    async getAnimeList(type = 'complete', page = 1, genre = '', search = '') {
+        let endpoint = `/anime?type=${type}&page=${page}`;
+        
+        if (genre) {
+            endpoint += `&genre=${genre}`;
+        }
+        
+        if (search) {
+            endpoint = `/anime?type=${type}&search=${encodeURIComponent(search)}&page=${page}`;
+        }
+        
+        return this.request(endpoint);
+    }
+
+    // Get all genres
+    async getGenres() {
+        return this.request('/genre');
+    }
+
+    // Get anime detail by slug
+    async getAnimeDetail(slug) {
+        return this.request(`/anime-info?slug=${slug}`);
+    }
+
+    // Get episode information
+    async getEpisode(slug) {
+        return this.request(`/anime/episode?slug=${slug}`);
+    }
+
+    // Get streaming iframe
+    async getIframe(content, nonce) {
+        return this.request(`/get-iframe?content=${content}&nonce=${nonce}`);
+    }
+
+    // Get nonce for iframe
+    async getNonce() {
+        return this.request('/nonce');
+    }
+
+    // Get anime schedule
+    async getSchedule() {
+        return this.request('/jadwal');
+    }
+
+    // Get batch download links
+    async getBatchDownload(slug) {
+        return this.request(`/download/batch?slug=${slug}`);
+    }
+
+    // Search anime
+    async searchAnime(query, type = 'complete') {
+        return this.request(`/anime?type=${type}&search=${encodeURIComponent(query)}`);
+    }
+
+    // Clear cache
+    clearCache() {
+        this.cache.clear();
+    }
+
+    // Get cached data
+    getFromCache(key) {
+        const cached = this.cache.get(key);
+        if (cached && Date.now() - cached.timestamp < this.cacheDuration) {
+            return cached.data;
+        }
+        return null;
+    }
+}
+
+const api = new AnimeAPI();
+
+js/app.js
+
+// Initialize the application
+document.addEventListener('DOMContentLoaded', async () => {
+    // Initialize router
+    await setupRoutes();
+    
+    // Setup search functionality
+    setupSearch();
+    
+    // Setup image lazy loading
+    Utils.lazyLoadImages();
+});
+
+async function setupRoutes() {
+    // Home page
+    router.addRoute('/', async () => {
+        Utils.updatePageTitle('Beranda');
+        const content = document.getElementById('app-content');
+        content.innerHTML = `
+            <div class="home-page">
+                <div class="hero-section text-center mb-5">
+                    <h1 class="display-4 mb-3">Selamat Datang di KeyAnimeList</h1>
+                    <p class="lead">Temukan dan nikmati anime favoritmu dengan mudah</p>
+                </div>
+                
+                <div class="row mb-5">
+                    <div class="col-md-4 mb-3">
+                        <a href="#/ongoing" class="feature-card card text-center h-100">
+                            <div class="card-body">
+                                <i class="fas fa-play-circle fa-3x text-primary mb-3"></i>
+                                <h3>Ongoing Anime</h3>
+                                <p>Anime yang sedang tayang</p>
+                            </div>
+                        </a>
+                    </div>
+                    <div class="col-md-4 mb-3">
+                        <a href="#/complete" class="feature-card card text-center h-100">
+                            <div class="card-body">
+                                <i class="fas fa-check-circle fa-3x text-success mb-3"></i>
+                                <h3>Complete Anime</h3>
+                                <p>Anime yang sudah selesai</p>
+                            </div>
+                        </a>
+                    </div>
+                    <div class="col-md-4 mb-3">
+                        <a href="#/schedule" class="feature-card card text-center h-100">
+                            <div class="card-body">
+                                <i class="fas fa-calendar-alt fa-3x text-warning mb-3"></i>
+                                <h3>Jadwal Tayang</h3>
+                                <p>Jadwal anime per hari</p>
+                            </div>
+                        </a>
+                    </div>
+                </div>
+                
+                <div class="trending-anime">
+                    <h2 class="mb-4"><i class="fas fa-fire"></i> Trending Anime</h2>
+                    <div class="row" id="trending-list"></div>
+                </div>
+            </div>
+        `;
+        
+        // Load trending anime
+        try {
+            const trending = await api.getAnimeList('complete', 1);
+            const trendingList = document.getElementById('trending-list');
+            trendingList.innerHTML = trending.slice(0, 8).map(anime => 
+                Components.createAnimeCard(anime)
+            ).join('');
+        } catch (error) {
+            console.error('Failed to load trending anime:', error);
+        }
+    });
+
+    // Ongoing anime page
+    router.addRoute('/ongoing', async (params) => {
+        const page = params.page || 1;
+        const genre = params.genre || '';
+        Utils.updatePageTitle('Ongoing Anime');
+        
+        const content = document.getElementById('app-content');
+        content.innerHTML = `
+            <div class="ongoing-page">
+                <div class="d-flex justify-content-between align-items-center mb-4">
+                    <h1><i class="fas fa-play-circle"></i> Ongoing Anime</h1>
+                    <div class="genre-filter">
+                        ${genre ? `
+                            <a href="#/ongoing" class="btn btn-outline-primary btn-sm">
+                                <i class="fas fa-times"></i> Clear Filter
+                            </a>
+                        ` : ''}
+                    </div>
+                </div>
+                
+                <div class="row" id="ongoing-list"></div>
+                <div id="ongoing-pagination"></div>
+            </div>
+        `;
+        
+        try {
+            const data = await api.getAnimeList('ongoing', page, genre);
+            const listElement = document.getElementById('ongoing-list');
+            const paginationElement = document.getElementById('ongoing-pagination');
+            
+            if (data && data.length > 0) {
+                listElement.innerHTML = data.map(anime => 
+                    Components.createAnimeCard(anime)
+                ).join('');
+                
+                // Simple pagination (assuming 15 items per page)
+                const totalPages = Math.ceil(data.length / 15) + 1;
+                paginationElement.innerHTML = Components.createPagination(
+                    parseInt(page),
+                    totalPages,
+                    `#/ongoing${genre ? `?genre=${genre}` : ''}`
+                );
+            } else {
+                listElement.innerHTML = `
+                    <div class="col-12 text-center py-5">
+                        <i class="fas fa-film fa-3x text-muted mb-3"></i>
+                        <h3>Tidak ada anime ditemukan</h3>
+                    </div>
+                `;
+            }
+        } catch (error) {
+            console.error('Failed to load ongoing anime:', error);
+            content.innerHTML = `
+                <div class="text-center py-5">
+                    <i class="fas fa-exclamation-triangle fa-3x text-danger mb-3"></i>
+                    <h3>Gagal memuat data</h3>
+                    <p>${error.message}</p>
+                </div>
+            `;
+        }
+    });
+
+    // Complete anime page
+    router.addRoute('/complete', async (params) => {
+        const page = params.page || 1;
+        const genre = params.genre || '';
+        Utils.updatePageTitle('Complete Anime');
+        
+        const content = document.getElementById('app-content');
+        content.innerHTML = `
+            <div class="complete-page">
+                <div class="d-flex justify-content-between align-items-center mb-4">
+                    <h1><i class="fas fa-check-circle"></i> Complete Anime</h1>
+                    <div class="genre-filter">
+                        ${genre ? `
+                            <a href="#/complete" class="btn btn-outline-primary btn-sm">
+                                <i class="fas fa-times"></i> Clear Filter
+                            </a>
+                        ` : ''}
+                    </div>
+                </div>
+                
+                <div class="row" id="complete-list"></div>
+                <div id="complete-pagination"></div>
+            </div>
+        `;
+        
+        try {
+            const data = await api.getAnimeList('complete', page, genre);
+            const listElement = document.getElementById('complete-list');
+            const paginationElement = document.getElementById('complete-pagination');
+            
+            if (data && data.length > 0) {
+                listElement.innerHTML = data.map(anime => 
+                    Components.createAnimeCard(anime)
+                ).join('');
+                
+                const totalPages = Math.ceil(data.length / 15) + 1;
+                paginationElement.innerHTML = Components.createPagination(
+                    parseInt(page),
+                    totalPages,
+                    `#/complete${genre ? `?genre=${genre}` : ''}`
+                );
+            } else {
+                listElement.innerHTML = `
+                    <div class="col-12 text-center py-5">
+                        <i class="fas fa-film fa-3x text-muted mb-3"></i>
+                        <h3>Tidak ada anime ditemukan</h3>
+                    </div>
+                `;
+            }
+        } catch (error) {
+            console.error('Failed to load complete anime:', error);
+            content.innerHTML = `
+                <div class="text-center py-5">
+                    <i class="fas fa-exclamation-triangle fa-3x text-danger mb-3"></i>
+                    <h3>Gagal memuat data</h3>
+                    <p>${error.message}</p>
+                </div>
+            `;
+        }
+    });
+
+    // Genre page
+    router.addRoute('/genre', async () => {
+        Utils.updatePageTitle('Genre Anime');
+        
+        const content = document.getElementById('app-content');
+        content.innerHTML = `
+            <div class="genre-page">
+                <h1 class="mb-4"><i class="fas fa-tags"></i> Genre Anime</h1>
+                <div class="genre-list mb-5" id="genre-list"></div>
+                
+                <h3 class="mb-4"><i class="fas fa-star"></i> Popular Anime by Genre</h3>
+                <div class="row" id="popular-by-genre"></div>
+            </div>
+        `;
+        
+        try {
+            const genres = await api.getGenres();
+            const genreList = document.getElementById('genre-list');
+            genreList.innerHTML = Components.createGenreTags(genres);
+            
+            // Load popular anime from first genre
+            if (genres.length > 0) {
+                const popularAnime = await api.getAnimeList('complete', 1, genres[0].slug);
+                const popularList = document.getElementById('popular-by-genre');
+                popularList.innerHTML = popularAnime.slice(0, 6).map(anime => 
+                    Components.createAnimeCard(anime)
+                ).join('');
+            }
+        } catch (error) {
+            console.error('Failed to load genres:', error);
+        }
+    });
+
+    // Schedule page
+    router.addRoute('/schedule', async () => {
+        Utils.updatePageTitle('Jadwal Anime');
+        
+        const content = document.getElementById('app-content');
+        content.innerHTML = `
+            <div class="schedule-page">
+                <h1 class="mb-4"><i class="fas fa-calendar-alt"></i> Jadwal Tayang Anime</h1>
+                <div class="row" id="schedule-list"></div>
+            </div>
+        `;
+        
+        try {
+            const schedule = await api.getSchedule();
+            const scheduleList = document.getElementById('schedule-list');
+            scheduleList.innerHTML = schedule.map(day => 
+                Components.createScheduleDay(day)
+            ).join('');
+        } catch (error) {
+            console.error('Failed to load schedule:', error);
+        }
+    });
+
+    // Search page
+    router.addRoute('/search', async (params) => {
+        const query = params.query || '';
+        Utils.updatePageTitle(`Pencarian: ${query}`);
+        
+        const content = document.getElementById('app-content');
+        content.innerHTML = `
+            <div class="search-page">
+                <h1 class="mb-4">
+                    <i class="fas fa-search"></i> Hasil Pencarian: "${query}"
+                </h1>
+                <div class="row" id="search-results"></div>
+                <div id="search-pagination"></div>
+            </div>
+        `;
+        
+        try {
+            const results = await api.searchAnime(query);
+            const resultsList = document.getElementById('search-results');
+            
+            if (results && results.length > 0) {
+                resultsList.innerHTML = results.map(anime => 
+                    Components.createAnimeCard(anime)
+                ).join('');
+            } else {
+                resultsList.innerHTML = `
+                    <div class="col-12 text-center py-5">
+                        <i class="fas fa-search fa-3x text-muted mb-3"></i>
+                        <h3>Tidak ada hasil ditemukan</h3>
+                        <p>Coba kata kunci yang berbeda</p>
+                    </div>
+                `;
+            }
+        } catch (error) {
+            console.error('Search failed:', error);
+        }
+    });
+
+    // Detail page
+    router.addRoute('/detail/:slug', async (params) => {
+        Utils.updatePageTitle('Detail Anime');
+        
+        const content = document.getElementById('app-content');
+        content.innerHTML = `
+            <div class="detail-page">
+                <div id="anime-detail"></div>
+                <div id="episode-list"></div>
+                <div id="download-section" class="mt-5"></div>
+            </div>
+        `;
+        
+        try {
+            const detail = await api.getAnimeDetail(params.slug);
+            const detailElement = document.getElementById('anime-detail');
+            
+            // Parse anime info
+            const info = Utils.parseAnimeInfo(detail.nama + '\n' + detail.namaJapan);
+            
+            detailElement.innerHTML = `
+                <div class="anime-detail">
+                    <div class="row">
+                        <div class="col-md-4 mb-4">
+                            <img src="${detail.gambar}" 
+                                 class="img-fluid anime-poster" 
+                                 alt="${detail.judul}"
+                                 loading="lazy">
+                        </div>
+                        <div class="col-md-8">
+                            <h1 class="mb-3">${detail.judul}</h1>
+                            <div class="anime-info">
+                                ${detail.skor ? `
+                                    <div class="info-item">
+                                        <span class="info-label">Rating:</span>
+                                        <span class="badge bg-warning">${detail.skor}</span>
+                                    </div>
+                                ` : ''}
+                                
+                                ${info.judul ? `
+                                    <div class="info-item">
+                                        <span class="info-label">Judul:</span>
+                                        <span>${info.judul}</span>
+                                    </div>
+                                ` : ''}
+                                
+                                ${info.japanese ? `
+                                    <div class="info-item">
+                                        <span class="info-label">Japanese:</span>
+                                        <span>${info.japanese}</span>
+                                    </div>
+                                ` : ''}
+                                
+                                ${detail.tipe ? `
+                                    <div class="info-item">
+                                        <span class="info-label">Tipe:</span>
+                                        <span>${detail.tipe}</span>
+                                    </div>
+                                ` : ''}
+                                
+                                ${detail.status ? `
+                                    <div class="info-item">
+                                        <span class="info-label">Status:</span>
+                                        <span>${detail.status}</span>
+                                    </div>
+                                ` : ''}
+                                
+                                ${detail.totalEpisode ? `
+                                    <div class="info-item">
+                                        <span class="info-label">Total Episode:</span>
+                                        <span>${detail.totalEpisode}</span>
+                                    </div>
+                                ` : ''}
+                                
+                                ${detail.durasi ? `
+                                    <div class="info-item">
+                                        <span class="info-label">Durasi:</span>
+                                        <span>${detail.durasi}</span>
+                                    </div>
+                                ` : ''}
+                                
+                                ${detail.rilis ? `
+                                    <div class="info-item">
+                                        <span class="info-label">Rilis:</span>
+                                        <span>${detail.rilis}</span>
+                                    </div>
+                                ` : ''}
+                                
+                                ${detail.studio ? `
+                                    <div class="info-item">
+                                        <span class="info-label">Studio:</span>
+                                        <span>${detail.studio}</span>
+                                    </div>
+                                ` : ''}
+                                
+                                ${detail.genre ? `
+                                    <div class="info-item">
+                                        <span class="info-label">Genre:</span>
+                                        <span>${detail.genre}</span>
+                                    </div>
+                                ` : ''}
+                            </div>
+                            
+                            ${detail.batch ? `
+                                <div class="mt-4">
+                                    <a href="#/watch/${detail.batch.slug}" class="btn btn-success">
+                                        <i class="fas fa-download"></i> Download Batch
+                                    </a>
+                                </div>
+                            ` : ''}
+                        </div>
+                    </div>
+                </div>
+            `;
+            
+            // Load episodes
+            if (detail.episodes && detail.episodes.length > 0) {
+                const episodeList = document.getElementById('episode-list');
+                episodeList.innerHTML = `
+                    <h3 class="mb-4"><i class="fas fa-list"></i> Daftar Episode</h3>
+                    <div class="episode-list">
+                        ${Components.createEpisodeList(detail.episodes)}
+                    </div>
+                `;
+            }
+            
+            // Load batch download links if available
+            if (detail.lengkap) {
+                try {
+                    const batchLinks = await api.getBatchDownload(detail.lengkap.slug);
+                    const downloadSection = document.getElementById('download-section');
+                    downloadSection.innerHTML = `
+                        <h3 class="mb-4"><i class="fas fa-download"></i> Download Links</h3>
+                        ${Components.createDownloadLinks(batchLinks[0]?.download || {})}
+                    `;
+                } catch (error) {
+                    console.error('Failed to load batch links:', error);
+                }
+            }
+            
+            Utils.updatePageTitle(info.judul || detail.judul);
+        } catch (error) {
+            console.error('Failed to load anime detail:', error);
+        }
+    });
+
+    // Watch page
+    router.addRoute('/watch/:slug', async (params) => {
+        Utils.updatePageTitle('Watch Anime');
+        
+        const content = document.getElementById('app-content');
+        content.innerHTML = `
+            <div class="watch-page">
+                <div id="video-player"></div>
+                <div id="quality-selector" class="quality-selector"></div>
+                <div id="download-options" class="mt-4"></div>
+            </div>
+        `;
+        
+        try {
+            const episode = await api.getEpisode(params.slug);
+            const videoPlayer = document.getElementById('video-player');
+            const qualitySelector = document.getElementById('quality-selector');
+            
+            // Get nonce for iframe
+            const nonceData = await api.getNonce();
+            const nonce = nonceData.data;
+            
+            // Create video player
+            videoPlayer.innerHTML = `
+                <div class="video-container">
+                    <iframe src="${episode.iframe}" 
+                            allowfullscreen 
+                            frameborder="0">
+                    </iframe>
+                </div>
+            `;
+            
+            // Create quality selector
+            if (episode.mirror) {
+                const qualities = Object.keys(episode.mirror);
+                let qualityHtml = '<h5 class="mb-3">Pilih Kualitas:</h5><div class="btn-group flex-wrap">';
+                
+                qualities.forEach(quality => {
+                    if (episode.mirror[quality].length > 0) {
+                        qualityHtml += `
+                            <button type="button" class="quality-btn" data-quality="${quality}">
+                                ${quality.replace('m', '').toUpperCase()}
+                            </button>
+                        `;
+                    }
+                });
+                
+                qualityHtml += '</div>';
+                qualitySelector.innerHTML = qualityHtml;
+                
+                // Add quality selector event listeners
+                document.querySelectorAll('.quality-btn').forEach(btn => {
+                    btn.addEventListener('click', async () => {
+                        const quality = btn.dataset.quality;
+                        const mirror = episode.mirror[quality][0];
+                        
+                        if (mirror && mirror.content) {
+                            try {
+                                const iframeData = await api.getIframe(mirror.content, nonce);
+                                videoPlayer.innerHTML = `
+                                    <div class="video-container">
+                                        <iframe src="${iframeData.iframe}" 
+                                                allowfullscreen 
+                                                frameborder="0">
+                                        </iframe>
+                                    </div>
+                                `;
+                                
+                                // Update active button
+                                document.querySelectorAll('.quality-btn').forEach(b => {
+                                    b.classList.remove('active');
+                                });
+                                btn.classList.add('active');
+                            } catch (error) {
+                                console.error('Failed to load iframe:', error);
+                                Components.showToast('Gagal memutar video', 'danger');
+                            }
+                        }
+                    });
+                });
+                
+                // Click first quality button
+                const firstBtn = document.querySelector('.quality-btn');
+                if (firstBtn) firstBtn.click();
+            }
+            
+            // Load download options
+            if (episode.download) {
+                const downloadOptions = document.getElementById('download-options');
+                downloadOptions.innerHTML = `
+                    <h5 class="mb-3">Download Options:</h5>
+                    ${Components.createDownloadLinks(episode.download)}
+                `;
+            }
+            
+        } catch (error) {
+            console.error('Failed to load episode:', error);
+            content.innerHTML = `
+                <div class="text-center py-5">
+                    <i class="fas fa-exclamation-triangle fa-3x text-danger mb-3"></i>
+                    <h3>Gagal memuat video</h3>
+                    <p>${error.message}</p>
+                </div>
+            `;
+        }
+    });
+}
+
+function setupSearch() {
+    const searchForm = document.getElementById('search-form');
+    const searchInput = document.getElementById('search-input');
+    
+    if (searchForm && searchInput) {
+        searchForm.addEventListener('submit', (e) => {
+            e.preventDefault();
+            const query = searchInput.value.trim();
+            if (query) {
+                router.navigate(`/search?query=${encodeURIComponent(query)}`);
+                searchInput.value = '';
+            }
+        });
+        
+        // Debounce search for real-time suggestions
+        searchInput.addEventListener('input', Utils.debounce(async (e) => {
+            const query = e.target.value.trim();
+            if (query.length > 2) {
+                // Could implement search suggestions here
+                console.log('Searching for:', query);
+            }
+        }, 500));
+    }
+}
+
+// Global functions for other files to use
+window.showLoading = Components.showLoading;
+window.hideLoading = Components.hideLoading;
+window.api = api;
+window.router = router;
+window.Components = Components;
+window.Utils = Utils;
+
+js/components.js
+
+class Components {
+    static showLoading() {
+        const overlay = document.getElementById('loading-overlay');
+        if (overlay) {
+            overlay.style.display = 'flex';
+            overlay.style.opacity = '1';
+        }
+    }
+
+    static hideLoading() {
+        const overlay = document.getElementById('loading-overlay');
+        if (overlay) {
+            overlay.style.opacity = '0';
+            setTimeout(() => {
+                overlay.style.display = 'none';
+            }, 300);
+        }
+    }
+
+    static createAnimeCard(anime) {
+        const eps = anime.eps ? anime.eps[0] : '?';
+        const rate = anime.rate ? anime.rate[1] || anime.rate[0] || '?' : '?';
+        
+        return `
+            <div class="col-lg-3 col-md-4 col-sm-6 mb-4">
+                <div class="card anime-card h-100">
+                    <img src="${anime.gambar || 'https://via.placeholder.com/300x400?text=No+Image'}" 
+                         class="card-img-top" 
+                         alt="${anime.judul}"
+                         loading="lazy">
+                    <div class="card-body d-flex flex-column">
+                        <h5 class="card-title">${anime.judul}</h5>
+                        <div class="anime-meta mt-auto">
+                            <span class="episode-badge">
+                                <i class="fas fa-film"></i> ${eps} eps
+                            </span>
+                            <span class="rating-badge">
+                                <i class="fas fa-star"></i> ${rate}
+                            </span>
+                        </div>
+                        <a href="#/detail/${anime.slug}" class="btn btn-primary mt-3">
+                            <i class="fas fa-info-circle"></i> Detail
+                        </a>
+                    </div>
+                </div>
+            </div>
+        `;
+    }
+
+    static createGenreTags(genres) {
+        return genres.map(genre => `
+            <a href="#/complete?genre=${genre.slug}" class="genre-tag">
+                <i class="fas fa-tag"></i> ${genre.judul}
+            </a>
+        `).join('');
+    }
+
+    static createEpisodeList(episodes) {
+        return episodes.map(ep => `
+            <div class="episode-item">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <h6 class="mb-1">${ep.judul}</h6>
+                        <small class="text-muted">
+                            <i class="fas fa-calendar"></i> ${ep.tanggal}
+                        </small>
+                    </div>
+                    <a href="#/watch/${ep.slug}" class="btn btn-sm btn-primary">
+                        <i class="fas fa-play"></i> Watch
+                    </a>
+                </div>
+            </div>
+        `).join('');
+    }
+
+    static createScheduleDay(dayData) {
+        return `
+            <div class="col-md-6 col-lg-4 mb-4">
+                <div class="card schedule-day">
+                    <div class="card-header bg-primary text-white">
+                        <h5 class="mb-0">
+                            <i class="fas fa-calendar-day"></i> ${dayData.hari}
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="schedule-list">
+                            ${dayData.anime.map(anime => `
+                                <div class="schedule-item mb-2">
+                                    <a href="#/detail/${anime.slug}" class="text-decoration-none">
+                                        <i class="fas fa-play-circle text-primary"></i>
+                                        <span class="ms-2">${anime.judul}</span>
+                                    </a>
+                                </div>
+                            `).join('')}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        `;
+    }
+
+    static createPagination(currentPage, totalPages, baseUrl) {
+        if (totalPages <= 1) return '';
+        
+        let pagination = '<nav aria-label="Page navigation"><ul class="pagination justify-content-center">';
+        
+        // Previous button
+        if (currentPage > 1) {
+            pagination += `
+                <li class="page-item">
+                    <a class="page-link" href="${baseUrl}&page=${currentPage - 1}">
+                        <i class="fas fa-chevron-left"></i>
+                    </a>
+                </li>
+            `;
+        }
+        
+        // Page numbers
+        const startPage = Math.max(1, currentPage - 2);
+        const endPage = Math.min(totalPages, startPage + 4);
+        
+        for (let i = startPage; i <= endPage; i++) {
+            pagination += `
+                <li class="page-item ${i === currentPage ? 'active' : ''}">
+                    <a class="page-link" href="${baseUrl}&page=${i}">${i}</a>
+                </li>
+            `;
+        }
+        
+        // Next button
+        if (currentPage < totalPages) {
+            pagination += `
+                <li class="page-item">
+                    <a class="page-link" href="${baseUrl}&page=${currentPage + 1}">
+                        <i class="fas fa-chevron-right"></i>
+                    </a>
+                </li>
+            `;
+        }
+        
+        pagination += '</ul></nav>';
+        return pagination;
+    }
+
+    static showToast(message, type = 'info') {
+        const toastId = 'toast-' + Date.now();
+        const toastHtml = `
+            <div id="${toastId}" class="toast align-items-center text-bg-${type} border-0 position-fixed bottom-0 end-0 m-3" role="alert">
+                <div class="d-flex">
+                    <div class="toast-body">
+                        <i class="fas fa-${type === 'success' ? 'check-circle' : 'info-circle'} me-2"></i>
+                        ${message}
+                    </div>
+                    <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button>
+                </div>
+            </div>
+        `;
+        
+        document.body.insertAdjacentHTML('beforeend', toastHtml);
+        const toastElement = document.getElementById(toastId);
+        const toast = new bootstrap.Toast(toastElement, { delay: 3000 });
+        toast.show();
+        
+        toastElement.addEventListener('hidden.bs.toast', () => {
+            toastElement.remove();
+        });
+    }
+
+    static createDownloadLinks(downloadData) {
+        const qualities = ['d360pmp4', 'd480pmp4', 'd720pmp4'];
+        let html = '<div class="download-section">';
+        
+        qualities.forEach(quality => {
+            if (downloadData[quality] && downloadData[quality].length > 0) {
+                html += `
+                    <div class="mb-4">
+                        <h5 class="mb-3">${quality.replace('d', '').replace('mp4', '').toUpperCase()}</h5>
+                        <div class="row">
+                            ${downloadData[quality].map(link => `
+                                <div class="col-md-6 mb-2">
+                                    <a href="${link.href}" target="_blank" class="btn btn-outline-primary w-100">
+                                        <i class="fas fa-download"></i> ${link.nama}
+                                    </a>
+                                </div>
+                            `).join('')}
+                        </div>
+                    </div>
+                `;
+            }
+        });
+        
+        html += '</div>';
+        return html;
+    }
+}
+
+js/router.js
+
+class Router {
+    constructor() {
+        this.routes = {};
+        this.currentPath = '';
+        this.params = {};
+        this.init();
+    }
+
+    init() {
+        // Listen for hash changes
+        window.addEventListener('hashchange', () => this.handleRoute());
+        
+        // Listen for page load
+        window.addEventListener('load', () => this.handleRoute());
+    }
+
+    addRoute(path, handler) {
+        this.routes[path] = handler;
+    }
+
+    async handleRoute() {
+        const hash = window.location.hash.substring(1);
+        const [path, ...queryParams] = hash.split('?');
+        const query = new URLSearchParams(queryParams.join('?'));
+
+        // Parse query parameters
+        this.params = {};
+        for (const [key, value] of query.entries()) {
+            this.params[key] = value;
+        }
+
+        // Extract dynamic parameters
+        const pathSegments = path.split('/');
+        const routeSegments = Object.keys(this.routes).find(route => {
+            const routePathSegments = route.split('/');
+            if (routePathSegments.length !== pathSegments.length) return false;
+            
+            for (let i = 0; i < routePathSegments.length; i++) {
+                if (routePathSegments[i].startsWith(':')) {
+                    const paramName = routePathSegments[i].substring(1);
+                    this.params[paramName] = pathSegments[i];
+                } else if (routePathSegments[i] !== pathSegments[i]) {
+                    return false;
+                }
+            }
+            return true;
+        });
+
+        this.currentPath = path;
+
+        // Show loading
+        showLoading();
+
+        try {
+            if (routeSegments && this.routes[routeSegments]) {
+                await this.routes[routeSegments](this.params);
+            } else if (this.routes[path]) {
+                await this.routes[path](this.params);
+            } else {
+                // Default to home if no route matches
+                await this.routes['/'](this.params);
+            }
+        } catch (error) {
+            console.error('Route handling error:', error);
+            await this.showError('Terjadi kesalahan saat memuat halaman');
+        } finally {
+            hideLoading();
+        }
+    }
+
+    async showError(message) {
+        const content = document.getElementById('app-content');
+        content.innerHTML = `
+            <div class="error-page text-center py-5">
+                <i class="fas fa-exclamation-triangle fa-3x text-warning mb-3"></i>
+                <h2 class="mb-3">Oops!</h2>
+                <p class="mb-4">${message}</p>
+                <a href="#/" class="btn btn-primary">
+                    <i class="fas fa-home"></i> Kembali ke Beranda
+                </a>
+            </div>
+        `;
+    }
+
+    navigate(path) {
+        window.location.hash = path;
+    }
+
+    getParam(key) {
+        return this.params[key];
+    }
+
+    getCurrentPath() {
+        return this.currentPath;
+    }
+}
+
+const router = new Router();
+
+js/utils.js
+
+class Utils {
+    static debounce(func, wait) {
+        let timeout;
+        return function executedFunction(...args) {
+            const later = () => {
+                clearTimeout(timeout);
+                func(...args);
+            };
+            clearTimeout(timeout);
+            timeout = setTimeout(later, wait);
+        };
+    }
+
+    static formatDate(dateString) {
+        if (!dateString) return '-';
+        const date = new Date(dateString);
+        return date.toLocaleDateString('id-ID', {
+            day: 'numeric',
+            month: 'long',
+            year: 'numeric'
+        });
+    }
+
+    static truncateText(text, maxLength = 100) {
+        if (text.length <= maxLength) return text;
+        return text.substring(0, maxLength) + '...';
+    }
+
+    static parseAnimeInfo(infoText) {
+        const info = {};
+        const lines = infoText.split('\n');
+        
+        lines.forEach(line => {
+            const parts = line.split(':');
+            if (parts.length >= 2) {
+                const key = parts[0].trim().toLowerCase().replace(/ /g, '_');
+                const value = parts.slice(1).join(':').trim();
+                info[key] = value;
+            }
+        });
+        
+        return info;
+    }
+
+    static getCurrentPage() {
+        const params = new URLSearchParams(window.location.hash.split('?')[1]);
+        return parseInt(params.get('page')) || 1;
+    }
+
+    static updatePageTitle(title) {
+        document.title = `${title} - KeyAnimeList`;
+    }
+
+    static scrollToTop() {
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    static copyToClipboard(text) {
+        navigator.clipboard.writeText(text).then(() => {
+            Components.showToast('Tautan berhasil disalin!', 'success');
+        }).catch(err => {
+            console.error('Copy failed:', err);
+            Components.showToast('Gagal menyalin tautan', 'danger');
+        });
+    }
+
+    static formatBytes(bytes, decimals = 2) {
+        if (bytes === 0) return '0 Bytes';
+        const k = 1024;
+        const dm = decimals < 0 ? 0 : decimals;
+        const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+        const i = Math.floor(Math.log(bytes) / Math.log(k));
+        return parseFloat((bytes / Math.pow(k, i)).toFixed(dm)) + ' ' + sizes[i];
+    }
+
+    static isValidImage(url) {
+        return new Promise((resolve) => {
+            const img = new Image();
+            img.onload = () => resolve(true);
+            img.onerror = () => resolve(false);
+            img.src = url;
+        });
+    }
+
+    static lazyLoadImages() {
+        const images = document.querySelectorAll('img[data-src]');
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    const img = entry.target;
+                    img.src = img.dataset.src;
+                    img.removeAttribute('data-src');
+                    observer.unobserve(img);
+                }
+            });
+        });
+        
+        images.forEach(img => observer.observe(img));
+    }
+}

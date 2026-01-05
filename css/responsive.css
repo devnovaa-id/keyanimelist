@@ -1,0 +1,532 @@
+/* Extra Small Devices (Portrait Phones) */
+@media (max-width: 576px) {
+    :root {
+        --mobile-padding: 10px;
+        --card-radius: 12px;
+    }
+    
+    .mobile-grid .anime-card {
+        width: 48%;
+    }
+    
+    .card-image {
+        aspect-ratio: 2/3;
+    }
+    
+    .hero-section {
+        min-height: 25vh;
+        max-height: 250px;
+    }
+    
+    .hero-title {
+        font-size: 1rem;
+    }
+    
+    .hero-subtitle {
+        font-size: 0.8rem;
+    }
+    
+    .bottom-nav span {
+        display: none;
+    }
+    
+    .bottom-nav i {
+        font-size: 1.4rem;
+    }
+    
+    .detail-poster {
+        min-height: 35vh;
+        max-height: 300px;
+    }
+    
+    .episode-number {
+        width: 35px;
+        height: 35px;
+        font-size: 0.8rem;
+    }
+    
+    .card-btn {
+        font-size: 0.75rem;
+        padding: 8px;
+    }
+}
+
+/* Small Devices (Landscape Phones) */
+@media (min-width: 577px) and (max-width: 768px) {
+    .mobile-grid .anime-card {
+        width: 48%;
+    }
+    
+    .card-image {
+        aspect-ratio: 2/3;
+    }
+    
+    .hero-section {
+        min-height: 35vh;
+        max-height: 300px;
+    }
+    
+    .detail-poster {
+        min-height: 40vh;
+        max-height: 350px;
+    }
+    
+    .sidebar-menu {
+        width: 280px;
+        left: -280px;
+    }
+    
+    .sidebar-menu.active {
+        left: 0;
+    }
+}
+
+/* Tablets */
+@media (min-width: 769px) and (max-width: 992px) {
+    .mobile-grid .anime-card {
+        width: 32%;
+    }
+    
+    .card-image {
+        aspect-ratio: 2/3;
+    }
+    
+    .hero-section {
+        min-height: 40vh;
+        max-height: 350px;
+    }
+    
+    .sidebar-menu {
+        width: 320px;
+        left: -320px;
+    }
+    
+    .sidebar-menu.active {
+        left: 0;
+    }
+    
+    .bottom-nav {
+        max-width: 600px;
+        left: 50%;
+        transform: translateX(-50%);
+        border-radius: 25px 25px 0 0;
+        bottom: 20px;
+        height: 65px;
+        background: rgba(13, 13, 26, 0.8);
+        backdrop-filter: blur(20px);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+    }
+    
+    .bottom-nav span {
+        display: block;
+        font-size: 0.75rem;
+    }
+    
+    .detail-poster {
+        min-height: 45vh;
+        max-height: 400px;
+    }
+    
+    .episode-card {
+        padding: 18px;
+    }
+}
+
+/* Desktop - 2 Column Layout */
+@media (min-width: 993px) {
+    body.mobile-app {
+        padding-top: 70px;
+        padding-bottom: 0;
+        max-width: 1400px;
+        margin: 0 auto;
+        background: linear-gradient(135deg, var(--dark-color) 0%, #151530 100%);
+    }
+    
+    .mobile-grid {
+        justify-content: flex-start;
+        gap: 2%;
+    }
+    
+    .mobile-grid .anime-card {
+        width: 23.5%; /* 4 columns for desktop */
+    }
+    
+    .card-image {
+        aspect-ratio: 2/3;
+    }
+    
+    .hero-section {
+        min-height: 50vh;
+        max-height: 500px;
+    }
+    
+    .bottom-nav {
+        display: none;
+    }
+    
+    /* Desktop sidebar stays visible */
+    .sidebar-menu {
+        width: 280px;
+        left: 0;
+        background: rgba(13, 13, 26, 0.9);
+        backdrop-filter: blur(30px);
+        z-index: 1000;
+    }
+    
+    .sidebar-backdrop {
+        display: none !important;
+    }
+    
+    .nav-toggler {
+        display: none;
+    }
+    
+    .mobile-nav {
+        left: 280px;
+        width: calc(100% - 280px);
+        background: rgba(13, 13, 26, 0.8);
+    }
+    
+    main.container-fluid {
+        margin-left: 280px;
+        padding: 25px;
+        width: calc(100% - 280px);
+        min-height: calc(100vh - 70px);
+    }
+    
+    .detail-poster {
+        min-height: 50vh;
+        max-height: 600px;
+    }
+    
+    .video-container {
+        max-height: 70vh;
+    }
+    
+    /* Hover effects only for desktop */
+    .anime-card:hover .card-content {
+        transform: translateY(0);
+    }
+    
+    .search-results .result-item:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 10px 30px var(--shadow-color);
+    }
+}
+
+/* Ultra Wide Screens */
+@media (min-width: 1400px) {
+    body.mobile-app {
+        max-width: 1600px;
+        box-shadow: 0 0 50px rgba(0, 0, 0, 0.5);
+    }
+    
+    .mobile-grid .anime-card {
+        width: 18%; /* 5 columns for ultra-wide */
+    }
+    
+    .hero-section {
+        min-height: 60vh;
+        max-height: 600px;
+    }
+    
+    .detail-poster {
+        min-height: 60vh;
+        max-height: 700px;
+    }
+    
+    .sidebar-menu {
+        width: 300px;
+    }
+    
+    .mobile-nav {
+        left: 300px;
+        width: calc(100% - 300px);
+    }
+    
+    main.container-fluid {
+        margin-left: 300px;
+        width: calc(100% - 300px);
+    }
+}
+
+/* Dark/Light Mode Support */
+@media (prefers-color-scheme: light) {
+    body.mobile-app.light-mode {
+        --dark-color: #FFFFFF;
+        --light-color: #000000;
+        --card-bg: rgba(0, 0, 0, 0.05);
+        --card-border: rgba(0, 0, 0, 0.1);
+        --shadow-color: rgba(0, 0, 0, 0.1);
+    }
+    
+    .mobile-app.light-mode .mobile-nav,
+    .mobile-app.light-mode .sidebar-menu,
+    .mobile-app.light-mode .bottom-nav {
+        background: rgba(255, 255, 255, 0.95);
+        border-color: rgba(0, 0, 0, 0.1);
+        color: var(--light-color);
+    }
+    
+    .mobile-app.light-mode .search-form input {
+        color: var(--light-color);
+        background: rgba(0, 0, 0, 0.05);
+    }
+    
+    .mobile-app.light-mode .anime-card,
+    .mobile-app.light-mode .schedule-day,
+    .mobile-app.light-mode .result-item {
+        background: var(--card-bg);
+        color: var(--light-color);
+    }
+    
+    .mobile-app.light-mode .card-subtitle,
+    .mobile-app.light-mode .detail-synopsis p {
+        color: rgba(0, 0, 0, 0.7);
+    }
+    
+    .mobile-app.light-mode .skeleton {
+        background: linear-gradient(90deg, 
+            rgba(0, 0, 0, 0.05) 25%, 
+            rgba(0, 0, 0, 0.1) 50%, 
+            rgba(0, 0, 0, 0.05) 75%);
+    }
+}
+
+/* Reduced Motion */
+@media (prefers-reduced-motion: reduce) {
+    * {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+    }
+    
+    .anime-card:hover,
+    .result-item:hover,
+    .schedule-item:hover,
+    .episode-card:hover {
+        transform: none;
+    }
+    
+    .key-icon {
+        animation: none;
+    }
+}
+
+/* High Contrast */
+@media (prefers-contrast: high) {
+    :root {
+        --primary-color: #FF0000;
+        --secondary-color: #0000FF;
+        --accent-color: #00FF00;
+    }
+    
+    .anime-card {
+        border: 2px solid var(--primary-color);
+    }
+    
+    .card-btn,
+    .btn-play,
+    .download-btn {
+        border: 2px solid currentColor;
+    }
+    
+    .mobile-nav,
+    .bottom-nav {
+        border: 2px solid var(--primary-color);
+    }
+}
+
+/* Touch Device Optimizations */
+@media (hover: none) and (pointer: coarse) {
+    .card-btn,
+    .nav-toggler,
+    .nav-btn,
+    .chip,
+    .episode-card,
+    .schedule-item,
+    .result-item,
+    .download-btn,
+    .quality-btn {
+        min-height: 44px; /* Minimum touch target size */
+    }
+    
+    .card-btn {
+        padding: 12px 8px;
+    }
+    
+    .quality-btn,
+    .download-btn {
+        padding: 12px 15px;
+    }
+    
+    /* Larger hit areas for mobile */
+    .nav-toggler,
+    .nav-btn,
+    .back-btn {
+        width: 48px;
+        height: 48px;
+    }
+    
+    .bottom-nav-item {
+        padding: 12px;
+    }
+    
+    /* Remove hover effects on touch devices */
+    .anime-card:hover {
+        transform: none;
+    }
+    
+    .card-btn:hover,
+    .nav-btn:hover {
+        background: none;
+    }
+}
+
+/* Foldable Devices */
+@media (max-width: 280px) {
+    .mobile-grid .anime-card {
+        width: 100%;
+    }
+    
+    .card-image {
+        aspect-ratio: 2/3;
+    }
+    
+    .hero-section {
+        min-height: 20vh;
+        max-height: 180px;
+    }
+    
+    .detail-poster {
+        min-height: 30vh;
+        max-height: 250px;
+    }
+    
+    .bottom-nav i {
+        font-size: 1.2rem;
+    }
+    
+    .card-btn {
+        flex-direction: column;
+        padding: 6px;
+        font-size: 0.7rem;
+    }
+    
+    .card-btn i {
+        margin-bottom: 2px;
+    }
+}
+
+/* Landscape orientation */
+@media (orientation: landscape) and (max-height: 500px) {
+    .mobile-nav {
+        height: 50px;
+    }
+    
+    .nav-header {
+        height: 50px;
+    }
+    
+    .hero-section {
+        min-height: 50vh;
+    }
+    
+    .bottom-nav {
+        height: 50px;
+    }
+    
+    body.mobile-app {
+        padding-top: 50px;
+        padding-bottom: 50px;
+    }
+    
+    main.container-fluid {
+        min-height: calc(100vh - 100px);
+    }
+}
+
+/* Print Styles */
+@media print {
+    .mobile-nav,
+    .sidebar-menu,
+    .bottom-nav,
+    .card-btn,
+    .btn-play,
+    .episode-play,
+    .schedule-action,
+    .video-container,
+    .quality-selector,
+    .download-section,
+    .sidebar-backdrop {
+        display: none !important;
+    }
+    
+    body.mobile-app {
+        background: white;
+        color: black;
+        padding: 0;
+        margin: 0;
+        font-size: 12pt;
+    }
+    
+    .anime-card,
+    .schedule-day,
+    .result-item,
+    .anime-detail-mobile {
+        break-inside: avoid;
+        border: 1px solid #ccc;
+        box-shadow: none;
+        background: white !important;
+        color: black !important;
+        margin-bottom: 15px;
+    }
+    
+    a {
+        color: black;
+        text-decoration: underline;
+    }
+    
+    .card-image img {
+        filter: grayscale(100%);
+    }
+    
+    main.container-fluid {
+        padding: 20px;
+        width: 100%;
+        margin: 0;
+    }
+}
+
+/* Animation performance optimizations */
+@media (prefers-reduced-motion: no-preference) {
+    .anime-card,
+    .result-item,
+    .episode-card {
+        will-change: transform;
+    }
+}
+
+/* Very high DPI screens */
+@media (-webkit-min-device-pixel-ratio: 2), (min-resolution: 192dpi) {
+    .mobile-nav,
+    .sidebar-menu,
+    .bottom-nav {
+        backdrop-filter: blur(40px);
+    }
+}
+
+/* Small height devices */
+@media (max-height: 600px) {
+    .hero-section {
+        min-height: 25vh;
+    }
+    
+    .detail-poster {
+        min-height: 35vh;
+    }
+    
+    .sidebar-content {
+        max-height: 80vh;
+    }
+}
