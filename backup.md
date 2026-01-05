@@ -2198,3 +2198,2127 @@ main.container-fluid {
     background-color: var(--primary-color);
     color: white;
 }
+
+//js/api.js
+
+// API Service for KeyAnime
+
+class APIService {
+    constructor() {
+        this.baseURL = 'https://anim-api.devnova.icu/otakudesu';
+        this.cache = new Map();
+        this.cacheDuration = 5 * 60 * 1000; // 5 minutes
+    }
+
+    // Generic fetch method with caching
+    async fetch(endpoint, options = {}) {
+        const cacheKey = endpoint;
+        const cached = this.cache.get(cacheKey);
+        
+        // Return cached data if not expired
+        if (cached && Date.now() - cached.timestamp < this.cacheDuration) {
+            return cached.data;
+        }
+
+        try {
+            utils.showLoading();
+            const response = await fetch(`${this.baseURL}${endpoint}`, options);
+            
+            if (!response.ok) {
+                throw new Error(`HTTP ${response.status}`);
+            }
+            
+            const data = await response.json();
+            
+            // Cache the response
+            this.cache.set(cacheKey, {
+                data: data,
+                timestamp: Date.now()
+            });
+            
+            return data;
+        } catch (error) {
+            console.error('API Error:', error);
+            utils.showToast('Gagal memuat data. Silakan coba lagi.', 'error');
+            return {
+                error: true,
+                message: 'Gagal memuat data'
+            };
+        } finally {
+            utils.hideLoading();
+        }
+    }
+
+    // Clear cache
+    clearCache() {
+        this.cache.clear();
+    }
+
+    // Home Page
+    async getHome() {
+        return await this.fetch('/home');
+    }
+
+    // Schedule
+    async getSchedule() {
+        return await this.fetch('/schedule');
+    }
+
+    // All Anime
+    async getAllAnime(page = 1) {
+        return await this.fetch(`/anime?page=${page}`);
+    }
+
+    // All Genres
+    async getGenres() {
+        return await this.fetch('/genre');
+    }
+
+    // Ongoing Anime
+    async getOngoing(page = 1) {
+        return await this.fetch(`/ongoing?page=${page}`);
+    }
+
+    // Completed Anime
+    async getCompleted(page = 1) {
+        return await this.fetch(`/completed?page=${page}`);
+    }
+
+    // Search Anime
+    async searchAnime(query, page = 1) {
+        if (!query || query.trim() === '') {
+            return { data: { animeList: [] }, pagination: null };
+        }
+        return await this.fetch(`/search?q=${encodeURIComponent(query)}&page=${page}`);
+    }
+
+    // Anime by Genre
+    async getAnimeByGenre(genreId, page = 1) {
+        return await this.fetch(`/genre/${genreId}?page=${page}`);
+    }
+
+    // Anime Detail
+    async getAnimeDetail(animeId) {
+        return await this.fetch(`/anime/${animeId}`);
+    }
+
+    // Episode Detail
+    async getEpisodeDetail(episodeId) {
+        return await this.fetch(`/episode/${episodeId}`);
+    }
+
+    // Batch Detail
+    async getBatchDetail(batchId) {
+        return await this.fetch(`/batch/${batchId}`);
+    }
+
+    // Server Video
+    async getServerVideo(serverId) {
+        return await this.fetch(`/server/${serverId}`);
+    }
+
+    // Get video URL from episode data
+    async getVideoUrl(episodeData, quality = '480p', serverIndex = 0) {
+        try {
+            const qualityList = episodeData?.data?.details?.server?.qualityList;
+            if (!qualityList) {
+                return episodeData?.data?.details?.defaultStreamingUrl || null;
+            }
+
+            const qualityData = qualityList.find(q => q.title.includes(quality));
+            if (!qualityData) {
+                // Fallback to first quality
+                const firstQuality = qualityList[0];
+                if (firstQuality?.serverList?.length > 0) {
+                    const serverId = firstQuality.serverList[0].serverId;
+                    const serverData = await this.getServerVideo(serverId);
+                    return serverData?.data?.details?.url || null;
+                }
+                return null;
+            }
+
+            const server = qualityData.serverList[serverIndex];
+            if (!server) {
+                return null;
+            }
+
+            const serverData = await this.getServerVideo(server.serverId);
+            return serverData?.data?.details?.url || null;
+        } catch (error) {
+            console.error('Error getting video URL:', error);
+            return null;
+        }
+    }
+}
+
+// Export API instance
+const api = new APIService();
+
+//js/app.js
+
+// Main Application for KeyAnime
+
+class KeyAnimeApp {
+    constructor() {
+        this.utils = utils;
+        this.api = api;
+        this.components = components;
+        this.router = router;
+        this.init();
+    }
+
+    init() {
+        // Initialize when DOM is loaded
+        document.addEventListener('DOMContentLoaded', () => {
+            this.setupEventListeners();
+            this.hideLoading();
+            
+            // Check for search query in URL
+            const urlParams = new URLSearchParams(window.location.search);
+            const searchQuery = urlParams.get('q');
+            if (searchQuery) {
+                router.navigateTo('/search', { q: searchQuery });
+            }
+        });
+    }
+
+    setupEventListeners() {
+        // Menu toggle
+        const menuToggle = document.getElementById('menuToggle');
+        const closeMenu = document.getElementById('closeMenu');
+        const sidebarMenu = document.getElementById('sidebarMenu');
+        const sidebarBackdrop = document.getElementById('sidebarBackdrop');
+
+        if (menuToggle) {
+            menuToggle.addEventListener('click', () => {
+                sidebarMenu.classList.add('active');
+                sidebarBackdrop.classList.add('active');
+                document.body.style.overflow = 'hidden';
+            });
+        }
+
+        if (closeMenu) {
+            closeMenu.addEventListener('click', () => {
+                sidebarMenu.classList.remove('active');
+                sidebarBackdrop.classList.remove('active');
+                document.body.style.overflow = '';
+            });
+        }
+
+        if (sidebarBackdrop) {
+            sidebarBackdrop.addEventListener('click', () => {
+                sidebarMenu.classList.remove('active');
+                sidebarBackdrop.classList.remove('active');
+                document.body.style.overflow = '';
+            });
+        }
+
+        // Search toggle
+        const searchToggle = document.getElementById('searchToggle');
+        const mobileSearch = document.getElementById('mobileSearch');
+
+        if (searchToggle) {
+            searchToggle.addEventListener('click', () => {
+                mobileSearch.classList.toggle('active');
+                if (mobileSearch.classList.contains('active')) {
+                    document.getElementById('search-input').focus();
+                }
+            });
+        }
+
+        // Search form
+        const searchForm = document.getElementById('search-form');
+        if (searchForm) {
+            searchForm.addEventListener('submit', (e) => {
+                e.preventDefault();
+                const searchInput = document.getElementById('search-input');
+                const query = searchInput.value.trim();
+                
+                if (query) {
+                    // Close mobile search if open
+                    mobileSearch.classList.remove('active');
+                    
+                    // Navigate to search page
+                    router.navigateTo('/search', { q: query });
+                    
+                    // Clear input
+                    searchInput.value = '';
+                }
+            });
+        }
+
+        // Theme toggle
+        const themeToggle = document.getElementById('themeToggle');
+        if (themeToggle) {
+            themeToggle.addEventListener('click', () => {
+                utils.toggleTheme();
+            });
+        }
+
+        // Bottom navigation
+        document.querySelectorAll('.bottom-nav-item').forEach(item => {
+            item.addEventListener('click', (e) => {
+                e.preventDefault();
+                const href = item.getAttribute('href');
+                if (href) {
+                    router.navigateTo(href.substring(1));
+                }
+            });
+        });
+
+        // Sidebar navigation
+        document.querySelectorAll('.sidebar-nav a').forEach(link => {
+            link.addEventListener('click', (e) => {
+                e.preventDefault();
+                const href = link.getAttribute('href');
+                if (href) {
+                    // Close sidebar
+                    sidebarMenu.classList.remove('active');
+                    sidebarBackdrop.classList.remove('active');
+                    document.body.style.overflow = '';
+                    
+                    // Navigate
+                    router.navigateTo(href.substring(1));
+                }
+            });
+        });
+
+        // Video modal close
+        const videoModal = document.getElementById('videoModal');
+        if (videoModal) {
+            videoModal.addEventListener('hidden.bs.modal', () => {
+                const iframe = videoModal.querySelector('iframe');
+                if (iframe) {
+                    iframe.src = iframe.src; // Reload iframe
+                }
+            });
+        }
+
+        // Back button handling
+        window.addEventListener('popstate', () => {
+            // Close sidebar if open
+            if (sidebarMenu.classList.contains('active')) {
+                sidebarMenu.classList.remove('active');
+                sidebarBackdrop.classList.remove('active');
+                document.body.style.overflow = '';
+            }
+            
+            // Close search if open
+            if (mobileSearch.classList.contains('active')) {
+                mobileSearch.classList.remove('active');
+            }
+        });
+
+        // Keyboard shortcuts
+        document.addEventListener('keydown', (e) => {
+            // Escape key
+            if (e.key === 'Escape') {
+                // Close sidebar
+                if (sidebarMenu.classList.contains('active')) {
+                    sidebarMenu.classList.remove('active');
+                    sidebarBackdrop.classList.remove('active');
+                    document.body.style.overflow = '';
+                }
+                
+                // Close search
+                if (mobileSearch.classList.contains('active')) {
+                    mobileSearch.classList.remove('active');
+                }
+            }
+            
+            // Search shortcut (Ctrl+K or Cmd+K)
+            if ((e.ctrlKey || e.metaKey) && e.key === 'k') {
+                e.preventDefault();
+                if (!mobileSearch.classList.contains('active')) {
+                    mobileSearch.classList.add('active');
+                    document.getElementById('search-input').focus();
+                }
+            }
+        });
+
+        // Load more button
+        document.addEventListener('click', (e) => {
+            if (e.target.id === 'loadMoreBtn' || e.target.closest('#loadMoreBtn')) {
+                const btn = e.target.closest('#loadMoreBtn') || e.target;
+                const spinner = btn.querySelector('.fa-spinner');
+                const text = btn.querySelector('span');
+                
+                if (spinner && text) {
+                    spinner.style.display = 'inline-block';
+                    text.textContent = 'Memuat...';
+                    btn.disabled = true;
+                    
+                    // Simulate load more (will be handled by router)
+                    setTimeout(() => {
+                        spinner.style.display = 'none';
+                        text.textContent = 'Muat Lebih Banyak';
+                        btn.disabled = false;
+                    }, 1000);
+                }
+            }
+        });
+
+        // Infinite scroll (for mobile)
+        let isScrolling = false;
+        window.addEventListener('scroll', () => {
+            if (isScrolling) return;
+            
+            isScrolling = true;
+            setTimeout(() => {
+                const scrollPosition = window.innerHeight + window.scrollY;
+                const pageHeight = document.documentElement.scrollHeight;
+                
+                // Load more when 80% scrolled
+                if (scrollPosition >= pageHeight * 0.8) {
+                    const loadMoreBtn = document.getElementById('loadMoreBtn');
+                    if (loadMoreBtn && !loadMoreBtn.disabled) {
+                        loadMoreBtn.click();
+                    }
+                }
+                
+                isScrolling = false;
+            }, 200);
+        });
+
+        // PWA features
+        this.setupPWA();
+    }
+
+    setupPWA() {
+        // Register service worker for PWA
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('/sw.js').catch(error => {
+                    console.log('Service Worker registration failed:', error);
+                });
+            });
+        }
+
+        // Add to home screen prompt
+        let deferredPrompt;
+        window.addEventListener('beforeinstallprompt', (e) => {
+            // Prevent Chrome 67 and earlier from automatically showing the prompt
+            e.preventDefault();
+            // Stash the event so it can be triggered later
+            deferredPrompt = e;
+            
+            // Show custom install button
+            this.showInstallPrompt();
+        });
+
+        // Handle app installed
+        window.addEventListener('appinstalled', () => {
+            utils.showToast('Aplikasi berhasil diinstal!', 'success');
+            deferredPrompt = null;
+        });
+    }
+
+    showInstallPrompt() {
+        // You can add a custom install button in your UI
+        // and trigger the prompt when clicked:
+        // deferredPrompt.prompt();
+        // Then listen for the user's choice
+    }
+
+    hideLoading() {
+        setTimeout(() => {
+            document.getElementById('loading-overlay').style.opacity = '0';
+            setTimeout(() => {
+                document.getElementById('loading-overlay').style.display = 'none';
+            }, 300);
+        }, 1000);
+    }
+
+    // Global error handler
+    setupErrorHandling() {
+        window.addEventListener('error', (e) => {
+            console.error('Global error:', e);
+            utils.showToast('Terjadi kesalahan dalam aplikasi', 'error');
+        });
+
+        window.addEventListener('unhandledrejection', (e) => {
+            console.error('Unhandled promise rejection:', e);
+            utils.showToast('Terjadi kesalahan dalam aplikasi', 'error');
+        });
+    }
+}
+
+// Initialize the app
+const app = new KeyAnimeApp();
+
+// Make utils, api, components, router globally accessible for debugging
+window.utils = utils;
+window.api = api;
+window.components = components;
+window.router = router;
+window.app = app;
+
+//js/components.js
+
+// UI Components for KeyAnime
+
+class Components {
+    constructor() {
+        this.utils = utils;
+        this.api = api;
+    }
+
+    // Create Anime Card
+    createAnimeCard(anime, options = {}) {
+        const isFavorite = this.utils.isFavorite(anime.animeId);
+        const watchBtnText = anime.episodes ? `Tonton Eps ${anime.episodes}` : 'Tonton';
+        
+        return `
+            <div class="anime-card" data-anime-id="${anime.animeId}">
+                <div class="card-image">
+                    <img src="${this.utils.getImageUrl(anime.poster)}" 
+                         alt="${anime.title}"
+                         loading="lazy">
+                    ${anime.episodes ? `<div class="episode-badge">${anime.episodes}</div>` : ''}
+                    ${anime.score ? `
+                        <div class="rating-badge">
+                            <i class="fas fa-star"></i>
+                            <span>${anime.score}</span>
+                        </div>
+                    ` : ''}
+                </div>
+                <div class="card-content">
+                    <h3 class="card-title" title="${anime.title}">
+                        ${this.utils.truncateText(anime.title, 40)}
+                    </h3>
+                    ${anime.season ? `
+                        <div class="card-subtitle">${anime.season}</div>
+                    ` : ''}
+                    <div class="card-actions">
+                        <button class="card-btn watch" data-action="watch" data-anime-id="${anime.animeId}">
+                            <i class="fas fa-play"></i>
+                            ${watchBtnText}
+                        </button>
+                        <button class="card-btn detail" data-action="detail" data-anime-id="${anime.animeId}">
+                            <i class="fas fa-info-circle"></i>
+                            Detail
+                        </button>
+                    </div>
+                    <div class="card-actions" style="margin-top: 8px;">
+                        <button class="card-btn ${isFavorite ? 'watch' : 'detail'}" 
+                                data-action="favorite" 
+                                data-anime-id="${anime.animeId}"
+                                style="flex: none; padding: 8px 12px;">
+                            <i class="fas fa-heart${isFavorite ? '' : '-broken'}"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        `;
+    }
+
+    // Create Search Result Item
+    createSearchResultItem(anime) {
+        const isFavorite = this.utils.isFavorite(anime.animeId);
+        
+        return `
+            <a href="#/anime/${anime.animeId}" class="result-item">
+                <div class="result-image">
+                    <img src="${this.utils.getImageUrl(anime.poster)}" 
+                         alt="${anime.title}"
+                         loading="lazy">
+                </div>
+                <div class="result-content">
+                    <h3 class="result-title">${anime.title}</h3>
+                    <div class="result-meta">
+                        <span>${anime.status || ''}</span>
+                        ${anime.score ? `<span>⭐ ${anime.score}</span>` : ''}
+                    </div>
+                    <div class="result-genres">
+                        ${anime.genreList ? anime.genreList.slice(0, 3).map(genre => 
+                            `<span class="genre-tag">${genre.title}</span>`
+                        ).join('') : ''}
+                    </div>
+                    <div class="result-actions">
+                        <button class="btn watch" data-action="watch" data-anime-id="${anime.animeId}">
+                            <i class="fas fa-play"></i> Tonton
+                        </button>
+                        <button class="btn ${isFavorite ? 'watch' : 'detail'}" 
+                                data-action="favorite" 
+                                data-anime-id="${anime.animeId}">
+                            <i class="fas fa-heart${isFavorite ? '' : '-broken'}"></i>
+                        </button>
+                    </div>
+                </div>
+            </a>
+        `;
+    }
+
+    // Create Episode Card
+    createEpisodeCard(episode, animeId) {
+        return `
+            <a href="#/watch/${episode.episodeId}" class="episode-card" data-episode-id="${episode.episodeId}">
+                <div class="episode-number">${episode.title}</div>
+                <div class="episode-info">
+                    <div class="episode-title">Episode ${episode.title}</div>
+                    <div class="episode-date">${animeId}</div>
+                </div>
+                <div class="episode-play">
+                    <i class="fas fa-play"></i>
+                </div>
+            </a>
+        `;
+    }
+
+    // Create Genre Chip
+    createGenreChip(genre, active = false) {
+        return `
+            <a href="#/genre/${genre.genreId}" class="chip ${active ? 'active' : ''}">
+                <i class="fas fa-tag"></i>
+                ${genre.title}
+            </a>
+        `;
+    }
+
+    // Create Schedule Day
+    createScheduleDay(day) {
+        return `
+            <div class="schedule-day">
+                <h4>${day.title}</h4>
+                <div class="schedule-list">
+                    ${day.animeList.map(anime => `
+                        <div class="schedule-item">
+                            <a href="#/anime/${anime.animeId}">${anime.title}</a>
+                        </div>
+                    `).join('')}
+                </div>
+            </div>
+        `;
+    }
+
+    // Create Hero Slider
+    createHeroSlider(slides) {
+        if (!slides || slides.length === 0) return '';
+        
+        const slidesHtml = slides.map((slide, index) => `
+            <div class="hero-slide ${index === 0 ? 'active' : ''}" 
+                 style="background-image: url('${this.utils.getImageUrl(slide.poster)}')">
+                <div class="hero-content">
+                    <h2 class="hero-title">${slide.title}</h2>
+                    <p class="hero-subtitle">Episode ${slide.episodes} • ${slide.latestReleaseDate || ''}</p>
+                    <button class="btn-play" data-anime-id="${slide.animeId}">
+                        <i class="fas fa-play"></i> Tonton Sekarang
+                    </button>
+                </div>
+            </div>
+        `).join('');
+
+        return `
+            <div class="hero-section">
+                ${slidesHtml}
+            </div>
+        `;
+    }
+
+    // Create Anime Detail Page
+    createAnimeDetail(anime) {
+        const isFavorite = this.utils.isFavorite(anime.animeId);
+        
+        return `
+            <div class="mobile-detail-page">
+                <div class="detail-header">
+                    <button class="back-btn" onclick="window.history.back()">
+                        <i class="fas fa-arrow-left"></i>
+                    </button>
+                    <h4>Detail Anime</h4>
+                </div>
+                
+                <div class="anime-detail-mobile">
+                    <div class="detail-poster">
+                        <img src="${this.utils.getImageUrl(anime.poster)}" 
+                             alt="${anime.title}" 
+                             class="poster-img">
+                        <div class="poster-overlay">
+                            <button class="btn-play" data-action="play-first" data-anime-id="${anime.animeId}">
+                                <i class="fas fa-play"></i> Tonton Sekarang
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <div class="detail-info">
+                        <h1 class="detail-title">${anime.title}</h1>
+                        
+                        ${anime.score ? `
+                            <div class="detail-rating">
+                                <i class="fas fa-star"></i>
+                                <span>${anime.score}</span>
+                            </div>
+                        ` : ''}
+                        
+                        <div class="detail-meta">
+                            ${anime.type ? `<span><i class="fas fa-tv"></i> ${anime.type}</span>` : ''}
+                            ${anime.episodes ? `<span><i class="fas fa-list-ol"></i> ${anime.episodes} Episode</span>` : ''}
+                            ${anime.duration ? `<span><i class="fas fa-clock"></i> ${anime.duration}</span>` : ''}
+                            ${anime.status ? `<span><i class="fas fa-circle"></i> ${anime.status}</span>` : ''}
+                        </div>
+                        
+                        ${anime.genreList ? `
+                            <div class="detail-genres">
+                                ${anime.genreList.map(genre => `
+                                    <a href="#/genre/${genre.genreId}" class="genre-tag">${genre.title}</a>
+                                `).join('')}
+                            </div>
+                        ` : ''}
+                        
+                        ${anime.synopsis?.paragraphList?.length > 0 ? `
+                            <div class="detail-synopsis">
+                                <h6>Sinopsis</h6>
+                                <p>${anime.synopsis.paragraphList.join(' ')}</p>
+                            </div>
+                        ` : ''}
+                        
+                        <div class="detail-actions" style="margin-top: 20px; display: flex; gap: 10px;">
+                            <button class="card-btn watch" data-action="play-first" data-anime-id="${anime.animeId}" style="flex: 2;">
+                                <i class="fas fa-play"></i> Tonton
+                            </button>
+                            <button class="card-btn ${isFavorite ? 'watch' : 'detail'}" 
+                                    data-action="favorite" 
+                                    data-anime-id="${anime.animeId}"
+                                    style="flex: 1;">
+                                <i class="fas fa-heart${isFavorite ? '' : '-broken'}"></i>
+                            </button>
+                        </div>
+                    </div>
+                    
+                    ${anime.episodeList?.length > 0 ? `
+                        <div class="detail-episodes">
+                            <div class="episodes-header">
+                                <h5>Daftar Episode</h5>
+                            </div>
+                            <div class="episodes-grid">
+                                ${anime.episodeList.map(ep => this.createEpisodeCard(ep, anime.animeId)).join('')}
+                            </div>
+                        </div>
+                    ` : ''}
+                </div>
+            </div>
+        `;
+    }
+
+    // Create Watch Page
+    createWatchPage(episodeData) {
+        const anime = episodeData?.data?.details;
+        if (!anime) return '<div class="error-page">Episode tidak ditemukan</div>';
+        
+        return `
+            <div class="mobile-watch-page">
+                <div class="watch-header">
+                    <button class="back-btn" onclick="window.history.back()">
+                        <i class="fas fa-arrow-left"></i>
+                    </button>
+                    <h5>${anime.title || 'Menonton...'}</h5>
+                </div>
+                
+                <div class="video-container" id="videoPlayerContainer">
+                    <div class="loading-video">
+                        <i class="fas fa-spinner fa-spin"></i>
+                        <p>Memuat video...</p>
+                    </div>
+                </div>
+                
+                ${anime.server?.qualityList ? `
+                    <div class="quality-selector">
+                        <h6>Pilih Kualitas</h6>
+                        <div class="quality-buttons" id="qualityButtons">
+                            ${anime.server.qualityList.map((quality, index) => `
+                                <button class="quality-btn ${index === 1 ? 'active' : ''}" 
+                                        data-quality="${quality.title.trim()}"
+                                        data-server-index="0">
+                                    ${quality.title.trim()}
+                                </button>
+                            `).join('')}
+                        </div>
+                    </div>
+                ` : ''}
+                
+                ${anime.download?.qualityList ? `
+                    <div class="download-section">
+                        <h6>Download Episode</h6>
+                        ${anime.download.qualityList.map(quality => `
+                            <div class="quality-download">
+                                <div class="quality-title">${quality.title}</div>
+                                <div class="download-buttons">
+                                    ${quality.urlList.map((url, idx) => `
+                                        <a href="${url.url}" 
+                                           class="download-btn" 
+                                           target="_blank" 
+                                           rel="noopener noreferrer">
+                                            <i class="fas fa-download"></i>
+                                            ${url.title}
+                                        </a>
+                                    `).join('')}
+                                </div>
+                            </div>
+                        `).join('')}
+                    </div>
+                ` : ''}
+                
+                <div class="episode-navigation" style="margin-top: 20px;">
+                    ${anime.hasPrevEpisode ? `
+                        <a href="#/watch/${anime.prevEpisode.episodeId}" class="card-btn detail">
+                            <i class="fas fa-arrow-left"></i> Episode Sebelumnya
+                        </a>
+                    ` : ''}
+                    ${anime.hasNextEpisode ? `
+                        <a href="#/watch/${anime.nextEpisode.episodeId}" class="card-btn watch" style="margin-top: 10px;">
+                            Episode Selanjutnya <i class="fas fa-arrow-right"></i>
+                        </a>
+                    ` : ''}
+                </div>
+            </div>
+        `;
+    }
+
+    // Create Empty State
+    createEmptyState(message = 'Tidak ada data', icon = 'fas fa-inbox') {
+        return `
+            <div class="empty-state">
+                <div class="empty-icon">
+                    <i class="${icon}"></i>
+                </div>
+                <h5>${message}</h5>
+                <p>Coba cari dengan kata kunci yang berbeda</p>
+            </div>
+        `;
+    }
+
+    // Create Error Page
+    createErrorPage(message = 'Terjadi kesalahan') {
+        return `
+            <div class="error-page">
+                <i class="fas fa-exclamation-triangle"></i>
+                <h2>Oops!</h2>
+                <p>${message}</p>
+                <button class="btn watch" onclick="window.history.back()">
+                    <i class="fas fa-arrow-left"></i> Kembali
+                </button>
+            </div>
+        `;
+    }
+
+    // Load More Button
+    createLoadMoreButton(hasNextPage, onClick) {
+        if (!hasNextPage) return '';
+        
+        return `
+            <div class="load-more">
+                <button class="btn watch" id="loadMoreBtn">
+                    <i class="fas fa-spinner fa-spin" style="display: none;"></i>
+                    <span>Muat Lebih Banyak</span>
+                </button>
+            </div>
+        `;
+    }
+}
+
+// Export components instance
+const components = new Components();
+
+//js/router.js
+
+// Router for KeyAnime
+
+class Router {
+    constructor() {
+        this.routes = {};
+        this.currentPath = '';
+        this.utils = utils;
+        this.api = api;
+        this.components = components;
+        this.currentPage = {};
+        this.init();
+    }
+
+    init() {
+        // Define routes
+        this.routes = {
+            '/': this.renderHome.bind(this),
+            '/ongoing': this.renderOngoing.bind(this),
+            '/complete': this.renderComplete.bind(this),
+            '/genre': this.renderGenres.bind(this),
+            '/genre/:id': this.renderGenreAnime.bind(this),
+            '/schedule': this.renderSchedule.bind(this),
+            '/search': this.renderSearch.bind(this),
+            '/favorites': this.renderFavorites.bind(this),
+            '/history': this.renderHistory.bind(this),
+            '/anime/:id': this.renderAnimeDetail.bind(this),
+            '/watch/:id': this.renderWatch.bind(this),
+            '/profile': this.renderProfile.bind(this)
+        };
+
+        // Handle initial load
+        window.addEventListener('DOMContentLoaded', () => {
+            this.handleRoute();
+        });
+
+        // Handle hash changes
+        window.addEventListener('hashchange', () => {
+            this.handleRoute();
+        });
+
+        // Handle back button
+        window.addEventListener('popstate', () => {
+            this.handleRoute();
+        });
+    }
+
+    // Get current route from hash
+    getRouteFromHash() {
+        const hash = window.location.hash.substring(1);
+        if (!hash) return '/';
+        
+        // Remove query params for route matching
+        const route = hash.split('?')[0];
+        return route || '/';
+    }
+
+    // Get query params from hash
+    getQueryParams() {
+        const hash = window.location.hash.substring(1);
+        const queryString = hash.split('?')[1];
+        if (!queryString) return {};
+        
+        const params = new URLSearchParams(queryString);
+        const result = {};
+        for (const [key, value] of params) {
+            result[key] = value;
+        }
+        return result;
+    }
+
+    // Extract params from route
+    extractParams(routePattern, path) {
+        const patternParts = routePattern.split('/');
+        const pathParts = path.split('/');
+        const params = {};
+
+        for (let i = 0; i < patternParts.length; i++) {
+            if (patternParts[i].startsWith(':')) {
+                const paramName = patternParts[i].substring(1);
+                params[paramName] = pathParts[i] || '';
+            }
+        }
+
+        return params;
+    }
+
+    // Find matching route
+    findMatchingRoute(path) {
+        // Exact match
+        if (this.routes[path]) {
+            return {
+                handler: this.routes[path],
+                params: {}
+            };
+        }
+
+        // Param match
+        for (const route in this.routes) {
+            if (route.includes(':')) {
+                const routePattern = route.split('/');
+                const pathParts = path.split('/');
+                
+                if (routePattern.length === pathParts.length) {
+                    let match = true;
+                    const params = {};
+                    
+                    for (let i = 0; i < routePattern.length; i++) {
+                        if (routePattern[i].startsWith(':')) {
+                            const paramName = routePattern[i].substring(1);
+                            params[paramName] = pathParts[i];
+                        } else if (routePattern[i] !== pathParts[i]) {
+                            match = false;
+                            break;
+                        }
+                    }
+                    
+                    if (match) {
+                        return {
+                            handler: this.routes[route],
+                            params: params
+                        };
+                    }
+                }
+            }
+        }
+
+        // No match
+        return null;
+    }
+
+    // Handle route
+    async handleRoute() {
+        const path = this.getRouteFromHash();
+        const queryParams = this.getQueryParams();
+        const route = this.findMatchingRoute(path);
+
+        // Update active nav
+        this.updateActiveNav(path);
+
+        if (route) {
+            try {
+                await route.handler(route.params, queryParams);
+            } catch (error) {
+                console.error('Route error:', error);
+                this.renderError('Terjadi kesalahan saat memuat halaman');
+            }
+        } else {
+            this.renderError('Halaman tidak ditemukan');
+        }
+    }
+
+    // Update active navigation
+    updateActiveNav(path) {
+        // Update sidebar
+        const sidebarLinks = document.querySelectorAll('.sidebar-nav a');
+        sidebarLinks.forEach(link => {
+            link.classList.remove('active');
+            const href = link.getAttribute('href').substring(1);
+            if (href === path || (href === '/' && path === '/')) {
+                link.classList.add('active');
+            }
+        });
+
+        // Update bottom nav
+        const bottomNavLinks = document.querySelectorAll('.bottom-nav-item');
+        bottomNavLinks.forEach(link => {
+            link.classList.remove('active');
+            const href = link.getAttribute('href').substring(1);
+            
+            // Special handling for bottom nav
+            if (href === '/' && path === '/') {
+                link.classList.add('active');
+            } else if (href === 'ongoing' && path.startsWith('/ongoing')) {
+                link.classList.add('active');
+            } else if (href === 'search' && path.startsWith('/search')) {
+                link.classList.add('active');
+            } else if (href === 'favorites' && path.startsWith('/favorites')) {
+                link.classList.add('active');
+            } else if (href === 'profile' && path.startsWith('/profile')) {
+                link.classList.add('active');
+            }
+        });
+    }
+
+    // Navigate to route
+    navigateTo(path, queryParams = {}) {
+        let url = `#${path}`;
+        
+        if (Object.keys(queryParams).length > 0) {
+            const params = new URLSearchParams(queryParams);
+            url += `?${params.toString()}`;
+        }
+        
+        window.location.hash = url;
+    }
+
+    // Render error page
+    renderError(message) {
+        const content = document.getElementById('app-content');
+        content.innerHTML = components.createErrorPage(message);
+    }
+
+    // Route handlers
+    async renderHome() {
+        this.currentPage = { type: 'home', data: null };
+        const content = document.getElementById('app-content');
+        content.innerHTML = components.utils.generateSkeletonCards(6);
+
+        try {
+            const data = await api.getHome();
+            
+            if (data.error) {
+                content.innerHTML = components.createErrorPage('Gagal memuat halaman beranda');
+                return;
+            }
+
+            let html = '';
+            
+            // Hero slider with ongoing anime
+            if (data.data?.ongoing?.animeList) {
+                const heroSlides = data.data.ongoing.animeList.slice(0, 5);
+                html += components.createHeroSlider(heroSlides);
+            }
+
+            // Ongoing section
+            html += `
+                <div class="section-header">
+                    <h4><i class="fas fa-fire"></i> Sedang Tayang</h4>
+                    <a href="#/ongoing" class="see-all">Lihat Semua</a>
+                </div>
+                <div class="mobile-grid" id="ongoingList">
+                    ${data.data?.ongoing?.animeList?.slice(0, 12).map(anime => 
+                        components.createAnimeCard(anime)
+                    ).join('') || ''}
+                </div>
+            `;
+
+            // Completed section
+            html += `
+                <div class="section-header" style="margin-top: 30px;">
+                    <h4><i class="fas fa-check-circle"></i> Selesai Tayang</h4>
+                    <a href="#/complete" class="see-all">Lihat Semua</a>
+                </div>
+                <div class="mobile-grid" id="completedList">
+                    ${data.data?.completed?.animeList?.slice(0, 12).map(anime => 
+                        components.createAnimeCard({ ...anime, episodes: anime.episodes || '?' })
+                    ).join('') || ''}
+                </div>
+            `;
+
+            content.innerHTML = html;
+            this.attachCardEventListeners();
+        } catch (error) {
+            console.error('Home render error:', error);
+            content.innerHTML = components.createErrorPage('Gagal memuat halaman beranda');
+        }
+    }
+
+    async renderOngoing(params = {}, query = {}) {
+        const page = parseInt(query.page) || 1;
+        this.currentPage = { type: 'ongoing', page, data: null };
+        
+        const content = document.getElementById('app-content');
+        content.innerHTML = `
+            <div class="page-header">
+                <h4><i class="fas fa-fire"></i> Anime Sedang Tayang</h4>
+            </div>
+            ${components.utils.generateSkeletonCards(6)}
+        `;
+
+        try {
+            const data = await api.getOngoing(page);
+            
+            if (data.error) {
+                content.innerHTML = components.createErrorPage('Gagal memuat anime ongoing');
+                return;
+            }
+
+            if (!data.data?.animeList?.length) {
+                content.innerHTML = components.createEmptyState('Tidak ada anime ongoing');
+                return;
+            }
+
+            let html = `
+                <div class="page-header">
+                    <h4><i class="fas fa-fire"></i> Anime Sedang Tayang</h4>
+                </div>
+                <div class="mobile-grid" id="ongoingList">
+                    ${data.data.animeList.map(anime => 
+                        components.createAnimeCard(anime)
+                    ).join('')}
+                </div>
+            `;
+
+            // Add pagination
+            if (data.pagination?.hasNextPage) {
+                html += components.createLoadMoreButton(true, () => {
+                    this.navigateTo('/ongoing', { page: page + 1 });
+                });
+            }
+
+            content.innerHTML = html;
+            this.attachCardEventListeners();
+        } catch (error) {
+            console.error('Ongoing render error:', error);
+            content.innerHTML = components.createErrorPage('Gagal memuat anime ongoing');
+        }
+    }
+
+    async renderComplete(params = {}, query = {}) {
+        const page = parseInt(query.page) || 1;
+        this.currentPage = { type: 'complete', page, data: null };
+        
+        const content = document.getElementById('app-content');
+        content.innerHTML = `
+            <div class="page-header">
+                <h4><i class="fas fa-check-circle"></i> Anime Selesai</h4>
+            </div>
+            ${components.utils.generateSkeletonCards(6)}
+        `;
+
+        try {
+            const data = await api.getCompleted(page);
+            
+            if (data.error) {
+                content.innerHTML = components.createErrorPage('Gagal memuat anime selesai');
+                return;
+            }
+
+            if (!data.data?.animeList?.length) {
+                content.innerHTML = components.createEmptyState('Tidak ada anime selesai');
+                return;
+            }
+
+            let html = `
+                <div class="page-header">
+                    <h4><i class="fas fa-check-circle"></i> Anime Selesai</h4>
+                </div>
+                <div class="mobile-grid" id="completedList">
+                    ${data.data.animeList.map(anime => 
+                        components.createAnimeCard({ ...anime, episodes: anime.episodes || '?' })
+                    ).join('')}
+                </div>
+            `;
+
+            // Add pagination
+            if (data.pagination?.hasNextPage) {
+                html += components.createLoadMoreButton(true, () => {
+                    this.navigateTo('/complete', { page: page + 1 });
+                });
+            }
+
+            content.innerHTML = html;
+            this.attachCardEventListeners();
+        } catch (error) {
+            console.error('Complete render error:', error);
+            content.innerHTML = components.createErrorPage('Gagal memuat anime selesai');
+        }
+    }
+
+    async renderGenres() {
+        this.currentPage = { type: 'genres', data: null };
+        
+        const content = document.getElementById('app-content');
+        content.innerHTML = `
+            <div class="page-header">
+                <h4><i class="fas fa-tags"></i> Semua Genre</h4>
+            </div>
+            <div class="category-chips" style="justify-content: flex-start; flex-wrap: wrap;">
+                ${Array(12).fill().map(() => `
+                    <div class="chip skeleton" style="width: 100px; height: 40px;"></div>
+                `).join('')}
+            </div>
+        `;
+
+        try {
+            const data = await api.getGenres();
+            
+            if (data.error) {
+                content.innerHTML = components.createErrorPage('Gagal memuat genre');
+                return;
+            }
+
+            if (!data.data?.genreList?.length) {
+                content.innerHTML = components.createEmptyState('Tidak ada genre');
+                return;
+            }
+
+            const html = `
+                <div class="page-header">
+                    <h4><i class="fas fa-tags"></i> Semua Genre</h4>
+                </div>
+                <div class="category-chips" style="justify-content: flex-start; flex-wrap: wrap;">
+                    ${data.data.genreList.map(genre => 
+                        components.createGenreChip(genre)
+                    ).join('')}
+                </div>
+            `;
+
+            content.innerHTML = html;
+        } catch (error) {
+            console.error('Genres render error:', error);
+            content.innerHTML = components.createErrorPage('Gagal memuat genre');
+        }
+    }
+
+    async renderGenreAnime(params, query = {}) {
+        const page = parseInt(query.page) || 1;
+        const { id } = params;
+        this.currentPage = { type: 'genre', id, page, data: null };
+        
+        const content = document.getElementById('app-content');
+        content.innerHTML = `
+            <div class="page-header">
+                <h4><i class="fas fa-tag"></i> Genre</h4>
+            </div>
+            ${components.utils.generateSkeletonCards(6)}
+        `;
+
+        try {
+            const data = await api.getAnimeByGenre(id, page);
+            
+            if (data.error) {
+                content.innerHTML = components.createErrorPage('Gagal memuat anime genre');
+                return;
+            }
+
+            if (!data.data?.animeList?.length) {
+                content.innerHTML = components.createEmptyState('Tidak ada anime untuk genre ini');
+                return;
+            }
+
+            let html = `
+                <div class="page-header">
+                    <h4><i class="fas fa-tag"></i> ${id.charAt(0).toUpperCase() + id.slice(1)}</h4>
+                </div>
+                <div class="mobile-grid" id="genreList">
+                    ${data.data.animeList.map(anime => 
+                        components.createAnimeCard(anime)
+                    ).join('')}
+                </div>
+            `;
+
+            // Add pagination
+            if (data.pagination?.hasNextPage) {
+                html += components.createLoadMoreButton(true, () => {
+                    this.navigateTo(`/genre/${id}`, { page: page + 1 });
+                });
+            }
+
+            content.innerHTML = html;
+            this.attachCardEventListeners();
+        } catch (error) {
+            console.error('Genre anime render error:', error);
+            content.innerHTML = components.createErrorPage('Gagal memuat anime genre');
+        }
+    }
+
+    async renderSchedule() {
+        this.currentPage = { type: 'schedule', data: null };
+        
+        const content = document.getElementById('app-content');
+        content.innerHTML = `
+            <div class="page-header">
+                <h4><i class="fas fa-calendar-alt"></i> Jadwal Tayang</h4>
+            </div>
+            ${Array(7).fill().map(() => `
+                <div class="schedule-day skeleton" style="height: 200px; margin-bottom: 20px;"></div>
+            `).join('')}
+        `;
+
+        try {
+            const data = await api.getSchedule();
+            
+            if (data.error) {
+                content.innerHTML = components.createErrorPage('Gagal memuat jadwal');
+                return;
+            }
+
+            if (!data.data?.scheduleList?.length) {
+                content.innerHTML = components.createEmptyState('Tidak ada jadwal');
+                return;
+            }
+
+            const html = `
+                <div class="page-header">
+                    <h4><i class="fas fa-calendar-alt"></i> Jadwal Tayang</h4>
+                </div>
+                ${data.data.scheduleList.map(day => 
+                    components.createScheduleDay(day)
+                ).join('')}
+            `;
+
+            content.innerHTML = html;
+        } catch (error) {
+            console.error('Schedule render error:', error);
+            content.innerHTML = components.createErrorPage('Gagal memuat jadwal');
+        }
+    }
+
+    async renderSearch(params = {}, query = {}) {
+        const searchQuery = query.q || '';
+        this.currentPage = { type: 'search', query: searchQuery, data: null };
+        
+        const content = document.getElementById('app-content');
+        
+        let html = `
+            <div class="mobile-search-page">
+                <div class="search-header">
+                    <div class="search-box">
+                        <i class="fas fa-search"></i>
+                        <input type="text" 
+                               id="searchInput" 
+                               placeholder="Cari anime..." 
+                               value="${searchQuery}"
+                               autocomplete="off">
+                        ${searchQuery ? `
+                            <button class="clear-search" id="clearSearch">
+                                <i class="fas fa-times"></i>
+                            </button>
+                        ` : ''}
+                    </div>
+                </div>
+                <div id="searchResults">
+        `;
+
+        if (searchQuery) {
+            html += components.utils.generateSkeletonCards(3);
+        } else {
+            html += components.createEmptyState('Masukkan kata kunci pencarian', 'fas fa-search');
+        }
+
+        html += `</div></div>`;
+        content.innerHTML = html;
+
+        // Setup search input
+        const searchInput = document.getElementById('searchInput');
+        const clearSearch = document.getElementById('clearSearch');
+        
+        if (searchInput) {
+            searchInput.focus();
+            
+            // Debounced search
+            const debouncedSearch = utils.debounce((value) => {
+                if (value.trim()) {
+                    this.navigateTo('/search', { q: value });
+                }
+            }, 500);
+            
+            searchInput.addEventListener('input', (e) => {
+                const value = e.target.value;
+                if (clearSearch) {
+                    clearSearch.style.display = value ? 'block' : 'none';
+                }
+                debouncedSearch(value);
+            });
+            
+            // Enter key search
+            searchInput.addEventListener('keypress', (e) => {
+                if (e.key === 'Enter') {
+                    const value = e.target.value.trim();
+                    if (value) {
+                        this.navigateTo('/search', { q: value });
+                    }
+                }
+            });
+        }
+        
+        if (clearSearch) {
+            clearSearch.addEventListener('click', () => {
+                searchInput.value = '';
+                searchInput.focus();
+                clearSearch.style.display = 'none';
+                this.navigateTo('/search');
+            });
+        }
+
+        // Perform search if query exists
+        if (searchQuery) {
+            try {
+                const data = await api.searchAnime(searchQuery);
+                
+                const resultsContainer = document.getElementById('searchResults');
+                if (!resultsContainer) return;
+                
+                if (data.error) {
+                    resultsContainer.innerHTML = components.createErrorPage('Gagal melakukan pencarian');
+                    return;
+                }
+
+                if (!data.data?.animeList?.length) {
+                    resultsContainer.innerHTML = components.createEmptyState('Tidak ditemukan anime dengan kata kunci tersebut');
+                    return;
+                }
+
+                resultsContainer.innerHTML = `
+                    <div class="search-results">
+                        ${data.data.animeList.map(anime => 
+                            components.createSearchResultItem(anime)
+                        ).join('')}
+                    </div>
+                `;
+
+                this.attachCardEventListeners();
+            } catch (error) {
+                console.error('Search render error:', error);
+                const resultsContainer = document.getElementById('searchResults');
+                if (resultsContainer) {
+                    resultsContainer.innerHTML = components.createErrorPage('Gagal melakukan pencarian');
+                }
+            }
+        }
+    }
+
+    async renderFavorites() {
+        this.currentPage = { type: 'favorites', data: null };
+        
+        const content = document.getElementById('app-content');
+        const favorites = utils.getItem('favorites') || [];
+        
+        if (favorites.length === 0) {
+            content.innerHTML = `
+                <div class="page-header">
+                    <h4><i class="fas fa-heart"></i> Favorit</h4>
+                </div>
+                ${components.createEmptyState('Belum ada anime favorit', 'fas fa-heart-broken')}
+            `;
+            return;
+        }
+
+        content.innerHTML = `
+            <div class="page-header">
+                <h4><i class="fas fa-heart"></i> Favorit (${favorites.length})</h4>
+            </div>
+            <div class="mobile-grid" id="favoritesList">
+                ${favorites.map(fav => 
+                    components.createAnimeCard({
+                        animeId: fav.animeId,
+                        title: fav.title,
+                        poster: fav.poster,
+                        episodes: 'Favorit'
+                    })
+                ).join('')}
+            </div>
+        `;
+
+        this.attachCardEventListeners();
+    }
+
+    async renderHistory() {
+        this.currentPage = { type: 'history', data: null };
+        
+        const content = document.getElementById('app-content');
+        const history = utils.getHistory();
+        
+        if (history.length === 0) {
+            content.innerHTML = `
+                <div class="page-header">
+                    <h4><i class="fas fa-history"></i> Riwayat</h4>
+                </div>
+                ${components.createEmptyState('Belum ada riwayat tontonan', 'fas fa-history')}
+            `;
+            return;
+        }
+
+        // Group by anime
+        const grouped = {};
+        history.forEach(item => {
+            if (!grouped[item.animeId]) {
+                grouped[item.animeId] = {
+                    ...item,
+                    lastWatched: item.watchedAt,
+                    watchCount: 1
+                };
+            } else {
+                grouped[item.animeId].watchCount++;
+                if (new Date(item.watchedAt) > new Date(grouped[item.animeId].lastWatched)) {
+                    grouped[item.animeId].lastWatched = item.watchedAt;
+                }
+            }
+        });
+
+        const historyList = Object.values(grouped).sort((a, b) => 
+            new Date(b.lastWatched) - new Date(a.lastWatched)
+        );
+
+        content.innerHTML = `
+            <div class="page-header">
+                <h4><i class="fas fa-history"></i> Riwayat (${historyList.length})</h4>
+            </div>
+            <div class="mobile-grid" id="historyList">
+                ${historyList.map(item => 
+                    components.createAnimeCard({
+                        animeId: item.animeId,
+                        title: item.title,
+                        poster: item.poster,
+                        episodes: `Ditonton ${item.watchCount}x`
+                    })
+                ).join('')}
+            </div>
+        `;
+
+        this.attachCardEventListeners();
+    }
+
+    async renderAnimeDetail(params) {
+        const { id } = params;
+        this.currentPage = { type: 'anime-detail', id, data: null };
+        
+        const content = document.getElementById('app-content');
+        content.innerHTML = components.utils.generateSkeletonCards(1);
+
+        try {
+            const data = await api.getAnimeDetail(id);
+            
+            if (data.error) {
+                content.innerHTML = components.createErrorPage('Gagal memuat detail anime');
+                return;
+            }
+
+            if (!data.data?.details) {
+                content.innerHTML = components.createErrorPage('Anime tidak ditemukan');
+                return;
+            }
+
+            const detail = data.data.details;
+            content.innerHTML = components.createAnimeDetail(detail);
+            
+            // Add to history
+            utils.addToHistory(detail);
+            
+            this.attachCardEventListeners();
+        } catch (error) {
+            console.error('Anime detail render error:', error);
+            content.innerHTML = components.createErrorPage('Gagal memuat detail anime');
+        }
+    }
+
+    async renderWatch(params) {
+        const { id } = params;
+        this.currentPage = { type: 'watch', id, data: null };
+        
+        const content = document.getElementById('app-content');
+        content.innerHTML = components.utils.generateSkeletonCards(1);
+
+        try {
+            const data = await api.getEpisodeDetail(id);
+            
+            if (data.error) {
+                content.innerHTML = components.createErrorPage('Gagal memuat episode');
+                return;
+            }
+
+            if (!data.data?.details) {
+                content.innerHTML = components.createErrorPage('Episode tidak ditemukan');
+                return;
+            }
+
+            const episode = data.data.details;
+            content.innerHTML = components.createWatchPage(data);
+            
+            // Load video
+            await this.loadVideoPlayer(episode);
+            
+            // Add to history
+            const animeData = {
+                animeId: episode.animeId,
+                title: episode.title,
+                poster: '' // We don't have poster in episode data
+            };
+            utils.addToHistory(animeData, {
+                episodeId: id,
+                title: episode.title.split('Episode')[1]?.trim() || 'Episode'
+            });
+            
+            this.attachCardEventListeners();
+        } catch (error) {
+            console.error('Watch render error:', error);
+            content.innerHTML = components.createErrorPage('Gagal memuat episode');
+        }
+    }
+
+    async renderProfile() {
+        this.currentPage = { type: 'profile', data: null };
+        
+        const favorites = utils.getItem('favorites') || [];
+        const history = utils.getHistory();
+        
+        const content = document.getElementById('app-content');
+        content.innerHTML = `
+            <div class="mobile-detail-page">
+                <div class="detail-header">
+                    <h4><i class="fas fa-user"></i> Profil</h4>
+                </div>
+                
+                <div class="anime-detail-mobile">
+                    <div class="detail-poster" style="background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));">
+                        <div style="display: flex; justify-content: center; align-items: center; height: 100%;">
+                            <div class="user-avatar" style="width: 100px; height: 100px; font-size: 2.5rem;">
+                                <i class="fas fa-user"></i>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="detail-info">
+                        <h1 class="detail-title">Anime Lover</h1>
+                        
+                        <div class="detail-meta">
+                            <span><i class="fas fa-crown"></i> Premium Member</span>
+                            <span><i class="fas fa-calendar"></i> Bergabung 2024</span>
+                        </div>
+                        
+                        <div class="stats-grid" style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin: 20px 0;">
+                            <div class="stat-card" style="background: rgba(255, 255, 255, 0.05); padding: 15px; border-radius: 10px; text-align: center;">
+                                <div style="font-size: 1.5rem; color: var(--primary-color);">
+                                    <i class="fas fa-heart"></i>
+                                </div>
+                                <div style="font-size: 1.8rem; font-weight: bold; margin: 5px 0;">${favorites.length}</div>
+                                <div style="font-size: 0.8rem; opacity: 0.7;">Favorit</div>
+                            </div>
+                            <div class="stat-card" style="background: rgba(255, 255, 255, 0.05); padding: 15px; border-radius: 10px; text-align: center;">
+                                <div style="font-size: 1.5rem; color: var(--accent-color);">
+                                    <i class="fas fa-history"></i>
+                                </div>
+                                <div style="font-size: 1.8rem; font-weight: bold; margin: 5px 0;">${history.length}</div>
+                                <div style="font-size: 0.8rem; opacity: 0.7;">Ditonton</div>
+                            </div>
+                        </div>
+                        
+                        <div class="detail-synopsis">
+                            <h6>Pengaturan</h6>
+                            <div class="settings-list">
+                                <button class="episode-card" onclick="utils.toggleTheme()">
+                                    <div class="episode-number">
+                                        <i class="fas fa-${utils.theme === 'dark' ? 'moon' : 'sun'}"></i>
+                                    </div>
+                                    <div class="episode-info">
+                                        <div class="episode-title">Tema ${utils.theme === 'dark' ? 'Gelap' : 'Terang'}</div>
+                                        <div class="episode-date">Ubah tampilan aplikasi</div>
+                                    </div>
+                                    <div class="episode-play">
+                                        <i class="fas fa-toggle-${utils.theme === 'dark' ? 'on' : 'off'}"></i>
+                                    </div>
+                                </button>
+                                
+                                <button class="episode-card" onclick="api.clearCache(); utils.showToast('Cache dibersihkan', 'success')">
+                                    <div class="episode-number">
+                                        <i class="fas fa-broom"></i>
+                                    </div>
+                                    <div class="episode-info">
+                                        <div class="episode-title">Bersihkan Cache</div>
+                                        <div class="episode-date">Hapus data sementara</div>
+                                    </div>
+                                    <div class="episode-play">
+                                        <i class="fas fa-chevron-right"></i>
+                                    </div>
+                                </button>
+                                
+                                <button class="episode-card" onclick="if(confirm('Hapus semua riwayat?')){localStorage.removeItem('watchHistory'); utils.showToast('Riwayat dihapus', 'success'); router.handleRoute();}">
+                                    <div class="episode-number">
+                                        <i class="fas fa-trash"></i>
+                                    </div>
+                                    <div class="episode-info">
+                                        <div class="episode-title">Hapus Riwayat</div>
+                                        <div class="episode-date">Bersihkan riwayat tontonan</div>
+                                    </div>
+                                    <div class="episode-play">
+                                        <i class="fas fa-chevron-right"></i>
+                                    </div>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        `;
+    }
+
+    // Video player loading
+    async loadVideoPlayer(episodeData) {
+        const container = document.getElementById('videoPlayerContainer');
+        if (!container) return;
+
+        try {
+            // Get video URL
+            const videoUrl = await api.getVideoUrl({ data: { details: episodeData } }, '480p', 0);
+            
+            if (!videoUrl) {
+                container.innerHTML = `
+                    <div class="no-video">
+                        <i class="fas fa-video-slash"></i>
+                        <p>Video tidak tersedia</p>
+                        <p>Silakan coba server atau kualitas lain</p>
+                    </div>
+                `;
+                return;
+            }
+
+            // Create iframe for video
+            container.innerHTML = `
+                <iframe src="${videoUrl}" 
+                        allowfullscreen 
+                        scrolling="no" 
+                        frameborder="0" 
+                        webkitallowfullscreen 
+                        mozallowfullscreen></iframe>
+            `;
+
+            // Setup quality buttons
+            const qualityButtons = document.querySelectorAll('.quality-btn');
+            qualityButtons.forEach(btn => {
+                btn.addEventListener('click', async () => {
+                    // Update active button
+                    qualityButtons.forEach(b => b.classList.remove('active'));
+                    btn.classList.add('active');
+                    
+                    // Get new video URL
+                    const quality = btn.dataset.quality;
+                    const serverIndex = parseInt(btn.dataset.serverIndex) || 0;
+                    const newVideoUrl = await api.getVideoUrl({ data: { details: episodeData } }, quality, serverIndex);
+                    
+                    if (newVideoUrl) {
+                        container.innerHTML = `
+                            <iframe src="${newVideoUrl}" 
+                                    allowfullscreen 
+                                    scrolling="no" 
+                                    frameborder="0" 
+                                    webkitallowfullscreen 
+                                    mozallowfullscreen></iframe>
+                        `;
+                    }
+                });
+            });
+
+        } catch (error) {
+            console.error('Video load error:', error);
+            container.innerHTML = `
+                <div class="no-video">
+                    <i class="fas fa-exclamation-triangle"></i>
+                    <p>Gagal memuat video</p>
+                    <p>Silakan coba lagi nanti</p>
+                </div>
+            `;
+        }
+    }
+
+    // Attach event listeners to cards
+    attachCardEventListeners() {
+        // Watch buttons
+        document.querySelectorAll('[data-action="watch"], [data-action="play-first"]').forEach(btn => {
+            btn.addEventListener('click', async (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                
+                const animeId = btn.dataset.animeId;
+                if (!animeId) return;
+                
+                // Get anime detail to get first episode
+                try {
+                    const data = await api.getAnimeDetail(animeId);
+                    if (data.data?.details?.episodeList?.length > 0) {
+                        const firstEpisode = data.data.details.episodeList[0];
+                        this.navigateTo(`/watch/${firstEpisode.episodeId}`);
+                    } else {
+                        this.navigateTo(`/anime/${animeId}`);
+                    }
+                } catch (error) {
+                    console.error('Error getting first episode:', error);
+                    this.navigateTo(`/anime/${animeId}`);
+                }
+            });
+        });
+
+        // Detail buttons
+        document.querySelectorAll('[data-action="detail"]').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                
+                const animeId = btn.dataset.animeId;
+                if (animeId) {
+                    this.navigateTo(`/anime/${animeId}`);
+                }
+            });
+        });
+
+        // Favorite buttons
+        document.querySelectorAll('[data-action="favorite"]').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                
+                const animeId = btn.dataset.animeId;
+                const card = btn.closest('.anime-card, .result-item');
+                
+                if (animeId) {
+                    if (utils.isFavorite(animeId)) {
+                        utils.removeFromFavorites(animeId);
+                        btn.innerHTML = '<i class="fas fa-heart-broken"></i>';
+                        btn.classList.remove('watch');
+                        btn.classList.add('detail');
+                    } else {
+                        utils.addToFavorites({
+                            animeId: animeId,
+                            title: card.querySelector('.card-title, .result-title')?.textContent || 'Anime',
+                            poster: card.querySelector('img')?.src || ''
+                        });
+                        btn.innerHTML = '<i class="fas fa-heart"></i>';
+                        btn.classList.remove('detail');
+                        btn.classList.add('watch');
+                    }
+                }
+            });
+        });
+
+        // Anime cards click
+        document.querySelectorAll('.anime-card').forEach(card => {
+            const animeId = card.dataset.animeId;
+            if (animeId) {
+                card.addEventListener('click', (e) => {
+                    // Don't trigger if clicked on a button
+                    if (!e.target.closest('button')) {
+                        this.navigateTo(`/anime/${animeId}`);
+                    }
+                });
+            }
+        });
+    }
+}
+
+// Export router instance
+const router = new Router();
+
+//js/utils.js
+
+// Utility functions for KeyAnime
+
+class Utils {
+    constructor() {
+        this.baseURL = 'https://anim-api.devnova.icu/otakudesu';
+        this.currentPage = 1;
+        this.itemsPerPage = 20;
+        this.theme = localStorage.getItem('theme') || 'dark';
+        this.initTheme();
+    }
+
+    // Theme Management
+    initTheme() {
+        if (this.theme === 'light') {
+            document.body.classList.add('light-mode');
+            document.querySelector('#themeToggle i').className = 'fas fa-sun';
+        }
+    }
+
+    toggleTheme() {
+        if (this.theme === 'dark') {
+            this.theme = 'light';
+            document.body.classList.add('light-mode');
+            document.querySelector('#themeToggle i').className = 'fas fa-sun';
+        } else {
+            this.theme = 'dark';
+            document.body.classList.remove('light-mode');
+            document.querySelector('#themeToggle i').className = 'fas fa-moon';
+        }
+        localStorage.setItem('theme', this.theme);
+    }
+
+    // Loading Management
+    showLoading() {
+        document.getElementById('loading-overlay').style.display = 'flex';
+    }
+
+    hideLoading() {
+        document.getElementById('loading-overlay').style.display = 'none';
+    }
+
+    // Toast Notifications
+    showToast(message, type = 'info') {
+        const toast = document.createElement('div');
+        toast.className = `toast ${type}`;
+        toast.innerHTML = `
+            <div class="toast-icon">
+                <i class="fas fa-${type === 'success' ? 'check-circle' : type === 'error' ? 'exclamation-circle' : 'info-circle'}"></i>
+            </div>
+            <div class="toast-content">
+                <div class="toast-message">${message}</div>
+            </div>
+            <button class="toast-close">
+                <i class="fas fa-times"></i>
+            </button>
+        `;
+
+        const container = document.querySelector('.toast-container') || this.createToastContainer();
+        container.appendChild(toast);
+
+        // Auto remove after 5 seconds
+        setTimeout(() => {
+            toast.style.opacity = '0';
+            toast.style.transform = 'translateX(100%)';
+            setTimeout(() => toast.remove(), 300);
+        }, 5000);
+
+        // Close button
+        toast.querySelector('.toast-close').addEventListener('click', () => {
+            toast.style.opacity = '0';
+            toast.style.transform = 'translateX(100%)';
+            setTimeout(() => toast.remove(), 300);
+        });
+    }
+
+    createToastContainer() {
+        const container = document.createElement('div');
+        container.className = 'toast-container';
+        document.body.appendChild(container);
+        return container;
+    }
+
+    // Local Storage Management
+    setItem(key, value) {
+        try {
+            localStorage.setItem(key, JSON.stringify(value));
+            return true;
+        } catch (e) {
+            console.error('LocalStorage error:', e);
+            return false;
+        }
+    }
+
+    getItem(key) {
+        try {
+            const item = localStorage.getItem(key);
+            return item ? JSON.parse(item) : null;
+        } catch (e) {
+            console.error('LocalStorage error:', e);
+            return null;
+        }
+    }
+
+    // Favorites Management
+    addToFavorites(anime) {
+        const favorites = this.getItem('favorites') || [];
+        if (!favorites.some(fav => fav.animeId === anime.animeId)) {
+            favorites.push({
+                animeId: anime.animeId,
+                title: anime.title,
+                poster: anime.poster,
+                addedAt: new Date().toISOString()
+            });
+            this.setItem('favorites', favorites);
+            this.showToast('Ditambahkan ke favorit', 'success');
+            return true;
+        }
+        return false;
+    }
+
+    removeFromFavorites(animeId) {
+        const favorites = this.getItem('favorites') || [];
+        const filtered = favorites.filter(fav => fav.animeId !== animeId);
+        this.setItem('favorites', filtered);
+        this.showToast('Dihapus dari favorit', 'success');
+        return true;
+    }
+
+    isFavorite(animeId) {
+        const favorites = this.getItem('favorites') || [];
+        return favorites.some(fav => fav.animeId === animeId);
+    }
+
+    // Watch History Management
+    addToHistory(anime, episode = null) {
+        const history = this.getItem('watchHistory') || [];
+        
+        // Remove if already exists
+        const filtered = history.filter(item => 
+            !(item.animeId === anime.animeId && item.episodeId === (episode?.episodeId || 'main'))
+        );
+        
+        const historyItem = {
+            animeId: anime.animeId,
+            title: anime.title,
+            poster: anime.poster,
+            episodeId: episode?.episodeId || 'main',
+            episodeTitle: episode?.title || 'Detail',
+            watchedAt: new Date().toISOString()
+        };
+        
+        // Add to beginning and keep only last 100 items
+        filtered.unshift(historyItem);
+        if (filtered.length > 100) {
+            filtered.length = 100;
+        }
+        
+        this.setItem('watchHistory', filtered);
+    }
+
+    getHistory() {
+        return this.getItem('watchHistory') || [];
+    }
+
+    // URL Helper
+    getImageUrl(url) {
+        if (!url) return 'https://via.placeholder.com/300x450?text=No+Image';
+        return url;
+    }
+
+    // Format Date
+    formatDate(dateString) {
+        if (!dateString) return '-';
+        const date = new Date(dateString);
+        return date.toLocaleDateString('id-ID', {
+            day: 'numeric',
+            month: 'short',
+            year: 'numeric'
+        });
+    }
+
+    // Truncate Text
+    truncateText(text, maxLength = 100) {
+        if (!text) return '';
+        if (text.length <= maxLength) return text;
+        return text.substring(0, maxLength) + '...';
+    }
+
+    // Generate Skeleton Loading
+    generateSkeletonCards(count = 6) {
+        let html = '';
+        for (let i = 0; i < count; i++) {
+            html += `
+                <div class="anime-card skeleton">
+                    <div class="card-image skeleton-image"></div>
+                    <div class="card-content">
+                        <div class="skeleton-line"></div>
+                        <div class="skeleton-line short"></div>
+                        <div class="skeleton-buttons">
+                            <div class="skeleton-button"></div>
+                            <div class="skeleton-button"></div>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+        return html;
+    }
+
+    // Error Handler
+    handleError(error, message = 'Terjadi kesalahan') {
+        console.error(error);
+        this.showToast(message, 'error');
+        return {
+            error: true,
+            message: message
+        };
+    }
+
+    // Scroll to Top
+    scrollToTop() {
+        window.scrollTo({
+            top: 0,
+            behavior: 'smooth'
+        });
+    }
+
+    // Debounce Function
+    debounce(func, wait) {
+        let timeout;
+        return function executedFunction(...args) {
+            const later = () => {
+                clearTimeout(timeout);
+                func(...args);
+            };
+            clearTimeout(timeout);
+            timeout = setTimeout(later, wait);
+        };
+    }
+
+    // Check Mobile
+    isMobile() {
+        return window.innerWidth <= 768;
+    }
+
+    // Get Query Parameter
+    getQueryParam(name) {
+        const urlParams = new URLSearchParams(window.location.search);
+        return urlParams.get(name);
+    }
+
+    // Set Query Parameter
+    setQueryParam(name, value) {
+        const urlParams = new URLSearchParams(window.location.search);
+        if (value) {
+            urlParams.set(name, value);
+        } else {
+            urlParams.delete(name);
+        }
+        window.history.replaceState({}, '', `${window.location.pathname}?${urlParams}`);
+    }
+}
+
+// Export utils instance
+const utils = new Utils();
+

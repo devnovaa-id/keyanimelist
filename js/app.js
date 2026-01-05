@@ -1,128 +1,296 @@
-// Main Application
+// Main Application for KeyAnime
+
 class KeyAnimeApp {
     constructor() {
+        this.utils = utils;
+        this.api = api;
+        this.components = components;
+        this.router = router;
         this.init();
     }
 
     init() {
-        // Initialize router
-        Router.init();
-        
-        // Initialize theme
-        Utils.initTheme();
-        
-        // Handle offline/online status
-        window.addEventListener('online', () => {
-            Utils.showToast('Koneksi internet kembali', 'success');
-        });
-        
-        window.addEventListener('offline', () => {
-            Utils.showToast('Anda sedang offline', 'error');
-        });
-        
-        // Handle service worker for PWA
-        this.registerServiceWorker();
-        
-        // Handle install prompt
-        this.handleInstallPrompt();
-        
-        // Handle visibility change
-        document.addEventListener('visibilitychange', () => {
-            if (document.hidden) {
-                console.log('App minimized');
-            } else {
-                console.log('App active');
+        // Initialize when DOM is loaded
+        document.addEventListener('DOMContentLoaded', () => {
+            this.setupEventListeners();
+            this.hideLoading();
+            
+            // Check for search query in URL
+            const urlParams = new URLSearchParams(window.location.search);
+            const searchQuery = urlParams.get('q');
+            if (searchQuery) {
+                router.navigateTo('/search', { q: searchQuery });
             }
         });
-        
-        // Add global error handler
-        window.addEventListener('error', (event) => {
-            console.error('Global error:', event.error);
-        });
-        
-        // Log app start
-        console.log('KeyAnime v2.0 Mobile initialized');
     }
 
-    // Register service worker for PWA
-    async registerServiceWorker() {
-        if ('serviceWorker' in navigator) {
-            try {
-                const registration = await navigator.serviceWorker.register('/sw.js');
-                console.log('ServiceWorker registered:', registration);
-            } catch (error) {
-                console.error('ServiceWorker registration failed:', error);
-            }
+    setupEventListeners() {
+        // Menu toggle
+        const menuToggle = document.getElementById('menuToggle');
+        const closeMenu = document.getElementById('closeMenu');
+        const sidebarMenu = document.getElementById('sidebarMenu');
+        const sidebarBackdrop = document.getElementById('sidebarBackdrop');
+
+        if (menuToggle) {
+            menuToggle.addEventListener('click', () => {
+                sidebarMenu.classList.add('active');
+                sidebarBackdrop.classList.add('active');
+                document.body.style.overflow = 'hidden';
+            });
         }
+
+        if (closeMenu) {
+            closeMenu.addEventListener('click', () => {
+                sidebarMenu.classList.remove('active');
+                sidebarBackdrop.classList.remove('active');
+                document.body.style.overflow = '';
+            });
+        }
+
+        if (sidebarBackdrop) {
+            sidebarBackdrop.addEventListener('click', () => {
+                sidebarMenu.classList.remove('active');
+                sidebarBackdrop.classList.remove('active');
+                document.body.style.overflow = '';
+            });
+        }
+
+        // Search toggle
+        const searchToggle = document.getElementById('searchToggle');
+        const mobileSearch = document.getElementById('mobileSearch');
+
+        if (searchToggle) {
+            searchToggle.addEventListener('click', () => {
+                mobileSearch.classList.toggle('active');
+                if (mobileSearch.classList.contains('active')) {
+                    document.getElementById('search-input').focus();
+                }
+            });
+        }
+
+        // Search form
+        const searchForm = document.getElementById('search-form');
+        if (searchForm) {
+            searchForm.addEventListener('submit', (e) => {
+                e.preventDefault();
+                const searchInput = document.getElementById('search-input');
+                const query = searchInput.value.trim();
+                
+                if (query) {
+                    // Close mobile search if open
+                    mobileSearch.classList.remove('active');
+                    
+                    // Navigate to search page
+                    router.navigateTo('/search', { q: query });
+                    
+                    // Clear input
+                    searchInput.value = '';
+                }
+            });
+        }
+
+        // Theme toggle
+        const themeToggle = document.getElementById('themeToggle');
+        if (themeToggle) {
+            themeToggle.addEventListener('click', () => {
+                utils.toggleTheme();
+            });
+        }
+
+        // Bottom navigation
+        document.querySelectorAll('.bottom-nav-item').forEach(item => {
+            item.addEventListener('click', (e) => {
+                e.preventDefault();
+                const href = item.getAttribute('href');
+                if (href) {
+                    router.navigateTo(href.substring(1));
+                }
+            });
+        });
+
+        // Sidebar navigation
+        document.querySelectorAll('.sidebar-nav a').forEach(link => {
+            link.addEventListener('click', (e) => {
+                e.preventDefault();
+                const href = link.getAttribute('href');
+                if (href) {
+                    // Close sidebar
+                    sidebarMenu.classList.remove('active');
+                    sidebarBackdrop.classList.remove('active');
+                    document.body.style.overflow = '';
+                    
+                    // Navigate
+                    router.navigateTo(href.substring(1));
+                }
+            });
+        });
+
+        // Video modal close
+        const videoModal = document.getElementById('videoModal');
+        if (videoModal) {
+            videoModal.addEventListener('hidden.bs.modal', () => {
+                const iframe = videoModal.querySelector('iframe');
+                if (iframe) {
+                    iframe.src = iframe.src; // Reload iframe
+                }
+            });
+        }
+
+        // Back button handling
+        window.addEventListener('popstate', () => {
+            // Close sidebar if open
+            if (sidebarMenu.classList.contains('active')) {
+                sidebarMenu.classList.remove('active');
+                sidebarBackdrop.classList.remove('active');
+                document.body.style.overflow = '';
+            }
+            
+            // Close search if open
+            if (mobileSearch.classList.contains('active')) {
+                mobileSearch.classList.remove('active');
+            }
+        });
+
+        // Keyboard shortcuts
+        document.addEventListener('keydown', (e) => {
+            // Escape key
+            if (e.key === 'Escape') {
+                // Close sidebar
+                if (sidebarMenu.classList.contains('active')) {
+                    sidebarMenu.classList.remove('active');
+                    sidebarBackdrop.classList.remove('active');
+                    document.body.style.overflow = '';
+                }
+                
+                // Close search
+                if (mobileSearch.classList.contains('active')) {
+                    mobileSearch.classList.remove('active');
+                }
+            }
+            
+            // Search shortcut (Ctrl+K or Cmd+K)
+            if ((e.ctrlKey || e.metaKey) && e.key === 'k') {
+                e.preventDefault();
+                if (!mobileSearch.classList.contains('active')) {
+                    mobileSearch.classList.add('active');
+                    document.getElementById('search-input').focus();
+                }
+            }
+        });
+
+        // Load more button
+        document.addEventListener('click', (e) => {
+            if (e.target.id === 'loadMoreBtn' || e.target.closest('#loadMoreBtn')) {
+                const btn = e.target.closest('#loadMoreBtn') || e.target;
+                const spinner = btn.querySelector('.fa-spinner');
+                const text = btn.querySelector('span');
+                
+                if (spinner && text) {
+                    spinner.style.display = 'inline-block';
+                    text.textContent = 'Memuat...';
+                    btn.disabled = true;
+                    
+                    // Simulate load more (will be handled by router)
+                    setTimeout(() => {
+                        spinner.style.display = 'none';
+                        text.textContent = 'Muat Lebih Banyak';
+                        btn.disabled = false;
+                    }, 1000);
+                }
+            }
+        });
+
+        // Infinite scroll (for mobile)
+        let isScrolling = false;
+        window.addEventListener('scroll', () => {
+            if (isScrolling) return;
+            
+            isScrolling = true;
+            setTimeout(() => {
+                const scrollPosition = window.innerHeight + window.scrollY;
+                const pageHeight = document.documentElement.scrollHeight;
+                
+                // Load more when 80% scrolled
+                if (scrollPosition >= pageHeight * 0.8) {
+                    const loadMoreBtn = document.getElementById('loadMoreBtn');
+                    if (loadMoreBtn && !loadMoreBtn.disabled) {
+                        loadMoreBtn.click();
+                    }
+                }
+                
+                isScrolling = false;
+            }, 200);
+        });
+
+        // PWA features
+        this.setupPWA();
     }
 
-    // Handle PWA install prompt
-    handleInstallPrompt() {
+    setupPWA() {
+        // Register service worker for PWA
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('/sw.js').catch(error => {
+                    console.log('Service Worker registration failed:', error);
+                });
+            });
+        }
+
+        // Add to home screen prompt
         let deferredPrompt;
-        
         window.addEventListener('beforeinstallprompt', (e) => {
             // Prevent Chrome 67 and earlier from automatically showing the prompt
             e.preventDefault();
             // Stash the event so it can be triggered later
             deferredPrompt = e;
             
-            // Show install button (optional)
-            this.showInstallButton();
+            // Show custom install button
+            this.showInstallPrompt();
         });
-        
+
+        // Handle app installed
         window.addEventListener('appinstalled', () => {
-            console.log('PWA installed');
+            utils.showToast('Aplikasi berhasil diinstal!', 'success');
             deferredPrompt = null;
         });
     }
 
-    // Show install button (optional)
-    showInstallButton() {
-        // You can add an install button to your UI here
-        // Example: 
-        // const installButton = document.createElement('button');
-        // installButton.textContent = 'Install App';
-        // installButton.addEventListener('click', () => this.installApp());
-        // document.body.appendChild(installButton);
+    showInstallPrompt() {
+        // You can add a custom install button in your UI
+        // and trigger the prompt when clicked:
+        // deferredPrompt.prompt();
+        // Then listen for the user's choice
     }
 
-    // Install app
-    installApp(deferredPrompt) {
-        if (deferredPrompt) {
-            deferredPrompt.prompt();
-            deferredPrompt.userChoice.then((choiceResult) => {
-                if (choiceResult.outcome === 'accepted') {
-                    console.log('User accepted install');
-                } else {
-                    console.log('User dismissed install');
-                }
-                deferredPrompt = null;
-            });
-        }
+    hideLoading() {
+        setTimeout(() => {
+            document.getElementById('loading-overlay').style.opacity = '0';
+            setTimeout(() => {
+                document.getElementById('loading-overlay').style.display = 'none';
+            }, 300);
+        }, 1000);
     }
 
-    // Check for updates
-    checkForUpdates() {
-        // You can implement update checking logic here
-        // For example, check version from server
-        const currentVersion = '2.0';
-        // Fetch latest version from server and compare
+    // Global error handler
+    setupErrorHandling() {
+        window.addEventListener('error', (e) => {
+            console.error('Global error:', e);
+            utils.showToast('Terjadi kesalahan dalam aplikasi', 'error');
+        });
+
+        window.addEventListener('unhandledrejection', (e) => {
+            console.error('Unhandled promise rejection:', e);
+            utils.showToast('Terjadi kesalahan dalam aplikasi', 'error');
+        });
     }
 }
 
-// Initialize app when DOM is loaded
-document.addEventListener('DOMContentLoaded', () => {
-    // Hide loading overlay after 1.5 seconds
-    setTimeout(() => {
-        Utils.hideLoading();
-    }, 1500);
-    
-    // Start the app
-    window.app = new KeyAnimeApp();
-});
+// Initialize the app
+const app = new KeyAnimeApp();
 
-// Make functions globally available
-window.Components = Components;
-window.Utils = Utils;
-window.Router = Router;
-window.API = API;
+// Make utils, api, components, router globally accessible for debugging
+window.utils = utils;
+window.api = api;
+window.components = components;
+window.router = router;
+window.app = app;

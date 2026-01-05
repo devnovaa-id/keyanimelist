@@ -1,40 +1,53 @@
-// UI Components
+// UI Components for KeyAnime
+
 class Components {
-    // Create anime card
-    static createAnimeCard(anime) {
-        const isFavorite = Utils.isFavorite(anime.slug);
-        const episodeText = anime.eps ? anime.eps[0] || 'Unknown' : 'Unknown';
-        const rating = anime.rate ? anime.rate[0] || 'N/A' : 'N/A';
+    constructor() {
+        this.utils = utils;
+        this.api = api;
+    }
+
+    // Create Anime Card
+    createAnimeCard(anime, options = {}) {
+        const isFavorite = this.utils.isFavorite(anime.animeId);
+        const watchBtnText = anime.episodes ? `Tonton Eps ${anime.episodes}` : 'Tonton';
         
         return `
-            <div class="anime-card" data-slug="${anime.slug}">
+            <div class="anime-card" data-anime-id="${anime.animeId}">
                 <div class="card-image">
-                    <img 
-                        src="${anime.gambar || 'assets/placeholder.jpg'}" 
-                        alt="${anime.judul}"
-                        loading="lazy"
-                        onerror="this.src='assets/placeholder.jpg'"
-                    >
-                    ${episodeText !== 'Unknown' ? `<div class="episode-badge">${episodeText}</div>` : ''}
-                    ${rating !== 'N/A' ? `
+                    <img src="${this.utils.getImageUrl(anime.poster)}" 
+                         alt="${anime.title}"
+                         loading="lazy">
+                    ${anime.episodes ? `<div class="episode-badge">${anime.episodes}</div>` : ''}
+                    ${anime.score ? `
                         <div class="rating-badge">
                             <i class="fas fa-star"></i>
-                            <span>${rating}</span>
+                            <span>${anime.score}</span>
                         </div>
                     ` : ''}
                 </div>
                 <div class="card-content">
-                    <h3 class="card-title">${Utils.truncateText(anime.judul, 50)}</h3>
-                    <div class="card-subtitle">Episode: ${episodeText}</div>
+                    <h3 class="card-title" title="${anime.title}">
+                        ${this.utils.truncateText(anime.title, 40)}
+                    </h3>
+                    ${anime.season ? `
+                        <div class="card-subtitle">${anime.season}</div>
+                    ` : ''}
                     <div class="card-actions">
-                        <button class="card-btn watch" onclick="Router.navigateTo('watch', '${anime.slug}')">
-                            <i class="fas fa-play"></i> Tonton
+                        <button class="card-btn watch" data-action="watch" data-anime-id="${anime.animeId}">
+                            <i class="fas fa-play"></i>
+                            ${watchBtnText}
                         </button>
-                        <button class="card-btn detail" onclick="Router.navigateTo('detail', '${anime.slug}')">
-                            <i class="fas fa-info-circle"></i> Detail
+                        <button class="card-btn detail" data-action="detail" data-anime-id="${anime.animeId}">
+                            <i class="fas fa-info-circle"></i>
+                            Detail
                         </button>
-                        <button class="card-btn ${isFavorite ? 'favorite' : ''}" onclick="Components.toggleFavorite('${anime.slug}', this)">
-                            <i class="fas ${isFavorite ? 'fa-heart' : 'fa-heart-o'}"></i>
+                    </div>
+                    <div class="card-actions" style="margin-top: 8px;">
+                        <button class="card-btn ${isFavorite ? 'watch' : 'detail'}" 
+                                data-action="favorite" 
+                                data-anime-id="${anime.animeId}"
+                                style="flex: none; padding: 8px 12px;">
+                            <i class="fas fa-heart${isFavorite ? '' : '-broken'}"></i>
                         </button>
                     </div>
                 </div>
@@ -42,15 +55,51 @@ class Components {
         `;
     }
 
-    // Create episode card
-    static createEpisodeCard(episode, animeSlug) {
-        const episodeNumber = episode.judul.match(/Episode\s+(\d+)/i)?.[1] || '?';
+    // Create Search Result Item
+    createSearchResultItem(anime) {
+        const isFavorite = this.utils.isFavorite(anime.animeId);
+        
         return `
-            <a href="#/watch?slug=${animeSlug}&ep=${episode.slug}" class="episode-card" data-episode-slug="${episode.slug}">
-                <div class="episode-number">${episodeNumber}</div>
+            <a href="#/anime/${anime.animeId}" class="result-item">
+                <div class="result-image">
+                    <img src="${this.utils.getImageUrl(anime.poster)}" 
+                         alt="${anime.title}"
+                         loading="lazy">
+                </div>
+                <div class="result-content">
+                    <h3 class="result-title">${anime.title}</h3>
+                    <div class="result-meta">
+                        <span>${anime.status || ''}</span>
+                        ${anime.score ? `<span>⭐ ${anime.score}</span>` : ''}
+                    </div>
+                    <div class="result-genres">
+                        ${anime.genreList ? anime.genreList.slice(0, 3).map(genre => 
+                            `<span class="genre-tag">${genre.title}</span>`
+                        ).join('') : ''}
+                    </div>
+                    <div class="result-actions">
+                        <button class="btn watch" data-action="watch" data-anime-id="${anime.animeId}">
+                            <i class="fas fa-play"></i> Tonton
+                        </button>
+                        <button class="btn ${isFavorite ? 'watch' : 'detail'}" 
+                                data-action="favorite" 
+                                data-anime-id="${anime.animeId}">
+                            <i class="fas fa-heart${isFavorite ? '' : '-broken'}"></i>
+                        </button>
+                    </div>
+                </div>
+            </a>
+        `;
+    }
+
+    // Create Episode Card
+    createEpisodeCard(episode, animeId) {
+        return `
+            <a href="#/watch/${episode.episodeId}" class="episode-card" data-episode-id="${episode.episodeId}">
+                <div class="episode-number">${episode.title}</div>
                 <div class="episode-info">
-                    <div class="episode-title">${Utils.truncateText(episode.judul, 60)}</div>
-                    <div class="episode-date">${Utils.formatDate(episode.tanggal)}</div>
+                    <div class="episode-title">Episode ${episode.title}</div>
+                    <div class="episode-date">${animeId}</div>
                 </div>
                 <div class="episode-play">
                     <i class="fas fa-play"></i>
@@ -59,274 +108,256 @@ class Components {
         `;
     }
 
-    // Create genre chip
-    static createGenreChip(genre, active = false) {
+    // Create Genre Chip
+    createGenreChip(genre, active = false) {
         return `
-            <a href="#/genre?name=${genre.slug}" class="chip ${active ? 'active' : ''}">
+            <a href="#/genre/${genre.genreId}" class="chip ${active ? 'active' : ''}">
                 <i class="fas fa-tag"></i>
-                ${genre.judul}
+                ${genre.title}
             </a>
         `;
     }
 
-    // Create search result item
-    static createSearchResult(anime) {
-        const rating = anime.rate ? anime.rate[0] || 'N/A' : 'N/A';
-        return `
-            <div class="result-item" data-slug="${anime.slug}">
-                <div class="result-image">
-                    <img 
-                        src="${anime.gambar || 'assets/placeholder.jpg'}" 
-                        alt="${anime.judul}"
-                        loading="lazy"
-                        onerror="this.src='assets/placeholder.jpg'"
-                    >
-                </div>
-                <div class="result-content">
-                    <h4 class="result-title">${anime.judul}</h4>
-                    <div class="result-meta">
-                        <span>Episode: ${anime.eps ? anime.eps[0] || 'Unknown' : 'Unknown'}</span>
-                        <span class="result-rating">
-                            <i class="fas fa-star"></i> ${rating}
-                        </span>
-                    </div>
-                    <div class="result-actions">
-                        <button class="btn btn-primary" onclick="Router.navigateTo('watch', '${anime.slug}')">
-                            <i class="fas fa-play"></i> Tonton
-                        </button>
-                        <button class="btn btn-secondary" onclick="Router.navigateTo('detail', '${anime.slug}')">
-                            <i class="fas fa-info"></i> Detail
-                        </button>
-                    </div>
-                </div>
-            </div>
-        `;
-    }
-
-    // Create schedule day
-    static createScheduleDay(day) {
-        const animeItems = day.anime.map(anime => `
-            <div class="schedule-item" onclick="Router.navigateTo('detail', '${anime.slug}')">
-                <div class="schedule-anime-title">${anime.judul}</div>
-                <button class="schedule-action" onclick="event.stopPropagation(); Router.navigateTo('watch', '${anime.slug}')">
-                    <i class="fas fa-play"></i>
-                </button>
-            </div>
-        `).join('');
-
+    // Create Schedule Day
+    createScheduleDay(day) {
         return `
             <div class="schedule-day">
-                <h5>${day.hari}</h5>
+                <h4>${day.title}</h4>
                 <div class="schedule-list">
-                    ${animeItems}
+                    ${day.animeList.map(anime => `
+                        <div class="schedule-item">
+                            <a href="#/anime/${anime.animeId}">${anime.title}</a>
+                        </div>
+                    `).join('')}
                 </div>
             </div>
         `;
     }
 
-    // Create download button
-    static createDownloadButton(quality, links, episodeTitle) {
-        const qualityButtons = links.map(link => `
-            <a href="${link.href}" target="_blank" class="download-btn" onclick="Utils.showToast('Mengunduh ${quality} - ${link.nama}')">
-                <i class="fas fa-download"></i> ${link.nama}
-            </a>
+    // Create Hero Slider
+    createHeroSlider(slides) {
+        if (!slides || slides.length === 0) return '';
+        
+        const slidesHtml = slides.map((slide, index) => `
+            <div class="hero-slide ${index === 0 ? 'active' : ''}" 
+                 style="background-image: url('${this.utils.getImageUrl(slide.poster)}')">
+                <div class="hero-content">
+                    <h2 class="hero-title">${slide.title}</h2>
+                    <p class="hero-subtitle">Episode ${slide.episodes} • ${slide.latestReleaseDate || ''}</p>
+                    <button class="btn-play" data-anime-id="${slide.animeId}">
+                        <i class="fas fa-play"></i> Tonton Sekarang
+                    </button>
+                </div>
+            </div>
         `).join('');
 
         return `
-            <div class="quality-title">${episodeTitle} - ${quality}</div>
-            <div class="download-buttons">
-                ${qualityButtons}
+            <div class="hero-section">
+                ${slidesHtml}
             </div>
         `;
     }
 
-    // Toggle favorite
-    static toggleFavorite(slug, button) {
-        const favorites = Utils.getStorage('favorites') || [];
-        const isFavorite = favorites.some(fav => fav.slug === slug);
+    // Create Anime Detail Page
+    createAnimeDetail(anime) {
+        const isFavorite = this.utils.isFavorite(anime.animeId);
         
-        if (isFavorite) {
-            Utils.removeFavorite(slug);
-            if (button) {
-                button.innerHTML = '<i class="fas fa-heart-o"></i>';
-                button.classList.remove('favorite');
-            }
-        } else {
-            const anime = {
-                slug,
-                judul: button?.closest('.anime-card')?.querySelector('.card-title')?.textContent || '',
-                gambar: button?.closest('.anime-card')?.querySelector('img')?.src || ''
-            };
-            Utils.addFavorite(anime);
-            if (button) {
-                button.innerHTML = '<i class="fas fa-heart"></i>';
-                button.classList.add('favorite');
-            }
-        }
-        
-        // Refresh favorites page if active
-        if (Router.currentPage === 'favorites') {
-            Router.loadPage();
-        }
-    }
-
-    // Render hero section
-    static async renderHeroSection() {
-        try {
-            const animeList = await API.getAnimeList({ type: 'ongoing', page: 1 });
-            if (animeList.length > 0) {
-                const featured = animeList.slice(0, 3);
-                let heroHTML = '';
+        return `
+            <div class="mobile-detail-page">
+                <div class="detail-header">
+                    <button class="back-btn" onclick="window.history.back()">
+                        <i class="fas fa-arrow-left"></i>
+                    </button>
+                    <h4>Detail Anime</h4>
+                </div>
                 
-                featured.forEach((anime, index) => {
-                    heroHTML += `
-                        <div class="hero-slide ${index === 0 ? 'active' : ''}" 
-                             style="background-image: linear-gradient(rgba(0,0,0,0.3), rgba(0,0,0,0.7)), url('${anime.gambar}')">
-                            <div class="hero-content">
-                                <h2 class="hero-title">${anime.judul}</h2>
-                                <p class="hero-subtitle">Tonton sekarang!</p>
-                                <button class="btn-play" onclick="Router.navigateTo('detail', '${anime.slug}')">
-                                    <i class="fas fa-play"></i> Tonton Sekarang
-                                </button>
+                <div class="anime-detail-mobile">
+                    <div class="detail-poster">
+                        <img src="${this.utils.getImageUrl(anime.poster)}" 
+                             alt="${anime.title}" 
+                             class="poster-img">
+                        <div class="poster-overlay">
+                            <button class="btn-play" data-action="play-first" data-anime-id="${anime.animeId}">
+                                <i class="fas fa-play"></i> Tonton Sekarang
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <div class="detail-info">
+                        <h1 class="detail-title">${anime.title}</h1>
+                        
+                        ${anime.score ? `
+                            <div class="detail-rating">
+                                <i class="fas fa-star"></i>
+                                <span>${anime.score}</span>
+                            </div>
+                        ` : ''}
+                        
+                        <div class="detail-meta">
+                            ${anime.type ? `<span><i class="fas fa-tv"></i> ${anime.type}</span>` : ''}
+                            ${anime.episodes ? `<span><i class="fas fa-list-ol"></i> ${anime.episodes} Episode</span>` : ''}
+                            ${anime.duration ? `<span><i class="fas fa-clock"></i> ${anime.duration}</span>` : ''}
+                            ${anime.status ? `<span><i class="fas fa-circle"></i> ${anime.status}</span>` : ''}
+                        </div>
+                        
+                        ${anime.genreList ? `
+                            <div class="detail-genres">
+                                ${anime.genreList.map(genre => `
+                                    <a href="#/genre/${genre.genreId}" class="genre-tag">${genre.title}</a>
+                                `).join('')}
+                            </div>
+                        ` : ''}
+                        
+                        ${anime.synopsis?.paragraphList?.length > 0 ? `
+                            <div class="detail-synopsis">
+                                <h6>Sinopsis</h6>
+                                <p>${anime.synopsis.paragraphList.join(' ')}</p>
+                            </div>
+                        ` : ''}
+                        
+                        <div class="detail-actions" style="margin-top: 20px; display: flex; gap: 10px;">
+                            <button class="card-btn watch" data-action="play-first" data-anime-id="${anime.animeId}" style="flex: 2;">
+                                <i class="fas fa-play"></i> Tonton
+                            </button>
+                            <button class="card-btn ${isFavorite ? 'watch' : 'detail'}" 
+                                    data-action="favorite" 
+                                    data-anime-id="${anime.animeId}"
+                                    style="flex: 1;">
+                                <i class="fas fa-heart${isFavorite ? '' : '-broken'}"></i>
+                            </button>
+                        </div>
+                    </div>
+                    
+                    ${anime.episodeList?.length > 0 ? `
+                        <div class="detail-episodes">
+                            <div class="episodes-header">
+                                <h5>Daftar Episode</h5>
+                            </div>
+                            <div class="episodes-grid">
+                                ${anime.episodeList.map(ep => this.createEpisodeCard(ep, anime.animeId)).join('')}
                             </div>
                         </div>
-                    `;
-                });
-                
-                const heroSection = document.querySelector('.hero-section');
-                if (heroSection) {
-                    heroSection.innerHTML = heroHTML;
-                    
-                    // Auto slide
-                    let currentSlide = 0;
-                    setInterval(() => {
-                        const slides = heroSection.querySelectorAll('.hero-slide');
-                        slides[currentSlide].classList.remove('active');
-                        currentSlide = (currentSlide + 1) % slides.length;
-                        slides[currentSlide].classList.add('active');
-                    }, 5000);
-                }
-            }
-        } catch (error) {
-            console.error('Error loading hero section:', error);
-        }
-    }
-
-    // Render genre chips
-    static async renderGenreChips(activeGenre = '') {
-        try {
-            const genres = await API.getGenres();
-            const chipsContainer = document.querySelector('.category-chips');
-            if (chipsContainer) {
-                const chipsHTML = genres.map(genre => 
-                    this.createGenreChip(genre, genre.slug === activeGenre)
-                ).join('');
-                chipsContainer.innerHTML = chipsHTML;
-            }
-        } catch (error) {
-            console.error('Error loading genres:', error);
-        }
-    }
-
-    // Render video player
-    static async renderVideoPlayer(episodeSlug, animeTitle = '') {
-        const container = document.getElementById('videoPlayerContainer');
-        if (!container) return;
-
-        container.innerHTML = `
-            <div class="loading-video">
-                <i class="fas fa-spinner fa-spin"></i>
-                <p>Memuat video...</p>
+                    ` : ''}
+                </div>
             </div>
         `;
-
-        try {
-            // Get episode data
-            const episodeData = await API.getEpisodeData(episodeSlug);
-            
-            // Get nonce for iframe
-            const nonceData = await API.getNonce();
-            
-            // Get iframe URL (using first mirror)
-            const mirror = episodeData.mirror?.m480p?.[0] || episodeData.mirror?.m720p?.[0];
-            if (mirror && nonceData.data) {
-                const iframeData = await API.getIframeUrl(mirror.content, nonceData.data);
-                
-                container.innerHTML = `
-                    <iframe 
-                        src="${iframeData.iframe}" 
-                        allowfullscreen
-                        frameborder="0"
-                        scrolling="no"
-                        referrerpolicy="strict-origin-when-cross-origin"
-                    ></iframe>
-                `;
-                
-                // Update title
-                const titleElement = document.getElementById('videoTitle');
-                if (titleElement && animeTitle) {
-                    titleElement.textContent = `${animeTitle} - ${episodeData.judul}`;
-                }
-                
-                // Store in history
-                const animeSlug = episodeSlug.split('-episode-')[0];
-                const animeInfo = await API.getAnimeInfo(animeSlug + '-sub-indo');
-                if (animeInfo) {
-                    Utils.addHistory(animeInfo, {
-                        slug: episodeSlug,
-                        judul: episodeData.judul
-                    });
-                }
-            } else {
-                container.innerHTML = `
-                    <div class="no-video">
-                        <i class="fas fa-exclamation-triangle"></i>
-                        <h5>Video tidak tersedia</h5>
-                        <p>Coba gunakan link download di bawah</p>
-                    </div>
-                `;
-            }
-        } catch (error) {
-            console.error('Error loading video:', error);
-            container.innerHTML = `
-                <div class="no-video">
-                    <i class="fas fa-exclamation-triangle"></i>
-                    <h5>Gagal memuat video</h5>
-                    <p>${error.message}</p>
-                </div>
-            `;
-        }
     }
 
-    // Render download section
-    static async renderDownloadSection(slug) {
-        try {
-            const batchData = await API.getBatchDownload(slug);
-            const container = document.querySelector('.download-section');
-            
-            if (container && batchData.length > 0) {
-                let html = '<h6><i class="fas fa-download"></i> Download Batch</h6>';
+    // Create Watch Page
+    createWatchPage(episodeData) {
+        const anime = episodeData?.data?.details;
+        if (!anime) return '<div class="error-page">Episode tidak ditemukan</div>';
+        
+        return `
+            <div class="mobile-watch-page">
+                <div class="watch-header">
+                    <button class="back-btn" onclick="window.history.back()">
+                        <i class="fas fa-arrow-left"></i>
+                    </button>
+                    <h5>${anime.title || 'Menonton...'}</h5>
+                </div>
                 
-                // Group by episode
-                batchData.forEach((episode, index) => {
-                    html += `<h6 class="mt-3">${episode.judul}</h6>`;
-                    
-                    // Add quality options
-                    if (episode.download.d360pmp4?.length > 0) {
-                        html += this.createDownloadButton('360p MP4', episode.download.d360pmp4, episode.judul);
-                    }
-                    if (episode.download.d480pmp4?.length > 0) {
-                        html += this.createDownloadButton('480p MP4', episode.download.d480pmp4, episode.judul);
-                    }
-                    if (episode.download.d720pmp4?.length > 0) {
-                        html += this.createDownloadButton('720p MP4', episode.download.d720pmp4, episode.judul);
-                    }
-                });
+                <div class="video-container" id="videoPlayerContainer">
+                    <div class="loading-video">
+                        <i class="fas fa-spinner fa-spin"></i>
+                        <p>Memuat video...</p>
+                    </div>
+                </div>
                 
-                container.innerHTML = html;
-            }
-        } catch (error) {
-            console.error('Error loading download links:', error);
-        }
+                ${anime.server?.qualityList ? `
+                    <div class="quality-selector">
+                        <h6>Pilih Kualitas</h6>
+                        <div class="quality-buttons" id="qualityButtons">
+                            ${anime.server.qualityList.map((quality, index) => `
+                                <button class="quality-btn ${index === 1 ? 'active' : ''}" 
+                                        data-quality="${quality.title.trim()}"
+                                        data-server-index="0">
+                                    ${quality.title.trim()}
+                                </button>
+                            `).join('')}
+                        </div>
+                    </div>
+                ` : ''}
+                
+                ${anime.download?.qualityList ? `
+                    <div class="download-section">
+                        <h6>Download Episode</h6>
+                        ${anime.download.qualityList.map(quality => `
+                            <div class="quality-download">
+                                <div class="quality-title">${quality.title}</div>
+                                <div class="download-buttons">
+                                    ${quality.urlList.map((url, idx) => `
+                                        <a href="${url.url}" 
+                                           class="download-btn" 
+                                           target="_blank" 
+                                           rel="noopener noreferrer">
+                                            <i class="fas fa-download"></i>
+                                            ${url.title}
+                                        </a>
+                                    `).join('')}
+                                </div>
+                            </div>
+                        `).join('')}
+                    </div>
+                ` : ''}
+                
+                <div class="episode-navigation" style="margin-top: 20px;">
+                    ${anime.hasPrevEpisode ? `
+                        <a href="#/watch/${anime.prevEpisode.episodeId}" class="card-btn detail">
+                            <i class="fas fa-arrow-left"></i> Episode Sebelumnya
+                        </a>
+                    ` : ''}
+                    ${anime.hasNextEpisode ? `
+                        <a href="#/watch/${anime.nextEpisode.episodeId}" class="card-btn watch" style="margin-top: 10px;">
+                            Episode Selanjutnya <i class="fas fa-arrow-right"></i>
+                        </a>
+                    ` : ''}
+                </div>
+            </div>
+        `;
+    }
+
+    // Create Empty State
+    createEmptyState(message = 'Tidak ada data', icon = 'fas fa-inbox') {
+        return `
+            <div class="empty-state">
+                <div class="empty-icon">
+                    <i class="${icon}"></i>
+                </div>
+                <h5>${message}</h5>
+                <p>Coba cari dengan kata kunci yang berbeda</p>
+            </div>
+        `;
+    }
+
+    // Create Error Page
+    createErrorPage(message = 'Terjadi kesalahan') {
+        return `
+            <div class="error-page">
+                <i class="fas fa-exclamation-triangle"></i>
+                <h2>Oops!</h2>
+                <p>${message}</p>
+                <button class="btn watch" onclick="window.history.back()">
+                    <i class="fas fa-arrow-left"></i> Kembali
+                </button>
+            </div>
+        `;
+    }
+
+    // Load More Button
+    createLoadMoreButton(hasNextPage, onClick) {
+        if (!hasNextPage) return '';
+        
+        return `
+            <div class="load-more">
+                <button class="btn watch" id="loadMoreBtn">
+                    <i class="fas fa-spinner fa-spin" style="display: none;"></i>
+                    <span>Muat Lebih Banyak</span>
+                </button>
+            </div>
+        `;
     }
 }
+
+// Export components instance
+const components = new Components();
