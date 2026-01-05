@@ -2199,6 +2199,250 @@ main.container-fluid {
     color: white;
 }
 
+/* Hero Carousel Dots */
+.hero-dots {
+    position: absolute;
+    bottom: 20px;
+    left: 50%;
+    transform: translateX(-50%);
+    display: flex;
+    gap: 8px;
+    z-index: 10;
+}
+
+.hero-dot {
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    border: none;
+    background: rgba(255, 255, 255, 0.5);
+    cursor: pointer;
+    transition: all 0.3s ease;
+    padding: 0;
+    font-size: 0;
+    color: transparent;
+}
+
+.hero-dot.active {
+    background: var(--primary-color);
+    transform: scale(1.2);
+}
+
+.hero-dot:hover {
+    background: var(--secondary-color);
+}
+
+/* Pagination Styles */
+.pagination-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 8px;
+    margin: 30px 0;
+    flex-wrap: wrap;
+}
+
+.pagination-btn {
+    padding: 10px 15px;
+    background: var(--card-bg);
+    border-radius: 8px;
+    color: var(--light-color);
+    text-decoration: none;
+    border: 1px solid var(--card-border);
+    font-size: 0.9rem;
+    transition: all 0.3s ease;
+    min-width: 40px;
+    text-align: center;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 5px;
+}
+
+.pagination-btn:hover {
+    background: rgba(255, 255, 255, 0.1);
+    transform: translateY(-2px);
+}
+
+.pagination-btn.active {
+    background: var(--primary-color);
+    border-color: var(--primary-color);
+    color: white;
+    font-weight: bold;
+}
+
+.pagination-btn.prev,
+.pagination-btn.next {
+    padding: 10px 20px;
+}
+
+/* Search improvements */
+.search-box {
+    position: relative;
+}
+
+.clear-search {
+    position: absolute;
+    right: 10px;
+    top: 50%;
+    transform: translateY(-50%);
+    background: transparent;
+    border: none;
+    color: rgba(255, 255, 255, 0.5);
+    cursor: pointer;
+    padding: 5px;
+    border-radius: 50%;
+    display: none;
+}
+
+.clear-search:hover {
+    background: rgba(255, 255, 255, 0.1);
+}
+
+/* Animation for carousel */
+@keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+
+.hero-slide {
+    animation: fadeIn 1s ease;
+}
+
+/* Better error states */
+.error-page {
+    min-height: 60vh;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    text-align: center;
+    padding: 40px 20px;
+}
+
+.error-page i {
+    font-size: 4rem;
+    color: var(--primary-color);
+    margin-bottom: 20px;
+}
+
+.error-page h2 {
+    font-size: 1.8rem;
+    margin-bottom: 15px;
+}
+
+.error-page p {
+    font-size: 1rem;
+    color: rgba(255, 255, 255, 0.7);
+    margin-bottom: 30px;
+    line-height: 1.5;
+    max-width: 400px;
+}
+
+/* Toast improvements */
+.toast-actions {
+    display: flex;
+    gap: 10px;
+    margin-left: 10px;
+}
+
+.toast-btn {
+    padding: 5px 15px;
+    background: var(--primary-color);
+    border: none;
+    border-radius: 5px;
+    color: white;
+    font-size: 0.8rem;
+    cursor: pointer;
+    transition: background 0.3s ease;
+}
+
+.toast-btn:hover {
+    background: #E91E63;
+}
+
+/* Page info */
+.page-info {
+    font-size: 0.9rem;
+    color: rgba(255, 255, 255, 0.7);
+    display: flex;
+    align-items: center;
+    gap: 5px;
+}
+
+/* Loading improvements */
+.loading-video {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    text-align: center;
+    color: rgba(255, 255, 255, 0.7);
+}
+
+.loading-video i {
+    font-size: 2rem;
+    margin-bottom: 10px;
+}
+
+.no-video {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    text-align: center;
+    color: rgba(255, 255, 255, 0.7);
+    padding: 20px;
+}
+
+.no-video i {
+    font-size: 3rem;
+    color: var(--accent-color);
+    margin-bottom: 15px;
+}
+
+/* Responsive pagination */
+@media (max-width: 576px) {
+    .pagination-btn {
+        padding: 8px 12px;
+        font-size: 0.8rem;
+        min-width: 35px;
+    }
+    
+    .pagination-btn.prev,
+    .pagination-btn.next {
+        padding: 8px 15px;
+    }
+    
+    .page-info {
+        font-size: 0.8rem;
+    }
+}
+
+/* Dark mode adjustments */
+body.light-mode .pagination-btn {
+    background: rgba(0, 0, 0, 0.05);
+    color: var(--light-color);
+    border-color: rgba(0, 0, 0, 0.1);
+}
+
+body.light-mode .pagination-btn:hover {
+    background: rgba(0, 0, 0, 0.1);
+}
+
+body.light-mode .pagination-btn.active {
+    background: var(--primary-color);
+    color: white;
+}
+
+body.light-mode .hero-dot {
+    background: rgba(0, 0, 0, 0.3);
+}
+
+body.light-mode .hero-dot.active {
+    background: var(--primary-color);
+}
+
 //js/api.js
 
 // API Service for KeyAnime
@@ -2217,15 +2461,25 @@ class APIService {
         
         // Return cached data if not expired
         if (cached && Date.now() - cached.timestamp < this.cacheDuration) {
+            console.log('Cache hit:', endpoint);
             return cached.data;
         }
 
         try {
             utils.showLoading();
-            const response = await fetch(`${this.baseURL}${endpoint}`, options);
+            const url = `${this.baseURL}${endpoint}`;
+            console.log('Fetching:', url);
+            
+            const response = await fetch(url, {
+                ...options,
+                headers: {
+                    'Accept': 'application/json',
+                    ...options.headers
+                }
+            });
             
             if (!response.ok) {
-                throw new Error(`HTTP ${response.status}`);
+                throw new Error(`HTTP ${response.status}: ${response.statusText}`);
             }
             
             const data = await response.json();
@@ -2242,7 +2496,7 @@ class APIService {
             utils.showToast('Gagal memuat data. Silakan coba lagi.', 'error');
             return {
                 error: true,
-                message: 'Gagal memuat data'
+                message: error.message || 'Gagal memuat data'
             };
         } finally {
             utils.hideLoading();
@@ -2252,6 +2506,8 @@ class APIService {
     // Clear cache
     clearCache() {
         this.cache.clear();
+        console.log('Cache cleared');
+        return true;
     }
 
     // Home Page
@@ -2276,20 +2532,54 @@ class APIService {
 
     // Ongoing Anime
     async getOngoing(page = 1) {
-        return await this.fetch(`/ongoing?page=${page}`);
+        const data = await this.fetch(`/ongoing?page=${page}`);
+        
+        // Ensure pagination data exists
+        if (data.data && !data.pagination) {
+            const itemsPerPage = 24;
+            data.pagination = {
+                currentPage: page,
+                hasNextPage: true,
+                totalPages: page + 1,
+                totalItems: (page + 1) * itemsPerPage
+            };
+        }
+        
+        return data;
     }
 
     // Completed Anime
     async getCompleted(page = 1) {
-        return await this.fetch(`/completed?page=${page}`);
+        const data = await this.fetch(`/completed?page=${page}`);
+        
+        // Ensure pagination data exists
+        if (data.data && !data.pagination) {
+            const itemsPerPage = 24;
+            data.pagination = {
+                currentPage: page,
+                hasNextPage: true,
+                totalPages: page + 1,
+                totalItems: (page + 1) * itemsPerPage
+            };
+        }
+        
+        return data;
     }
 
     // Search Anime
     async searchAnime(query, page = 1) {
         if (!query || query.trim() === '') {
-            return { data: { animeList: [] }, pagination: null };
+            return { 
+                data: { animeList: [] }, 
+                pagination: {
+                    currentPage: 1,
+                    hasNextPage: false,
+                    totalPages: 1,
+                    totalItems: 0
+                }
+            };
         }
-        return await this.fetch(`/search?q=${encodeURIComponent(query)}&page=${page}`);
+        return await this.fetch(`/search?q=${encodeURIComponent(query.trim())}&page=${page}`);
     }
 
     // Anime by Genre
@@ -2320,34 +2610,47 @@ class APIService {
     // Get video URL from episode data
     async getVideoUrl(episodeData, quality = '480p', serverIndex = 0) {
         try {
-            const qualityList = episodeData?.data?.details?.server?.qualityList;
-            if (!qualityList) {
-                return episodeData?.data?.details?.defaultStreamingUrl || null;
+            // If direct streaming URL is available
+            if (episodeData?.data?.details?.defaultStreamingUrl) {
+                return episodeData.data.details.defaultStreamingUrl;
             }
 
-            const qualityData = qualityList.find(q => q.title.includes(quality));
-            if (!qualityData) {
-                // Fallback to first quality
-                const firstQuality = qualityList[0];
-                if (firstQuality?.serverList?.length > 0) {
-                    const serverId = firstQuality.serverList[0].serverId;
-                    const serverData = await this.getServerVideo(serverId);
+            const qualityList = episodeData?.data?.details?.server?.qualityList;
+            if (!qualityList || qualityList.length === 0) {
+                return null;
+            }
+
+            // Try to find the requested quality
+            const qualityData = qualityList.find(q => 
+                q.title && q.title.toLowerCase().includes(quality.toLowerCase())
+            );
+            
+            // Fallback to first available quality
+            const targetQuality = qualityData || qualityList[0];
+            
+            if (targetQuality?.serverList?.length > 0) {
+                const server = targetQuality.serverList[serverIndex] || targetQuality.serverList[0];
+                if (server?.serverId) {
+                    const serverData = await this.getServerVideo(server.serverId);
                     return serverData?.data?.details?.url || null;
                 }
-                return null;
             }
-
-            const server = qualityData.serverList[serverIndex];
-            if (!server) {
-                return null;
-            }
-
-            const serverData = await this.getServerVideo(server.serverId);
-            return serverData?.data?.details?.url || null;
+            
+            return null;
         } catch (error) {
             console.error('Error getting video URL:', error);
             return null;
         }
+    }
+
+    // Get recommended anime
+    async getRecommendations(animeId) {
+        return await this.fetch(`/recommendations/${animeId}`);
+    }
+
+    // Get popular anime
+    async getPopular(page = 1) {
+        return await this.fetch(`/popular?page=${page}`);
     }
 }
 
@@ -2379,6 +2682,14 @@ class KeyAnimeApp {
             if (searchQuery) {
                 router.navigateTo('/search', { q: searchQuery });
             }
+            
+            // Setup error handling
+            this.setupErrorHandling();
+        });
+        
+        // Cleanup on page unload
+        window.addEventListener('beforeunload', () => {
+            this.utils.cleanup();
         });
     }
 
@@ -2399,17 +2710,13 @@ class KeyAnimeApp {
 
         if (closeMenu) {
             closeMenu.addEventListener('click', () => {
-                sidebarMenu.classList.remove('active');
-                sidebarBackdrop.classList.remove('active');
-                document.body.style.overflow = '';
+                this.closeSidebar();
             });
         }
 
         if (sidebarBackdrop) {
             sidebarBackdrop.addEventListener('click', () => {
-                sidebarMenu.classList.remove('active');
-                sidebarBackdrop.classList.remove('active');
-                document.body.style.overflow = '';
+                this.closeSidebar();
             });
         }
 
@@ -2434,7 +2741,7 @@ class KeyAnimeApp {
                 const searchInput = document.getElementById('search-input');
                 const query = searchInput.value.trim();
                 
-                if (query) {
+                if (query && query.length >= 3) {
                     // Close mobile search if open
                     mobileSearch.classList.remove('active');
                     
@@ -2443,6 +2750,8 @@ class KeyAnimeApp {
                     
                     // Clear input
                     searchInput.value = '';
+                } else {
+                    utils.showToast('Masukkan minimal 3 karakter', 'error');
                 }
             });
         }
@@ -2473,9 +2782,7 @@ class KeyAnimeApp {
                 const href = link.getAttribute('href');
                 if (href) {
                     // Close sidebar
-                    sidebarMenu.classList.remove('active');
-                    sidebarBackdrop.classList.remove('active');
-                    document.body.style.overflow = '';
+                    this.closeSidebar();
                     
                     // Navigate
                     router.navigateTo(href.substring(1));
@@ -2497,14 +2804,10 @@ class KeyAnimeApp {
         // Back button handling
         window.addEventListener('popstate', () => {
             // Close sidebar if open
-            if (sidebarMenu.classList.contains('active')) {
-                sidebarMenu.classList.remove('active');
-                sidebarBackdrop.classList.remove('active');
-                document.body.style.overflow = '';
-            }
+            this.closeSidebar();
             
             // Close search if open
-            if (mobileSearch.classList.contains('active')) {
+            if (mobileSearch && mobileSearch.classList.contains('active')) {
                 mobileSearch.classList.remove('active');
             }
         });
@@ -2513,15 +2816,10 @@ class KeyAnimeApp {
         document.addEventListener('keydown', (e) => {
             // Escape key
             if (e.key === 'Escape') {
-                // Close sidebar
-                if (sidebarMenu.classList.contains('active')) {
-                    sidebarMenu.classList.remove('active');
-                    sidebarBackdrop.classList.remove('active');
-                    document.body.style.overflow = '';
-                }
+                this.closeSidebar();
                 
                 // Close search
-                if (mobileSearch.classList.contains('active')) {
+                if (mobileSearch && mobileSearch.classList.contains('active')) {
                     mobileSearch.classList.remove('active');
                 }
             }
@@ -2529,67 +2827,58 @@ class KeyAnimeApp {
             // Search shortcut (Ctrl+K or Cmd+K)
             if ((e.ctrlKey || e.metaKey) && e.key === 'k') {
                 e.preventDefault();
-                if (!mobileSearch.classList.contains('active')) {
+                if (mobileSearch && !mobileSearch.classList.contains('active')) {
                     mobileSearch.classList.add('active');
                     document.getElementById('search-input').focus();
                 }
             }
-        });
-
-        // Load more button
-        document.addEventListener('click', (e) => {
-            if (e.target.id === 'loadMoreBtn' || e.target.closest('#loadMoreBtn')) {
-                const btn = e.target.closest('#loadMoreBtn') || e.target;
-                const spinner = btn.querySelector('.fa-spinner');
-                const text = btn.querySelector('span');
-                
-                if (spinner && text) {
-                    spinner.style.display = 'inline-block';
-                    text.textContent = 'Memuat...';
-                    btn.disabled = true;
-                    
-                    // Simulate load more (will be handled by router)
-                    setTimeout(() => {
-                        spinner.style.display = 'none';
-                        text.textContent = 'Muat Lebih Banyak';
-                        btn.disabled = false;
-                    }, 1000);
-                }
+            
+            // Home shortcut (Ctrl+H or Cmd+H)
+            if ((e.ctrlKey || e.metaKey) && e.key === 'h') {
+                e.preventDefault();
+                router.navigateTo('/');
+            }
+            
+            // Toggle theme (Ctrl+T or Cmd+T)
+            if ((e.ctrlKey || e.metaKey) && e.key === 't') {
+                e.preventDefault();
+                utils.toggleTheme();
             }
         });
 
-        // Infinite scroll (for mobile)
-        let isScrolling = false;
-        window.addEventListener('scroll', () => {
-            if (isScrolling) return;
+        // Click outside to close search
+        document.addEventListener('click', (e) => {
+            const mobileSearch = document.getElementById('mobileSearch');
+            const searchToggle = document.getElementById('searchToggle');
             
-            isScrolling = true;
-            setTimeout(() => {
-                const scrollPosition = window.innerHeight + window.scrollY;
-                const pageHeight = document.documentElement.scrollHeight;
-                
-                // Load more when 80% scrolled
-                if (scrollPosition >= pageHeight * 0.8) {
-                    const loadMoreBtn = document.getElementById('loadMoreBtn');
-                    if (loadMoreBtn && !loadMoreBtn.disabled) {
-                        loadMoreBtn.click();
-                    }
-                }
-                
-                isScrolling = false;
-            }, 200);
+            if (mobileSearch && mobileSearch.classList.contains('active') && 
+                !mobileSearch.contains(e.target) && 
+                !searchToggle.contains(e.target)) {
+                mobileSearch.classList.remove('active');
+            }
         });
 
         // PWA features
         this.setupPWA();
     }
 
+    closeSidebar() {
+        const sidebarMenu = document.getElementById('sidebarMenu');
+        const sidebarBackdrop = document.getElementById('sidebarBackdrop');
+        
+        if (sidebarMenu) sidebarMenu.classList.remove('active');
+        if (sidebarBackdrop) sidebarBackdrop.classList.remove('active');
+        document.body.style.overflow = '';
+    }
+
     setupPWA() {
         // Register service worker for PWA
         if ('serviceWorker' in navigator) {
             window.addEventListener('load', () => {
-                navigator.serviceWorker.register('/sw.js').catch(error => {
-                    console.log('Service Worker registration failed:', error);
+                navigator.serviceWorker.register('/sw.js').then(registration => {
+                    console.log('ServiceWorker registration successful with scope: ', registration.scope);
+                }).catch(error => {
+                    console.log('ServiceWorker registration failed: ', error);
                 });
             });
         }
@@ -2602,8 +2891,10 @@ class KeyAnimeApp {
             // Stash the event so it can be triggered later
             deferredPrompt = e;
             
-            // Show custom install button
-            this.showInstallPrompt();
+            // Show custom install button after 5 seconds
+            setTimeout(() => {
+                this.showInstallPrompt(deferredPrompt);
+            }, 5000);
         });
 
         // Handle app installed
@@ -2613,20 +2904,76 @@ class KeyAnimeApp {
         });
     }
 
-    showInstallPrompt() {
-        // You can add a custom install button in your UI
-        // and trigger the prompt when clicked:
-        // deferredPrompt.prompt();
-        // Then listen for the user's choice
+    showInstallPrompt(deferredPrompt) {
+        // Create install prompt
+        const installPrompt = document.createElement('div');
+        installPrompt.className = 'toast info';
+        installPrompt.innerHTML = `
+            <div class="toast-icon">
+                <i class="fas fa-download"></i>
+            </div>
+            <div class="toast-content">
+                <div class="toast-message">Instal KeyAnime untuk pengalaman lebih baik</div>
+            </div>
+            <div class="toast-actions">
+                <button class="toast-btn" id="installBtn">Instal</button>
+                <button class="toast-close" id="closeInstall">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+        `;
+        
+        installPrompt.style.cssText = `
+            position: fixed;
+            bottom: 80px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(13, 13, 26, 0.95);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 10px;
+            padding: 15px;
+            z-index: 10001;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            min-width: 300px;
+            max-width: 90%;
+            animation: slideIn 0.3s ease;
+        `;
+        
+        const container = document.querySelector('.toast-container') || this.utils.createToastContainer();
+        container.appendChild(installPrompt);
+        
+        // Install button
+        document.getElementById('installBtn').addEventListener('click', () => {
+            deferredPrompt.prompt();
+            installPrompt.remove();
+        });
+        
+        // Close button
+        document.getElementById('closeInstall').addEventListener('click', () => {
+            installPrompt.remove();
+        });
+        
+        // Auto remove after 10 seconds
+        setTimeout(() => {
+            if (installPrompt.parentNode === container) {
+                installPrompt.remove();
+            }
+        }, 10000);
     }
 
     hideLoading() {
         setTimeout(() => {
-            document.getElementById('loading-overlay').style.opacity = '0';
-            setTimeout(() => {
-                document.getElementById('loading-overlay').style.display = 'none';
-            }, 300);
-        }, 1000);
+            const overlay = document.getElementById('loading-overlay');
+            if (overlay) {
+                overlay.style.opacity = '0';
+                setTimeout(() => {
+                    overlay.style.display = 'none';
+                }, 300);
+            }
+        }, 800);
     }
 
     // Global error handler
@@ -2639,6 +2986,15 @@ class KeyAnimeApp {
         window.addEventListener('unhandledrejection', (e) => {
             console.error('Unhandled promise rejection:', e);
             utils.showToast('Terjadi kesalahan dalam aplikasi', 'error');
+        });
+        
+        // Network status
+        window.addEventListener('online', () => {
+            utils.showToast('Koneksi internet tersedia', 'success');
+        });
+        
+        window.addEventListener('offline', () => {
+            utils.showToast('Koneksi internet terputus', 'error');
         });
     }
 }
@@ -2667,13 +3023,16 @@ class Components {
     createAnimeCard(anime, options = {}) {
         const isFavorite = this.utils.isFavorite(anime.animeId);
         const watchBtnText = anime.episodes ? `Tonton Eps ${anime.episodes}` : 'Tonton';
+        const showType = options.showType !== false;
+        const compact = options.compact || false;
         
         return `
             <div class="anime-card" data-anime-id="${anime.animeId}">
                 <div class="card-image">
                     <img src="${this.utils.getImageUrl(anime.poster)}" 
                          alt="${anime.title}"
-                         loading="lazy">
+                         loading="lazy"
+                         onerror="this.src='data:image/svg+xml,%3Csvg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 300 450\"%3E%3Crect width=\"300\" height=\"450\" fill=\"%231a1a2e\"/%3E%3Ctext x=\"150\" y=\"200\" font-family=\"Arial\" font-size=\"16\" fill=\"%23ffffff\" text-anchor=\"middle\"%3EKeyAnime%3C/text%3E%3Ctext x=\"150\" y=\"230\" font-family=\"Arial\" font-size=\"12\" fill=\"%23FF4081\" text-anchor=\"middle\"%3ENo Image%3C/text%3E%3C/svg%3E'">
                     ${anime.episodes ? `<div class="episode-badge">${anime.episodes}</div>` : ''}
                     ${anime.score ? `
                         <div class="rating-badge">
@@ -2684,29 +3043,32 @@ class Components {
                 </div>
                 <div class="card-content">
                     <h3 class="card-title" title="${anime.title}">
-                        ${this.utils.truncateText(anime.title, 40)}
+                        ${this.utils.truncateText(anime.title, compact ? 30 : 40)}
                     </h3>
-                    ${anime.season ? `
+                    ${showType && anime.season ? `
                         <div class="card-subtitle">${anime.season}</div>
                     ` : ''}
                     <div class="card-actions">
                         <button class="card-btn watch" data-action="watch" data-anime-id="${anime.animeId}">
                             <i class="fas fa-play"></i>
-                            ${watchBtnText}
+                            ${compact ? '' : watchBtnText}
                         </button>
                         <button class="card-btn detail" data-action="detail" data-anime-id="${anime.animeId}">
                             <i class="fas fa-info-circle"></i>
-                            Detail
+                            ${compact ? '' : 'Detail'}
                         </button>
                     </div>
+                    ${!compact ? `
                     <div class="card-actions" style="margin-top: 8px;">
                         <button class="card-btn ${isFavorite ? 'watch' : 'detail'}" 
                                 data-action="favorite" 
                                 data-anime-id="${anime.animeId}"
-                                style="flex: none; padding: 8px 12px;">
+                                style="flex: none; padding: 8px 12px; width: 100%;">
                             <i class="fas fa-heart${isFavorite ? '' : '-broken'}"></i>
+                            ${isFavorite ? 'Favorit' : 'Tambah Favorit'}
                         </button>
                     </div>
+                    ` : ''}
                 </div>
             </div>
         `;
@@ -2721,26 +3083,29 @@ class Components {
                 <div class="result-image">
                     <img src="${this.utils.getImageUrl(anime.poster)}" 
                          alt="${anime.title}"
-                         loading="lazy">
+                         loading="lazy"
+                         onerror="this.src='data:image/svg+xml,%3Csvg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 300 450\"%3E%3Crect width=\"300\" height=\"450\" fill=\"%231a1a2e\"/%3E%3Ctext x=\"150\" y=\"200\" font-family=\"Arial\" font-size=\"16\" fill=\"%23ffffff\" text-anchor=\"middle\"%3EKeyAnime%3C/text%3E%3Ctext x=\"150\" y=\"230\" font-family=\"Arial\" font-size=\"12\" fill=\"%23FF4081\" text-anchor=\"middle\"%3ENo Image%3C/text%3E%3C/svg%3E'">
                 </div>
                 <div class="result-content">
                     <h3 class="result-title">${anime.title}</h3>
                     <div class="result-meta">
-                        <span>${anime.status || ''}</span>
+                        ${anime.status ? `<span>${anime.status}</span>` : ''}
                         ${anime.score ? `<span>⭐ ${anime.score}</span>` : ''}
+                        ${anime.type ? `<span>${anime.type}</span>` : ''}
                     </div>
-                    <div class="result-genres">
+                    <div class="result-genres" style="display: flex; flex-wrap: wrap; gap: 5px; margin: 10px 0;">
                         ${anime.genreList ? anime.genreList.slice(0, 3).map(genre => 
-                            `<span class="genre-tag">${genre.title}</span>`
+                            `<span class="genre-tag" style="font-size: 0.75rem; padding: 4px 8px;">${genre.title}</span>`
                         ).join('') : ''}
                     </div>
-                    <div class="result-actions">
-                        <button class="btn watch" data-action="watch" data-anime-id="${anime.animeId}">
+                    <div class="result-actions" style="display: flex; gap: 10px; margin-top: 10px;">
+                        <button class="btn watch" data-action="watch" data-anime-id="${anime.animeId}" style="padding: 8px 15px; font-size: 0.85rem;">
                             <i class="fas fa-play"></i> Tonton
                         </button>
                         <button class="btn ${isFavorite ? 'watch' : 'detail'}" 
                                 data-action="favorite" 
-                                data-anime-id="${anime.animeId}">
+                                data-anime-id="${anime.animeId}"
+                                style="padding: 8px 15px; font-size: 0.85rem;">
                             <i class="fas fa-heart${isFavorite ? '' : '-broken'}"></i>
                         </button>
                     </div>
@@ -2753,9 +3118,9 @@ class Components {
     createEpisodeCard(episode, animeId) {
         return `
             <a href="#/watch/${episode.episodeId}" class="episode-card" data-episode-id="${episode.episodeId}">
-                <div class="episode-number">${episode.title}</div>
+                <div class="episode-number">${episode.episodeNumber || episode.title || '?'}</div>
                 <div class="episode-info">
-                    <div class="episode-title">Episode ${episode.title}</div>
+                    <div class="episode-title">Episode ${episode.title || episode.episodeNumber || '?'}</div>
                     <div class="episode-date">${animeId}</div>
                 </div>
                 <div class="episode-play">
@@ -2778,14 +3143,26 @@ class Components {
     // Create Schedule Day
     createScheduleDay(day) {
         return `
-            <div class="schedule-day">
-                <h4>${day.title}</h4>
+            <div class="schedule-day" style="background: var(--card-bg); border-radius: var(--card-radius); padding: 15px; margin-bottom: 15px;">
+                <h4 style="margin-bottom: 10px; color: var(--primary-color); display: flex; align-items: center; gap: 10px;">
+                    <i class="fas fa-calendar-day"></i> ${day.title}
+                </h4>
                 <div class="schedule-list">
-                    ${day.animeList.map(anime => `
-                        <div class="schedule-item">
-                            <a href="#/anime/${anime.animeId}">${anime.title}</a>
+                    ${day.animeList?.map(anime => `
+                        <div class="schedule-item" style="padding: 10px; border-bottom: 1px solid rgba(255,255,255,0.1);">
+                            <a href="#/anime/${anime.animeId}" style="color: var(--light-color); text-decoration: none; display: block;">
+                                <div style="display: flex; align-items: center; gap: 10px;">
+                                    <div style="width: 40px; height: 40px; border-radius: 5px; overflow: hidden; flex-shrink: 0;">
+                                        <img src="${this.utils.getImageUrl(anime.poster)}" alt="${anime.title}" style="width: 100%; height: 100%; object-fit: cover;">
+                                    </div>
+                                    <div>
+                                        <div style="font-weight: 500; font-size: 0.9rem;">${anime.title}</div>
+                                        ${anime.time ? `<div style="font-size: 0.8rem; color: rgba(255,255,255,0.6);">${anime.time}</div>` : ''}
+                                    </div>
+                                </div>
+                            </a>
                         </div>
-                    `).join('')}
+                    `).join('') || '<div style="padding: 10px; color: rgba(255,255,255,0.5);">Tidak ada jadwal</div>'}
                 </div>
             </div>
         `;
@@ -2797,11 +3174,11 @@ class Components {
         
         const slidesHtml = slides.map((slide, index) => `
             <div class="hero-slide ${index === 0 ? 'active' : ''}" 
-                 style="background-image: url('${this.utils.getImageUrl(slide.poster)}')">
+                 style="background-image: linear-gradient(rgba(0,0,0,0.3), rgba(0,0,0,0.7)), url('${this.utils.getImageUrl(slide.poster)}')">
                 <div class="hero-content">
                     <h2 class="hero-title">${slide.title}</h2>
-                    <p class="hero-subtitle">Episode ${slide.episodes} • ${slide.latestReleaseDate || ''}</p>
-                    <button class="btn-play" data-anime-id="${slide.animeId}">
+                    <p class="hero-subtitle">${slide.episodes ? `Episode ${slide.episodes}` : ''} ${slide.latestReleaseDate ? `• ${slide.latestReleaseDate}` : ''}</p>
+                    <button class="btn-play" data-anime-id="${slide.animeId}" data-action="watch">
                         <i class="fas fa-play"></i> Tonton Sekarang
                     </button>
                 </div>
@@ -2809,7 +3186,7 @@ class Components {
         `).join('');
 
         return `
-            <div class="hero-section">
+            <div class="hero-section" id="heroCarousel">
                 ${slidesHtml}
             </div>
         `;
@@ -2832,7 +3209,8 @@ class Components {
                     <div class="detail-poster">
                         <img src="${this.utils.getImageUrl(anime.poster)}" 
                              alt="${anime.title}" 
-                             class="poster-img">
+                             class="poster-img"
+                             onerror="this.src='data:image/svg+xml,%3Csvg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 300 450\"%3E%3Crect width=\"300\" height=\"450\" fill=\"%231a1a2e\"/%3E%3Ctext x=\"150\" y=\"200\" font-family=\"Arial\" font-size=\"16\" fill=\"%23ffffff\" text-anchor=\"middle\"%3E${encodeURIComponent(anime.title)}%3C/text%3E%3Ctext x=\"150\" y=\"230\" font-family=\"Arial\" font-size=\"12\" fill=\"%23FF4081\" text-anchor=\"middle\"%3ENo Image%3C/text%3E%3C/svg%3E'">
                         <div class="poster-overlay">
                             <button class="btn-play" data-action="play-first" data-anime-id="${anime.animeId}">
                                 <i class="fas fa-play"></i> Tonton Sekarang
@@ -2854,7 +3232,7 @@ class Components {
                             ${anime.type ? `<span><i class="fas fa-tv"></i> ${anime.type}</span>` : ''}
                             ${anime.episodes ? `<span><i class="fas fa-list-ol"></i> ${anime.episodes} Episode</span>` : ''}
                             ${anime.duration ? `<span><i class="fas fa-clock"></i> ${anime.duration}</span>` : ''}
-                            ${anime.status ? `<span><i class="fas fa-circle"></i> ${anime.status}</span>` : ''}
+                            ${anime.status ? `<span><i class="fas fa-circle" style="color: ${anime.status === 'Ongoing' ? '#00ff00' : '#ff4081'};"></i> ${anime.status}</span>` : ''}
                         </div>
                         
                         ${anime.genreList ? `
@@ -2869,6 +3247,11 @@ class Components {
                             <div class="detail-synopsis">
                                 <h6>Sinopsis</h6>
                                 <p>${anime.synopsis.paragraphList.join(' ')}</p>
+                            </div>
+                        ` : anime.description ? `
+                            <div class="detail-synopsis">
+                                <h6>Sinopsis</h6>
+                                <p>${anime.description}</p>
                             </div>
                         ` : ''}
                         
@@ -2888,11 +3271,18 @@ class Components {
                     ${anime.episodeList?.length > 0 ? `
                         <div class="detail-episodes">
                             <div class="episodes-header">
-                                <h5>Daftar Episode</h5>
+                                <h5>Daftar Episode (${anime.episodeList.length})</h5>
                             </div>
                             <div class="episodes-grid">
-                                ${anime.episodeList.map(ep => this.createEpisodeCard(ep, anime.animeId)).join('')}
+                                ${anime.episodeList.slice(0, 20).map(ep => this.createEpisodeCard(ep, anime.animeId)).join('')}
                             </div>
+                            ${anime.episodeList.length > 20 ? `
+                                <div style="text-align: center; margin-top: 15px;">
+                                    <button class="card-btn detail" onclick="alert('Total episode: ${anime.episodeList.length}')">
+                                        <i class="fas fa-eye"></i> Lihat Semua Episode
+                                    </button>
+                                </div>
+                            ` : ''}
                         </div>
                     ` : ''}
                 </div>
@@ -2926,10 +3316,10 @@ class Components {
                         <h6>Pilih Kualitas</h6>
                         <div class="quality-buttons" id="qualityButtons">
                             ${anime.server.qualityList.map((quality, index) => `
-                                <button class="quality-btn ${index === 1 ? 'active' : ''}" 
-                                        data-quality="${quality.title.trim()}"
+                                <button class="quality-btn ${index === 0 ? 'active' : ''}" 
+                                        data-quality="${quality.title?.trim() || '480p'}"
                                         data-server-index="0">
-                                    ${quality.title.trim()}
+                                    ${quality.title?.trim() || '480p'}
                                 </button>
                             `).join('')}
                         </div>
@@ -2943,29 +3333,30 @@ class Components {
                             <div class="quality-download">
                                 <div class="quality-title">${quality.title}</div>
                                 <div class="download-buttons">
-                                    ${quality.urlList.map((url, idx) => `
+                                    ${quality.urlList?.map((url, idx) => `
                                         <a href="${url.url}" 
                                            class="download-btn" 
                                            target="_blank" 
-                                           rel="noopener noreferrer">
+                                           rel="noopener noreferrer"
+                                           onclick="event.stopPropagation();">
                                             <i class="fas fa-download"></i>
-                                            ${url.title}
+                                            ${url.title || 'Download'}
                                         </a>
-                                    `).join('')}
+                                    `).join('') || ''}
                                 </div>
                             </div>
                         `).join('')}
                     </div>
                 ` : ''}
                 
-                <div class="episode-navigation" style="margin-top: 20px;">
+                <div class="episode-navigation" style="margin-top: 20px; display: flex; flex-direction: column; gap: 10px;">
                     ${anime.hasPrevEpisode ? `
-                        <a href="#/watch/${anime.prevEpisode.episodeId}" class="card-btn detail">
+                        <a href="#/watch/${anime.prevEpisode?.episodeId}" class="card-btn detail">
                             <i class="fas fa-arrow-left"></i> Episode Sebelumnya
                         </a>
                     ` : ''}
                     ${anime.hasNextEpisode ? `
-                        <a href="#/watch/${anime.nextEpisode.episodeId}" class="card-btn watch" style="margin-top: 10px;">
+                        <a href="#/watch/${anime.nextEpisode?.episodeId}" class="card-btn watch">
                             Episode Selanjutnya <i class="fas fa-arrow-right"></i>
                         </a>
                     ` : ''}
@@ -2974,45 +3365,175 @@ class Components {
         `;
     }
 
+    // Create Pagination
+    createPagination(currentPage, totalPages, baseRoute) {
+        if (totalPages <= 1) return '';
+        
+        const pages = [];
+        const maxVisible = 5;
+        
+        // Calculate visible page range
+        let startPage = Math.max(1, currentPage - Math.floor(maxVisible / 2));
+        let endPage = startPage + maxVisible - 1;
+        
+        if (endPage > totalPages) {
+            endPage = totalPages;
+            startPage = Math.max(1, endPage - maxVisible + 1);
+        }
+        
+        // Build pagination HTML
+        return `
+            <div class="pagination-container" style="
+                display: flex;
+                justify-content: center;
+                align-items: center;
+                gap: 8px;
+                margin: 30px 0;
+                flex-wrap: wrap;
+            ">
+                <!-- Previous Button -->
+                ${currentPage > 1 ? `
+                    <a href="${baseRoute}?page=${currentPage - 1}" class="pagination-btn prev" style="
+                        padding: 10px 15px;
+                        background: var(--card-bg);
+                        border-radius: 8px;
+                        color: var(--light-color);
+                        text-decoration: none;
+                        border: 1px solid var(--card-border);
+                        display: flex;
+                        align-items: center;
+                        gap: 5px;
+                        font-size: 0.9rem;
+                        transition: all 0.3s ease;
+                    ">
+                        <i class="fas fa-chevron-left"></i> Sebelumnya
+                    </a>
+                ` : ''}
+                
+                <!-- First Page -->
+                ${startPage > 1 ? `
+                    <a href="${baseRoute}?page=1" class="pagination-btn" style="
+                        padding: 10px 15px;
+                        background: var(--card-bg);
+                        border-radius: 8px;
+                        color: var(--light-color);
+                        text-decoration: none;
+                        border: 1px solid var(--card-border);
+                        font-size: 0.9rem;
+                        transition: all 0.3s ease;
+                    ">1</a>
+                    ${startPage > 2 ? '<span style="color: var(--light-color); opacity: 0.5; padding: 0 5px;">...</span>' : ''}
+                ` : ''}
+                
+                <!-- Page Numbers -->
+                ${Array.from({ length: endPage - startPage + 1 }, (_, i) => startPage + i).map(page => `
+                    <a href="${baseRoute}?page=${page}" 
+                       class="pagination-btn ${page === currentPage ? 'active' : ''}" 
+                       style="
+                        padding: 10px 15px;
+                        background: ${page === currentPage ? 'var(--primary-color)' : 'var(--card-bg)'};
+                        border-radius: 8px;
+                        color: ${page === currentPage ? 'white' : 'var(--light-color)'};
+                        text-decoration: none;
+                        border: 1px solid ${page === currentPage ? 'var(--primary-color)' : 'var(--card-border)'};
+                        font-size: 0.9rem;
+                        font-weight: ${page === currentPage ? 'bold' : 'normal'};
+                        transition: all 0.3s ease;
+                        min-width: 40px;
+                        text-align: center;
+                    ">
+                        ${page}
+                    </a>
+                `).join('')}
+                
+                <!-- Last Page -->
+                ${endPage < totalPages ? `
+                    ${endPage < totalPages - 1 ? '<span style="color: var(--light-color); opacity: 0.5; padding: 0 5px;">...</span>' : ''}
+                    <a href="${baseRoute}?page=${totalPages}" class="pagination-btn" style="
+                        padding: 10px 15px;
+                        background: var(--card-bg);
+                        border-radius: 8px;
+                        color: var(--light-color);
+                        text-decoration: none;
+                        border: 1px solid var(--card-border);
+                        font-size: 0.9rem;
+                        transition: all 0.3s ease;
+                    ">${totalPages}</a>
+                ` : ''}
+                
+                <!-- Next Button -->
+                ${currentPage < totalPages ? `
+                    <a href="${baseRoute}?page=${currentPage + 1}" class="pagination-btn next" style="
+                        padding: 10px 15px;
+                        background: var(--card-bg);
+                        border-radius: 8px;
+                        color: var(--light-color);
+                        text-decoration: none;
+                        border: 1px solid var(--card-border);
+                        display: flex;
+                        align-items: center;
+                        gap: 5px;
+                        font-size: 0.9rem;
+                        transition: all 0.3s ease;
+                    ">
+                        Selanjutnya <i class="fas fa-chevron-right"></i>
+                    </a>
+                ` : ''}
+            </div>
+        `;
+    }
+
     // Create Empty State
-    createEmptyState(message = 'Tidak ada data', icon = 'fas fa-inbox') {
+    createEmptyState(message = 'Tidak ada data', icon = 'fas fa-inbox', submessage = '') {
         return `
             <div class="empty-state">
                 <div class="empty-icon">
                     <i class="${icon}"></i>
                 </div>
                 <h5>${message}</h5>
-                <p>Coba cari dengan kata kunci yang berbeda</p>
+                ${submessage ? `<p>${submessage}</p>` : ''}
             </div>
         `;
     }
 
     // Create Error Page
-    createErrorPage(message = 'Terjadi kesalahan') {
+    createErrorPage(message = 'Terjadi kesalahan', retryAction = null) {
         return `
             <div class="error-page">
                 <i class="fas fa-exclamation-triangle"></i>
                 <h2>Oops!</h2>
                 <p>${message}</p>
-                <button class="btn watch" onclick="window.history.back()">
-                    <i class="fas fa-arrow-left"></i> Kembali
-                </button>
+                <div style="display: flex; gap: 10px; justify-content: center; margin-top: 20px;">
+                    <button class="btn watch" onclick="window.history.back()">
+                        <i class="fas fa-arrow-left"></i> Kembali
+                    </button>
+                    ${retryAction ? `
+                        <button class="btn detail" onclick="${retryAction}">
+                            <i class="fas fa-redo"></i> Coba Lagi
+                        </button>
+                    ` : ''}
+                </div>
             </div>
         `;
     }
 
-    // Load More Button
+    // Create Load More Button (for other pages)
     createLoadMoreButton(hasNextPage, onClick) {
         if (!hasNextPage) return '';
         
         return `
             <div class="load-more">
-                <button class="btn watch" id="loadMoreBtn">
+                <button class="btn watch" id="loadMoreBtn" onclick="${onClick}">
                     <i class="fas fa-spinner fa-spin" style="display: none;"></i>
                     <span>Muat Lebih Banyak</span>
                 </button>
             </div>
         `;
+    }
+
+    // Initialize carousel
+    initCarousel() {
+        utils.initCarousel('heroCarousel');
     }
 }
 
@@ -3031,6 +3552,7 @@ class Router {
         this.api = api;
         this.components = components;
         this.currentPage = {};
+        this.searchTimeout = null;
         this.init();
     }
 
@@ -3086,7 +3608,7 @@ class Router {
         const params = new URLSearchParams(queryString);
         const result = {};
         for (const [key, value] of params) {
-            result[key] = value;
+            result[key] = decodeURIComponent(value);
         }
         return result;
     }
@@ -3160,9 +3682,16 @@ class Router {
         // Update active nav
         this.updateActiveNav(path);
 
+        // Clear search timeout
+        if (this.searchTimeout) {
+            clearTimeout(this.searchTimeout);
+            this.searchTimeout = null;
+        }
+
         if (route) {
             try {
                 await route.handler(route.params, queryParams);
+                this.utils.scrollToTop();
             } catch (error) {
                 console.error('Route error:', error);
                 this.renderError('Terjadi kesalahan saat memuat halaman');
@@ -3210,7 +3739,10 @@ class Router {
         let url = `#${path}`;
         
         if (Object.keys(queryParams).length > 0) {
-            const params = new URLSearchParams(queryParams);
+            const params = new URLSearchParams();
+            for (const [key, value] of Object.entries(queryParams)) {
+                params.set(key, encodeURIComponent(value));
+            }
             url += `?${params.toString()}`;
         }
         
@@ -3233,7 +3765,7 @@ class Router {
             const data = await api.getHome();
             
             if (data.error) {
-                content.innerHTML = components.createErrorPage('Gagal memuat halaman beranda');
+                content.innerHTML = components.createErrorPage('Gagal memuat halaman beranda', 'router.handleRoute()');
                 return;
             }
 
@@ -3272,10 +3804,16 @@ class Router {
             `;
 
             content.innerHTML = html;
+            
+            // Initialize carousel
+            setTimeout(() => {
+                components.initCarousel();
+            }, 100);
+            
             this.attachCardEventListeners();
         } catch (error) {
             console.error('Home render error:', error);
-            content.innerHTML = components.createErrorPage('Gagal memuat halaman beranda');
+            content.innerHTML = components.createErrorPage('Gagal memuat halaman beranda', 'router.handleRoute()');
         }
     }
 
@@ -3295,18 +3833,23 @@ class Router {
             const data = await api.getOngoing(page);
             
             if (data.error) {
-                content.innerHTML = components.createErrorPage('Gagal memuat anime ongoing');
+                content.innerHTML = components.createErrorPage('Gagal memuat anime ongoing', 'router.handleRoute()');
                 return;
             }
 
             if (!data.data?.animeList?.length) {
-                content.innerHTML = components.createEmptyState('Tidak ada anime ongoing');
+                content.innerHTML = components.createEmptyState('Tidak ada anime ongoing', 'fas fa-fire');
                 return;
             }
 
+            const totalPages = data.pagination?.totalPages || 1;
+            
             let html = `
                 <div class="page-header">
                     <h4><i class="fas fa-fire"></i> Anime Sedang Tayang</h4>
+                    <div class="page-info" style="font-size: 0.9rem; color: rgba(255,255,255,0.7)">
+                        Halaman ${page} dari ${totalPages}
+                    </div>
                 </div>
                 <div class="mobile-grid" id="ongoingList">
                     ${data.data.animeList.map(anime => 
@@ -3316,17 +3859,13 @@ class Router {
             `;
 
             // Add pagination
-            if (data.pagination?.hasNextPage) {
-                html += components.createLoadMoreButton(true, () => {
-                    this.navigateTo('/ongoing', { page: page + 1 });
-                });
-            }
+            html += components.createPagination(page, totalPages, '#/ongoing');
 
             content.innerHTML = html;
             this.attachCardEventListeners();
         } catch (error) {
             console.error('Ongoing render error:', error);
-            content.innerHTML = components.createErrorPage('Gagal memuat anime ongoing');
+            content.innerHTML = components.createErrorPage('Gagal memuat anime ongoing', 'router.handleRoute()');
         }
     }
 
@@ -3346,18 +3885,23 @@ class Router {
             const data = await api.getCompleted(page);
             
             if (data.error) {
-                content.innerHTML = components.createErrorPage('Gagal memuat anime selesai');
+                content.innerHTML = components.createErrorPage('Gagal memuat anime selesai', 'router.handleRoute()');
                 return;
             }
 
             if (!data.data?.animeList?.length) {
-                content.innerHTML = components.createEmptyState('Tidak ada anime selesai');
+                content.innerHTML = components.createEmptyState('Tidak ada anime selesai', 'fas fa-check-circle');
                 return;
             }
 
+            const totalPages = data.pagination?.totalPages || 1;
+            
             let html = `
                 <div class="page-header">
                     <h4><i class="fas fa-check-circle"></i> Anime Selesai</h4>
+                    <div class="page-info" style="font-size: 0.9rem; color: rgba(255,255,255,0.7)">
+                        Halaman ${page} dari ${totalPages}
+                    </div>
                 </div>
                 <div class="mobile-grid" id="completedList">
                     ${data.data.animeList.map(anime => 
@@ -3367,17 +3911,13 @@ class Router {
             `;
 
             // Add pagination
-            if (data.pagination?.hasNextPage) {
-                html += components.createLoadMoreButton(true, () => {
-                    this.navigateTo('/complete', { page: page + 1 });
-                });
-            }
+            html += components.createPagination(page, totalPages, '#/complete');
 
             content.innerHTML = html;
             this.attachCardEventListeners();
         } catch (error) {
             console.error('Complete render error:', error);
-            content.innerHTML = components.createErrorPage('Gagal memuat anime selesai');
+            content.innerHTML = components.createErrorPage('Gagal memuat anime selesai', 'router.handleRoute()');
         }
     }
 
@@ -3400,12 +3940,12 @@ class Router {
             const data = await api.getGenres();
             
             if (data.error) {
-                content.innerHTML = components.createErrorPage('Gagal memuat genre');
+                content.innerHTML = components.createErrorPage('Gagal memuat genre', 'router.handleRoute()');
                 return;
             }
 
             if (!data.data?.genreList?.length) {
-                content.innerHTML = components.createEmptyState('Tidak ada genre');
+                content.innerHTML = components.createEmptyState('Tidak ada genre', 'fas fa-tags');
                 return;
             }
 
@@ -3423,7 +3963,7 @@ class Router {
             content.innerHTML = html;
         } catch (error) {
             console.error('Genres render error:', error);
-            content.innerHTML = components.createErrorPage('Gagal memuat genre');
+            content.innerHTML = components.createErrorPage('Gagal memuat genre', 'router.handleRoute()');
         }
     }
 
@@ -3435,7 +3975,7 @@ class Router {
         const content = document.getElementById('app-content');
         content.innerHTML = `
             <div class="page-header">
-                <h4><i class="fas fa-tag"></i> Genre</h4>
+                <h4><i class="fas fa-tag"></i> Memuat...</h4>
             </div>
             ${components.utils.generateSkeletonCards(6)}
         `;
@@ -3444,18 +3984,31 @@ class Router {
             const data = await api.getAnimeByGenre(id, page);
             
             if (data.error) {
-                content.innerHTML = components.createErrorPage('Gagal memuat anime genre');
+                content.innerHTML = components.createErrorPage('Gagal memuat anime genre', 'router.handleRoute()');
                 return;
             }
 
             if (!data.data?.animeList?.length) {
-                content.innerHTML = components.createEmptyState('Tidak ada anime untuk genre ini');
+                content.innerHTML = components.createEmptyState(
+                    'Tidak ada anime untuk genre ini',
+                    'fas fa-tag',
+                    'Coba genre lain atau halaman lain'
+                );
                 return;
             }
 
+            const genreName = id.split('-').map(word => 
+                word.charAt(0).toUpperCase() + word.slice(1)
+            ).join(' ');
+            
+            const totalPages = data.pagination?.totalPages || 1;
+            
             let html = `
                 <div class="page-header">
-                    <h4><i class="fas fa-tag"></i> ${id.charAt(0).toUpperCase() + id.slice(1)}</h4>
+                    <h4><i class="fas fa-tag"></i> ${genreName}</h4>
+                    <div class="page-info" style="font-size: 0.9rem; color: rgba(255,255,255,0.7)">
+                        Halaman ${page} dari ${totalPages}
+                    </div>
                 </div>
                 <div class="mobile-grid" id="genreList">
                     ${data.data.animeList.map(anime => 
@@ -3465,17 +4018,13 @@ class Router {
             `;
 
             // Add pagination
-            if (data.pagination?.hasNextPage) {
-                html += components.createLoadMoreButton(true, () => {
-                    this.navigateTo(`/genre/${id}`, { page: page + 1 });
-                });
-            }
+            html += components.createPagination(page, totalPages, `#/genre/${id}`);
 
             content.innerHTML = html;
             this.attachCardEventListeners();
         } catch (error) {
             console.error('Genre anime render error:', error);
-            content.innerHTML = components.createErrorPage('Gagal memuat anime genre');
+            content.innerHTML = components.createErrorPage('Gagal memuat anime genre', 'router.handleRoute()');
         }
     }
 
@@ -3496,12 +4045,12 @@ class Router {
             const data = await api.getSchedule();
             
             if (data.error) {
-                content.innerHTML = components.createErrorPage('Gagal memuat jadwal');
+                content.innerHTML = components.createErrorPage('Gagal memuat jadwal', 'router.handleRoute()');
                 return;
             }
 
             if (!data.data?.scheduleList?.length) {
-                content.innerHTML = components.createEmptyState('Tidak ada jadwal');
+                content.innerHTML = components.createEmptyState('Tidak ada jadwal', 'fas fa-calendar-alt');
                 return;
             }
 
@@ -3517,7 +4066,7 @@ class Router {
             content.innerHTML = html;
         } catch (error) {
             console.error('Schedule render error:', error);
-            content.innerHTML = components.createErrorPage('Gagal memuat jadwal');
+            content.innerHTML = components.createErrorPage('Gagal memuat jadwal', 'router.handleRoute()');
         }
     }
 
@@ -3535,7 +4084,7 @@ class Router {
                         <input type="text" 
                                id="searchInput" 
                                placeholder="Cari anime..." 
-                               value="${searchQuery}"
+                               value="${searchQuery.replace(/"/g, '&quot;')}"
                                autocomplete="off">
                         ${searchQuery ? `
                             <button class="clear-search" id="clearSearch">
@@ -3548,41 +4097,85 @@ class Router {
         `;
 
         if (searchQuery) {
-            html += components.utils.generateSkeletonCards(3);
+            html += components.utils.generateSearchSkeleton(3);
         } else {
-            html += components.createEmptyState('Masukkan kata kunci pencarian', 'fas fa-search');
+            html += components.createEmptyState(
+                'Masukkan kata kunci pencarian',
+                'fas fa-search',
+                'Minimal 3 karakter untuk memulai pencarian'
+            );
         }
 
         html += `</div></div>`;
         content.innerHTML = html;
 
-        // Setup search input
+        // Setup search input with debounce
         const searchInput = document.getElementById('searchInput');
         const clearSearch = document.getElementById('clearSearch');
         
         if (searchInput) {
             searchInput.focus();
             
-            // Debounced search
-            const debouncedSearch = utils.debounce((value) => {
-                if (value.trim()) {
-                    this.navigateTo('/search', { q: value });
-                }
-            }, 500);
+            // Clear previous timeout
+            if (this.searchTimeout) {
+                clearTimeout(this.searchTimeout);
+            }
             
             searchInput.addEventListener('input', (e) => {
-                const value = e.target.value;
+                const value = e.target.value.trim();
+                
+                // Show/hide clear button
                 if (clearSearch) {
                     clearSearch.style.display = value ? 'block' : 'none';
                 }
-                debouncedSearch(value);
+                
+                // Clear previous timeout
+                if (this.searchTimeout) {
+                    clearTimeout(this.searchTimeout);
+                }
+                
+                // If empty, show empty state
+                if (!value) {
+                    document.getElementById('searchResults').innerHTML = 
+                        components.createEmptyState(
+                            'Masukkan kata kunci pencarian',
+                            'fas fa-search',
+                            'Minimal 3 karakter untuk memulai pencarian'
+                        );
+                    this.navigateTo('/search');
+                    return;
+                }
+                
+                // Show loading skeleton for short queries
+                if (value.length < 3) {
+                    document.getElementById('searchResults').innerHTML = 
+                        components.createEmptyState(
+                            'Masukkan minimal 3 karakter',
+                            'fas fa-search',
+                            'Mencari: ' + value
+                        );
+                    return;
+                }
+                
+                // Show skeleton loading
+                document.getElementById('searchResults').innerHTML = 
+                    components.utils.generateSearchSkeleton(3);
+                
+                // Set new timeout with 800ms delay
+                this.searchTimeout = setTimeout(() => {
+                    this.navigateTo('/search', { q: value });
+                }, 800);
             });
             
-            // Enter key search
+            // Enter key for immediate search
             searchInput.addEventListener('keypress', (e) => {
                 if (e.key === 'Enter') {
                     const value = e.target.value.trim();
-                    if (value) {
+                    if (value && value.length >= 3) {
+                        // Clear timeout
+                        if (this.searchTimeout) {
+                            clearTimeout(this.searchTimeout);
+                        }
                         this.navigateTo('/search', { q: value });
                     }
                 }
@@ -3594,43 +4187,70 @@ class Router {
                 searchInput.value = '';
                 searchInput.focus();
                 clearSearch.style.display = 'none';
+                
+                // Clear search results
+                document.getElementById('searchResults').innerHTML = 
+                    components.createEmptyState(
+                        'Masukkan kata kunci pencarian',
+                        'fas fa-search',
+                        'Minimal 3 karakter untuk memulai pencarian'
+                    );
+                
+                // Navigate without query
                 this.navigateTo('/search');
             });
         }
 
-        // Perform search if query exists
-        if (searchQuery) {
-            try {
-                const data = await api.searchAnime(searchQuery);
-                
-                const resultsContainer = document.getElementById('searchResults');
-                if (!resultsContainer) return;
-                
-                if (data.error) {
-                    resultsContainer.innerHTML = components.createErrorPage('Gagal melakukan pencarian');
-                    return;
-                }
+        // Perform search if query exists and has at least 3 characters
+        if (searchQuery && searchQuery.length >= 3) {
+            await this.performSearchOperation(searchQuery);
+        }
+    }
 
-                if (!data.data?.animeList?.length) {
-                    resultsContainer.innerHTML = components.createEmptyState('Tidak ditemukan anime dengan kata kunci tersebut');
-                    return;
-                }
+    async performSearchOperation(searchQuery) {
+        try {
+            const data = await api.searchAnime(searchQuery);
+            
+            const resultsContainer = document.getElementById('searchResults');
+            if (!resultsContainer) return;
+            
+            if (data.error) {
+                resultsContainer.innerHTML = components.createErrorPage(
+                    'Gagal melakukan pencarian',
+                    'router.navigateTo(\'/search\', { q: \'' + searchQuery + '\' })'
+                );
+                return;
+            }
 
-                resultsContainer.innerHTML = `
-                    <div class="search-results">
-                        ${data.data.animeList.map(anime => 
-                            components.createSearchResultItem(anime)
-                        ).join('')}
-                    </div>
-                `;
+            if (!data.data?.animeList?.length) {
+                resultsContainer.innerHTML = components.createEmptyState(
+                    `Tidak ditemukan hasil untuk "${searchQuery}"`,
+                    'fas fa-search',
+                    'Coba kata kunci yang berbeda'
+                );
+                return;
+            }
 
-                this.attachCardEventListeners();
-            } catch (error) {
-                console.error('Search render error:', error);
-                const resultsContainer = document.getElementById('searchResults');
-                if (resultsContainer) {
-                    resultsContainer.innerHTML = components.createErrorPage('Gagal melakukan pencarian');
-                }
+            resultsContainer.innerHTML = `
+                <div style="margin-bottom: 10px; color: rgba(255,255,255,0.7);">
+                    <i class="fas fa-info-circle"></i> Ditemukan ${data.data.animeList.length} hasil untuk "${searchQuery}"
+                </div>
+                <div class="search-results">
+                    ${data.data.animeList.map(anime => 
+                        components.createSearchResultItem(anime)
+                    ).join('')}
+                </div>
+            `;
+
+            this.attachCardEventListeners();
+        } catch (error) {
+            console.error('Search render error:', error);
+            const resultsContainer = document.getElementById('searchResults');
+            if (resultsContainer) {
+                resultsContainer.innerHTML = components.createErrorPage(
+                    'Gagal melakukan pencarian',
+                    'router.navigateTo(\'/search\', { q: \'' + searchQuery + '\' })'
+                );
             }
         }
     }
@@ -3646,7 +4266,11 @@ class Router {
                 <div class="page-header">
                     <h4><i class="fas fa-heart"></i> Favorit</h4>
                 </div>
-                ${components.createEmptyState('Belum ada anime favorit', 'fas fa-heart-broken')}
+                ${components.createEmptyState(
+                    'Belum ada anime favorit',
+                    'fas fa-heart-broken',
+                    'Tambahkan anime ke favorit dengan menekan tombol hati'
+                )}
             `;
             return;
         }
@@ -3665,6 +4289,11 @@ class Router {
                     })
                 ).join('')}
             </div>
+            <div style="text-align: center; margin: 20px 0;">
+                <button class="card-btn detail" onclick="if(confirm('Hapus semua favorit?')){localStorage.removeItem('favorites'); router.handleRoute();}">
+                    <i class="fas fa-trash"></i> Hapus Semua Favorit
+                </button>
+            </div>
         `;
 
         this.attachCardEventListeners();
@@ -3681,7 +4310,11 @@ class Router {
                 <div class="page-header">
                     <h4><i class="fas fa-history"></i> Riwayat</h4>
                 </div>
-                ${components.createEmptyState('Belum ada riwayat tontonan', 'fas fa-history')}
+                ${components.createEmptyState(
+                    'Belum ada riwayat tontonan',
+                    'fas fa-history',
+                    'Tonton anime untuk melihat riwayat di sini'
+                )}
             `;
             return;
         }
@@ -3721,6 +4354,11 @@ class Router {
                     })
                 ).join('')}
             </div>
+            <div style="text-align: center; margin: 20px 0;">
+                <button class="card-btn detail" onclick="if(confirm('Hapus semua riwayat?')){localStorage.removeItem('watchHistory'); router.handleRoute();}">
+                    <i class="fas fa-trash"></i> Hapus Semua Riwayat
+                </button>
+            </div>
         `;
 
         this.attachCardEventListeners();
@@ -3737,12 +4375,12 @@ class Router {
             const data = await api.getAnimeDetail(id);
             
             if (data.error) {
-                content.innerHTML = components.createErrorPage('Gagal memuat detail anime');
+                content.innerHTML = components.createErrorPage('Gagal memuat detail anime', 'window.history.back()');
                 return;
             }
 
             if (!data.data?.details) {
-                content.innerHTML = components.createErrorPage('Anime tidak ditemukan');
+                content.innerHTML = components.createErrorPage('Anime tidak ditemukan', 'window.history.back()');
                 return;
             }
 
@@ -3755,7 +4393,7 @@ class Router {
             this.attachCardEventListeners();
         } catch (error) {
             console.error('Anime detail render error:', error);
-            content.innerHTML = components.createErrorPage('Gagal memuat detail anime');
+            content.innerHTML = components.createErrorPage('Gagal memuat detail anime', 'window.history.back()');
         }
     }
 
@@ -3770,12 +4408,12 @@ class Router {
             const data = await api.getEpisodeDetail(id);
             
             if (data.error) {
-                content.innerHTML = components.createErrorPage('Gagal memuat episode');
+                content.innerHTML = components.createErrorPage('Gagal memuat episode', 'window.history.back()');
                 return;
             }
 
             if (!data.data?.details) {
-                content.innerHTML = components.createErrorPage('Episode tidak ditemukan');
+                content.innerHTML = components.createErrorPage('Episode tidak ditemukan', 'window.history.back()');
                 return;
             }
 
@@ -3789,17 +4427,17 @@ class Router {
             const animeData = {
                 animeId: episode.animeId,
                 title: episode.title,
-                poster: '' // We don't have poster in episode data
+                poster: episode.poster || ''
             };
             utils.addToHistory(animeData, {
                 episodeId: id,
-                title: episode.title.split('Episode')[1]?.trim() || 'Episode'
+                title: `Episode ${episode.title?.split('Episode')[1]?.trim() || '1'}`
             });
             
             this.attachCardEventListeners();
         } catch (error) {
             console.error('Watch render error:', error);
-            content.innerHTML = components.createErrorPage('Gagal memuat episode');
+            content.innerHTML = components.createErrorPage('Gagal memuat episode', 'window.history.back()');
         }
     }
 
@@ -3879,18 +4517,28 @@ class Router {
                                     </div>
                                 </button>
                                 
-                                <button class="episode-card" onclick="if(confirm('Hapus semua riwayat?')){localStorage.removeItem('watchHistory'); utils.showToast('Riwayat dihapus', 'success'); router.handleRoute();}">
+                                <button class="episode-card" onclick="if(confirm('Hapus semua data aplikasi?')){localStorage.clear(); location.reload();}">
                                     <div class="episode-number">
                                         <i class="fas fa-trash"></i>
                                     </div>
                                     <div class="episode-info">
-                                        <div class="episode-title">Hapus Riwayat</div>
-                                        <div class="episode-date">Bersihkan riwayat tontonan</div>
+                                        <div class="episode-title">Reset Aplikasi</div>
+                                        <div class="episode-date">Hapus semua data lokal</div>
                                     </div>
                                     <div class="episode-play">
                                         <i class="fas fa-chevron-right"></i>
                                     </div>
                                 </button>
+                            </div>
+                        </div>
+                        
+                        <div class="developer-info" style="margin-top: 30px; padding-top: 20px; border-top: 1px solid rgba(255,255,255,0.1); text-align: center;">
+                            <div style="color: var(--accent-color); margin-bottom: 5px;">
+                                <i class="fas fa-code"></i>
+                                <span>this.key@devnova.icu</span>
+                            </div>
+                            <div style="font-size: 0.8rem; color: rgba(255,255,255,0.5);">
+                                KeyAnime v2.0 • Made with <i class="fas fa-heart" style="color: var(--primary-color);"></i>
                             </div>
                         </div>
                     </div>
@@ -3922,6 +4570,7 @@ class Router {
             // Create iframe for video
             container.innerHTML = `
                 <iframe src="${videoUrl}" 
+                        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" 
                         allowfullscreen 
                         scrolling="no" 
                         frameborder="0" 
@@ -3937,6 +4586,14 @@ class Router {
                     qualityButtons.forEach(b => b.classList.remove('active'));
                     btn.classList.add('active');
                     
+                    // Show loading
+                    container.innerHTML = `
+                        <div class="loading-video">
+                            <i class="fas fa-spinner fa-spin"></i>
+                            <p>Memuat video...</p>
+                        </div>
+                    `;
+                    
                     // Get new video URL
                     const quality = btn.dataset.quality;
                     const serverIndex = parseInt(btn.dataset.serverIndex) || 0;
@@ -3945,11 +4602,20 @@ class Router {
                     if (newVideoUrl) {
                         container.innerHTML = `
                             <iframe src="${newVideoUrl}" 
+                                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" 
                                     allowfullscreen 
                                     scrolling="no" 
                                     frameborder="0" 
                                     webkitallowfullscreen 
                                     mozallowfullscreen></iframe>
+                        `;
+                    } else {
+                        container.innerHTML = `
+                            <div class="no-video">
+                                <i class="fas fa-exclamation-triangle"></i>
+                                <p>Gagal memuat video</p>
+                                <p>Silakan coba lagi nanti</p>
+                            </div>
                         `;
                     }
                 });
@@ -3978,6 +4644,9 @@ class Router {
                 const animeId = btn.dataset.animeId;
                 if (!animeId) return;
                 
+                // Show loading
+                utils.showLoading();
+                
                 // Get anime detail to get first episode
                 try {
                     const data = await api.getAnimeDetail(animeId);
@@ -3990,6 +4659,8 @@ class Router {
                 } catch (error) {
                     console.error('Error getting first episode:', error);
                     this.navigateTo(`/anime/${animeId}`);
+                } finally {
+                    utils.hideLoading();
                 }
             });
         });
@@ -4019,16 +4690,18 @@ class Router {
                 if (animeId) {
                     if (utils.isFavorite(animeId)) {
                         utils.removeFromFavorites(animeId);
-                        btn.innerHTML = '<i class="fas fa-heart-broken"></i>';
+                        btn.innerHTML = '<i class="fas fa-heart-broken"></i>' + (btn.textContent.includes('Favorit') ? ' Tambah Favorit' : '');
                         btn.classList.remove('watch');
                         btn.classList.add('detail');
                     } else {
+                        const title = card.querySelector('.card-title, .result-title')?.textContent || 'Anime';
+                        const poster = card.querySelector('img')?.src || '';
                         utils.addToFavorites({
                             animeId: animeId,
-                            title: card.querySelector('.card-title, .result-title')?.textContent || 'Anime',
-                            poster: card.querySelector('img')?.src || ''
+                            title: title,
+                            poster: poster
                         });
-                        btn.innerHTML = '<i class="fas fa-heart"></i>';
+                        btn.innerHTML = '<i class="fas fa-heart"></i>' + (btn.textContent.includes('Favorit') ? ' Favorit' : '');
                         btn.classList.remove('detail');
                         btn.classList.add('watch');
                     }
@@ -4048,6 +4721,33 @@ class Router {
                 });
             }
         });
+
+        // Play buttons in hero carousel
+        document.querySelectorAll('.btn-play[data-anime-id]').forEach(btn => {
+            btn.addEventListener('click', async (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                
+                const animeId = btn.dataset.animeId;
+                if (!animeId) return;
+                
+                utils.showLoading();
+                try {
+                    const data = await api.getAnimeDetail(animeId);
+                    if (data.data?.details?.episodeList?.length > 0) {
+                        const firstEpisode = data.data.details.episodeList[0];
+                        this.navigateTo(`/watch/${firstEpisode.episodeId}`);
+                    } else {
+                        this.navigateTo(`/anime/${animeId}`);
+                    }
+                } catch (error) {
+                    console.error('Error getting first episode from carousel:', error);
+                    this.navigateTo(`/anime/${animeId}`);
+                } finally {
+                    utils.hideLoading();
+                }
+            });
+        });
     }
 }
 
@@ -4065,13 +4765,17 @@ class Utils {
         this.itemsPerPage = 20;
         this.theme = localStorage.getItem('theme') || 'dark';
         this.initTheme();
+        this.carouselInterval = null;
     }
 
     // Theme Management
     initTheme() {
         if (this.theme === 'light') {
             document.body.classList.add('light-mode');
-            document.querySelector('#themeToggle i').className = 'fas fa-sun';
+            const themeIcon = document.querySelector('#themeToggle i');
+            if (themeIcon) {
+                themeIcon.className = 'fas fa-sun';
+            }
         }
     }
 
@@ -4079,22 +4783,38 @@ class Utils {
         if (this.theme === 'dark') {
             this.theme = 'light';
             document.body.classList.add('light-mode');
-            document.querySelector('#themeToggle i').className = 'fas fa-sun';
+            const themeIcon = document.querySelector('#themeToggle i');
+            if (themeIcon) {
+                themeIcon.className = 'fas fa-sun';
+            }
         } else {
             this.theme = 'dark';
             document.body.classList.remove('light-mode');
-            document.querySelector('#themeToggle i').className = 'fas fa-moon';
+            const themeIcon = document.querySelector('#themeToggle i');
+            if (themeIcon) {
+                themeIcon.className = 'fas fa-moon';
+            }
         }
         localStorage.setItem('theme', this.theme);
     }
 
     // Loading Management
     showLoading() {
-        document.getElementById('loading-overlay').style.display = 'flex';
+        const overlay = document.getElementById('loading-overlay');
+        if (overlay) {
+            overlay.style.display = 'flex';
+            overlay.style.opacity = '1';
+        }
     }
 
     hideLoading() {
-        document.getElementById('loading-overlay').style.display = 'none';
+        const overlay = document.getElementById('loading-overlay');
+        if (overlay) {
+            overlay.style.opacity = '0';
+            setTimeout(() => {
+                overlay.style.display = 'none';
+            }, 300);
+        }
     }
 
     // Toast Notifications
@@ -4113,22 +4833,36 @@ class Utils {
             </button>
         `;
 
-        const container = document.querySelector('.toast-container') || this.createToastContainer();
+        let container = document.querySelector('.toast-container');
+        if (!container) {
+            container = this.createToastContainer();
+        }
         container.appendChild(toast);
 
         // Auto remove after 5 seconds
-        setTimeout(() => {
+        const removeToast = () => {
             toast.style.opacity = '0';
             toast.style.transform = 'translateX(100%)';
-            setTimeout(() => toast.remove(), 300);
-        }, 5000);
+            setTimeout(() => {
+                if (toast.parentNode === container) {
+                    container.removeChild(toast);
+                }
+                // Remove container if empty
+                if (container.children.length === 0) {
+                    container.remove();
+                }
+            }, 300);
+        };
+
+        const timeoutId = setTimeout(removeToast, 5000);
 
         // Close button
         toast.querySelector('.toast-close').addEventListener('click', () => {
-            toast.style.opacity = '0';
-            toast.style.transform = 'translateX(100%)';
-            setTimeout(() => toast.remove(), 300);
+            clearTimeout(timeoutId);
+            removeToast();
         });
+
+        return toast;
     }
 
     createToastContainer() {
@@ -4145,6 +4879,7 @@ class Utils {
             return true;
         } catch (e) {
             console.error('LocalStorage error:', e);
+            this.showToast('Gagal menyimpan data', 'error');
             return false;
         }
     }
@@ -4169,9 +4904,10 @@ class Utils {
                 poster: anime.poster,
                 addedAt: new Date().toISOString()
             });
-            this.setItem('favorites', favorites);
-            this.showToast('Ditambahkan ke favorit', 'success');
-            return true;
+            if (this.setItem('favorites', favorites)) {
+                this.showToast('Ditambahkan ke favorit', 'success');
+                return true;
+            }
         }
         return false;
     }
@@ -4179,9 +4915,11 @@ class Utils {
     removeFromFavorites(animeId) {
         const favorites = this.getItem('favorites') || [];
         const filtered = favorites.filter(fav => fav.animeId !== animeId);
-        this.setItem('favorites', filtered);
-        this.showToast('Dihapus dari favorit', 'success');
-        return true;
+        if (this.setItem('favorites', filtered)) {
+            this.showToast('Dihapus dari favorit', 'success');
+            return true;
+        }
+        return false;
     }
 
     isFavorite(animeId) {
@@ -4214,6 +4952,7 @@ class Utils {
         }
         
         this.setItem('watchHistory', filtered);
+        return true;
     }
 
     getHistory() {
@@ -4222,26 +4961,36 @@ class Utils {
 
     // URL Helper
     getImageUrl(url) {
-        if (!url) return 'https://via.placeholder.com/300x450?text=No+Image';
-        return url;
+        if (!url || url === 'default.jpg' || url === '') {
+            return 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 300 450"%3E%3Crect width="300" height="450" fill="%231a1a2e"/%3E%3Ctext x="150" y="200" font-family="Arial" font-size="16" fill="%23ffffff" text-anchor="middle"%3EKeyAnime%3C/text%3E%3Ctext x="150" y="230" font-family="Arial" font-size="12" fill="%23FF4081" text-anchor="middle"%3ENo Image%3C/text%3E%3C/svg%3E';
+        }
+        if (url.startsWith('http')) {
+            return url;
+        }
+        return `${this.baseURL}${url.startsWith('/') ? '' : '/'}${url}`;
     }
 
     // Format Date
     formatDate(dateString) {
         if (!dateString) return '-';
-        const date = new Date(dateString);
-        return date.toLocaleDateString('id-ID', {
-            day: 'numeric',
-            month: 'short',
-            year: 'numeric'
-        });
+        try {
+            const date = new Date(dateString);
+            if (isNaN(date.getTime())) return '-';
+            return date.toLocaleDateString('id-ID', {
+                day: 'numeric',
+                month: 'short',
+                year: 'numeric'
+            });
+        } catch {
+            return '-';
+        }
     }
 
     // Truncate Text
     truncateText(text, maxLength = 100) {
         if (!text) return '';
         if (text.length <= maxLength) return text;
-        return text.substring(0, maxLength) + '...';
+        return text.substring(0, maxLength).trim() + '...';
     }
 
     // Generate Skeleton Loading
@@ -4257,6 +5006,27 @@ class Utils {
                         <div class="skeleton-buttons">
                             <div class="skeleton-button"></div>
                             <div class="skeleton-button"></div>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+        return html;
+    }
+
+    // Generate Skeleton for Search Results
+    generateSearchSkeleton(count = 3) {
+        let html = '';
+        for (let i = 0; i < count; i++) {
+            html += `
+                <div class="result-item skeleton">
+                    <div class="result-image skeleton-image" style="width: 80px; height: 100px;"></div>
+                    <div class="result-content" style="flex: 1;">
+                        <div class="skeleton-line" style="width: 70%;"></div>
+                        <div class="skeleton-line short" style="width: 50%;"></div>
+                        <div class="skeleton-buttons" style="margin-top: 10px;">
+                            <div class="skeleton-button" style="width: 80px;"></div>
+                            <div class="skeleton-button" style="width: 40px;"></div>
                         </div>
                     </div>
                 </div>
@@ -4284,15 +5054,18 @@ class Utils {
     }
 
     // Debounce Function
-    debounce(func, wait) {
+    debounce(func, wait, immediate = false) {
         let timeout;
         return function executedFunction(...args) {
+            const context = this;
             const later = () => {
-                clearTimeout(timeout);
-                func(...args);
+                timeout = null;
+                if (!immediate) func.apply(context, args);
             };
+            const callNow = immediate && !timeout;
             clearTimeout(timeout);
             timeout = setTimeout(later, wait);
+            if (callNow) func.apply(context, args);
         };
     }
 
@@ -4301,21 +5074,143 @@ class Utils {
         return window.innerWidth <= 768;
     }
 
-    // Get Query Parameter
-    getQueryParam(name) {
-        const urlParams = new URLSearchParams(window.location.search);
-        return urlParams.get(name);
+    // Carousel Management
+    initCarousel(containerId) {
+        const container = document.getElementById(containerId);
+        if (!container) return;
+
+        const slides = container.querySelectorAll('.hero-slide');
+        if (slides.length <= 1) return;
+
+        // Clear existing interval
+        if (this.carouselInterval) {
+            clearInterval(this.carouselInterval);
+        }
+
+        let currentSlide = 0;
+        
+        // Function to show specific slide
+        const showSlide = (index) => {
+            slides.forEach((slide, i) => {
+                slide.classList.remove('active');
+                const dot = container.querySelector(`.hero-dot[data-index="${i}"]`);
+                if (dot) dot.classList.remove('active');
+            });
+            slides[index].classList.add('active');
+            const activeDot = container.querySelector(`.hero-dot[data-index="${index}"]`);
+            if (activeDot) activeDot.classList.add('active');
+            currentSlide = index;
+        };
+
+        // Function for next slide
+        const nextSlide = () => {
+            const nextIndex = (currentSlide + 1) % slides.length;
+            showSlide(nextIndex);
+        };
+
+        // Create dots if they don't exist
+        if (!container.querySelector('.hero-dots')) {
+            const dotsContainer = document.createElement('div');
+            dotsContainer.className = 'hero-dots';
+            dotsContainer.style.cssText = `
+                position: absolute;
+                bottom: 20px;
+                left: 50%;
+                transform: translateX(-50%);
+                display: flex;
+                gap: 8px;
+                z-index: 10;
+            `;
+
+            slides.forEach((_, index) => {
+                const dot = document.createElement('button');
+                dot.className = `hero-dot ${index === 0 ? 'active' : ''}`;
+                dot.dataset.index = index;
+                dot.innerHTML = '•';
+                dot.style.cssText = `
+                    width: 12px;
+                    height: 12px;
+                    border-radius: 50%;
+                    border: none;
+                    background: ${index === 0 ? 'var(--primary-color)' : 'rgba(255,255,255,0.5)'};
+                    color: transparent;
+                    cursor: pointer;
+                    transition: all 0.3s ease;
+                    padding: 0;
+                    font-size: 0;
+                `;
+                dot.addEventListener('click', () => {
+                    showSlide(index);
+                    resetInterval();
+                });
+                dotsContainer.appendChild(dot);
+            });
+
+            container.appendChild(dotsContainer);
+        }
+
+        // Function to reset interval
+        const resetInterval = () => {
+            if (this.carouselInterval) {
+                clearInterval(this.carouselInterval);
+            }
+            this.carouselInterval = setInterval(nextSlide, 5000);
+        };
+
+        // Start auto rotation
+        resetInterval();
+
+        // Pause on hover
+        container.addEventListener('mouseenter', () => {
+            if (this.carouselInterval) {
+                clearInterval(this.carouselInterval);
+            }
+        });
+
+        container.addEventListener('mouseleave', () => {
+            resetInterval();
+        });
+
+        // Touch events for mobile
+        let touchStartX = 0;
+        let touchEndX = 0;
+
+        container.addEventListener('touchstart', (e) => {
+            touchStartX = e.changedTouches[0].screenX;
+            if (this.carouselInterval) {
+                clearInterval(this.carouselInterval);
+            }
+        });
+
+        container.addEventListener('touchend', (e) => {
+            touchEndX = e.changedTouches[0].screenX;
+            handleSwipe();
+            resetInterval();
+        });
+
+        const handleSwipe = () => {
+            const swipeThreshold = 50;
+            const diff = touchStartX - touchEndX;
+            
+            if (Math.abs(diff) > swipeThreshold) {
+                if (diff > 0) {
+                    // Swipe left - next slide
+                    nextSlide();
+                } else {
+                    // Swipe right - previous slide
+                    const prevIndex = (currentSlide - 1 + slides.length) % slides.length;
+                    showSlide(prevIndex);
+                }
+            }
+        };
     }
 
-    // Set Query Parameter
-    setQueryParam(name, value) {
-        const urlParams = new URLSearchParams(window.location.search);
-        if (value) {
-            urlParams.set(name, value);
-        } else {
-            urlParams.delete(name);
+    // Cleanup function
+    cleanup() {
+        if (this.carouselInterval) {
+            clearInterval(this.carouselInterval);
+            this.carouselInterval = null;
         }
-        window.history.replaceState({}, '', `${window.location.pathname}?${urlParams}`);
     }
 }
 
