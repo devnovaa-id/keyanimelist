@@ -535,105 +535,97 @@ class Router {
         let html = `
             <div class="mobile-search-page">
                 <div class="search-header">
-                    <div class="search-box">
-                        <i class="fas fa-search"></i>
-                        <input type="text" 
-                               id="searchInput" 
-                               placeholder="Cari anime..." 
-                               value="${searchQuery.replace(/"/g, '&quot;')}"
-                               autocomplete="off">
-                        ${searchQuery ? `
-                            <button class="clear-search" id="clearSearch">
-                                <i class="fas fa-times"></i>
-                            </button>
-                        ` : ''}
-                    </div>
+                    <form class="search-form" id="search-page-form">
+                        <div class="search-box">
+                            <i class="fas fa-search"></i>
+                            <input type="text" 
+                                   id="searchInput" 
+                                   placeholder="Cari anime..." 
+                                   value="${searchQuery.replace(/"/g, '&quot;')}"
+                                   autocomplete="off">
+                            ${searchQuery ? `
+                                <button type="button" class="clear-search" id="clearSearch">
+                                    <i class="fas fa-times"></i>
+                                </button>
+                            ` : ''}
+                            <button type="submit" style="display: none;"></button>
+                        </div>
+                    </form>
                 </div>
                 <div id="searchResults">
         `;
-
+    
         if (searchQuery) {
             html += components.utils.generateSearchSkeleton(3);
         } else {
             html += components.createEmptyState(
                 'Masukkan kata kunci pencarian',
                 'fas fa-search',
-                'Minimal 3 karakter untuk memulai pencarian'
+                'Tekan Enter untuk mencari'
             );
         }
-
+    
         html += `</div></div>`;
         content.innerHTML = html;
-
-        // Setup search input with debounce
+    
+        // Setup search form submit
+        const searchForm = document.getElementById('search-page-form');
         const searchInput = document.getElementById('searchInput');
         const clearSearch = document.getElementById('clearSearch');
         
+        if (searchForm) {
+            searchForm.addEventListener('submit', (e) => {
+                e.preventDefault();
+                const value = searchInput.value.trim();
+                if (value && value.length >= 3) {
+                    this.navigateTo('/search', { q: value });
+                } else {
+                    utils.showToast('Masukkan minimal 3 karakter', 'error');
+                }
+            });
+        }
+        
         if (searchInput) {
+            // Focus on input
             searchInput.focus();
             
-            // Clear previous timeout
-            if (this.searchTimeout) {
-                clearTimeout(this.searchTimeout);
-            }
+            // Remove the old input event listener that caused automatic search
+            // and replace with just enter key support
             
+            // Enter key for search
+            searchInput.addEventListener('keypress', (e) => {
+                if (e.key === 'Enter') {
+                    e.preventDefault();
+                    const value = e.target.value.trim();
+                    if (value && value.length >= 3) {
+                        this.navigateTo('/search', { q: value });
+                    } else {
+                        utils.showToast('Masukkan minimal 3 karakter', 'error');
+                    }
+                }
+            });
+            
+            // Show/hide clear button
             searchInput.addEventListener('input', (e) => {
                 const value = e.target.value.trim();
-                
-                // Show/hide clear button
                 if (clearSearch) {
                     clearSearch.style.display = value ? 'block' : 'none';
                 }
                 
-                // Clear previous timeout
-                if (this.searchTimeout) {
-                    clearTimeout(this.searchTimeout);
-                }
-                
-                // If empty, show empty state
+                // Show search hint for short queries
+                const resultsContainer = document.getElementById('searchResults');
                 if (!value) {
-                    document.getElementById('searchResults').innerHTML = 
-                        components.createEmptyState(
-                            'Masukkan kata kunci pencarian',
-                            'fas fa-search',
-                            'Minimal 3 karakter untuk memulai pencarian'
-                        );
-                    this.navigateTo('/search');
-                    return;
-                }
-                
-                // Show loading skeleton for short queries
-                if (value.length < 3) {
-                    document.getElementById('searchResults').innerHTML = 
-                        components.createEmptyState(
-                            'Masukkan minimal 3 karakter',
-                            'fas fa-search',
-                            'Mencari: ' + value
-                        );
-                    return;
-                }
-                
-                // Show skeleton loading
-                document.getElementById('searchResults').innerHTML = 
-                    components.utils.generateSearchSkeleton(3);
-                
-                // Set new timeout with 800ms delay
-                this.searchTimeout = setTimeout(() => {
-                    this.navigateTo('/search', { q: value });
-                }, 800);
-            });
-            
-            // Enter key for immediate search
-            searchInput.addEventListener('keypress', (e) => {
-                if (e.key === 'Enter') {
-                    const value = e.target.value.trim();
-                    if (value && value.length >= 3) {
-                        // Clear timeout
-                        if (this.searchTimeout) {
-                            clearTimeout(this.searchTimeout);
-                        }
-                        this.navigateTo('/search', { q: value });
-                    }
+                    resultsContainer.innerHTML = components.createEmptyState(
+                        'Masukkan kata kunci pencarian',
+                        'fas fa-search',
+                        'Tekan Enter untuk mencari'
+                    );
+                } else if (value.length < 3) {
+                    resultsContainer.innerHTML = components.createEmptyState(
+                        'Masukkan minimal 3 karakter',
+                        'fas fa-search',
+                        `Mencari: ${value}`
+                    );
                 }
             });
         }
@@ -649,14 +641,14 @@ class Router {
                     components.createEmptyState(
                         'Masukkan kata kunci pencarian',
                         'fas fa-search',
-                        'Minimal 3 karakter untuk memulai pencarian'
+                        'Tekan Enter untuk mencari'
                     );
                 
                 // Navigate without query
                 this.navigateTo('/search');
             });
         }
-
+    
         // Perform search if query exists and has at least 3 characters
         if (searchQuery && searchQuery.length >= 3) {
             await this.performSearchOperation(searchQuery);
@@ -677,7 +669,7 @@ class Router {
                 );
                 return;
             }
-
+    
             if (!data.data?.animeList?.length) {
                 resultsContainer.innerHTML = components.createEmptyState(
                     `Tidak ditemukan hasil untuk "${searchQuery}"`,
@@ -686,7 +678,7 @@ class Router {
                 );
                 return;
             }
-
+    
             resultsContainer.innerHTML = `
                 <div style="margin-bottom: 10px; color: rgba(255,255,255,0.7);">
                     <i class="fas fa-info-circle"></i> Ditemukan ${data.data.animeList.length} hasil untuk "${searchQuery}"
@@ -697,7 +689,7 @@ class Router {
                     ).join('')}
                 </div>
             `;
-
+    
             this.attachCardEventListeners();
         } catch (error) {
             console.error('Search render error:', error);

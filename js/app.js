@@ -82,7 +82,7 @@ class KeyAnimeApp {
                 
                 if (query && query.length >= 3) {
                     // Close mobile search if open
-                    mobileSearch.classList.remove('active');
+                    if (mobileSearch) mobileSearch.classList.remove('active');
                     
                     // Navigate to search page
                     router.navigateTo('/search', { q: query });
@@ -94,6 +94,30 @@ class KeyAnimeApp {
                 }
             });
         }
+
+// Also handle the search input in navbar (mobile)
+const mobileSearchInput = document.getElementById('search-input');
+if (mobileSearchInput) {
+    mobileSearchInput.addEventListener('keypress', (e) => {
+        if (e.key === 'Enter') {
+            e.preventDefault();
+            const query = e.target.value.trim();
+            
+            if (query && query.length >= 3) {
+                // Close mobile search if open
+                if (mobileSearch) mobileSearch.classList.remove('active');
+                
+                // Navigate to search page
+                router.navigateTo('/search', { q: query });
+                
+                // Clear input
+                e.target.value = '';
+            } else {
+                utils.showToast('Masukkan minimal 3 karakter', 'error');
+            }
+        }
+    });
+}
 
         // Theme toggle
         const themeToggle = document.getElementById('themeToggle');

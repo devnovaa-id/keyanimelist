@@ -1540,6 +1540,24 @@ main.container-fluid {
 }
 
 /* Search improvements */
+.clear-search {
+    position: absolute;
+    right: 5px;
+    top: 50%;
+    transform: translateY(-50%);
+    background: transparent;
+    border: none;
+    color: rgba(255, 255, 255, 0.5);
+    cursor: pointer;
+    padding: 3px;
+    border-radius: 50%;
+    display: none;
+}
+
+.clear-search:hover {
+    background: rgba(255, 255, 255, 0.1);
+}
+
 .search-box {
     position: relative;
 }
