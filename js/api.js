@@ -147,7 +147,11 @@ class APIService {
 
     // Episode Detail
     async getEpisodeDetail(episodeId) {
-        return await this.fetch(`/episode/${episodeId}`);
+        console.log('Fetching episode detail for:', episodeId);
+        
+        // Coba decode jika diperlukan
+        const decodedId = decodeURIComponent(episodeId);
+        return await this.fetch(`/episode/${decodedId}`);
     }
 
     // Batch Detail

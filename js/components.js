@@ -8,13 +8,17 @@ class Components {
 
     // Create Anime Card
     createAnimeCard(anime, options = {}) {
-        const isFavorite = this.utils.isFavorite(anime.animeId);
+        // Gunakan slug jika animeId tidak ada
+        const animeId = anime.animeId || anime.slug || anime.id;
+        console.log('Creating card for animeId:', animeId); // Debug
+        
+        const isFavorite = this.utils.isFavorite(animeId);
         const watchBtnText = anime.episodes ? `Tonton Eps ${anime.episodes}` : 'Tonton';
         const showType = options.showType !== false;
         const compact = options.compact || false;
         
         return `
-            <div class="anime-card" data-anime-id="${anime.animeId}">
+            <div class="anime-card" data-anime-id="${animeId}">
                 <div class="card-image">
                     <img src="${this.utils.getImageUrl(anime.poster)}" 
                          alt="${anime.title}"
@@ -36,11 +40,11 @@ class Components {
                         <div class="card-subtitle">${anime.season}</div>
                     ` : ''}
                     <div class="card-actions">
-                        <button class="card-btn watch" data-action="watch" data-anime-id="${anime.animeId}">
+                        <button class="card-btn watch" data-action="watch" data-anime-id="${animeId}">
                             <i class="fas fa-play"></i>
                             ${compact ? '' : watchBtnText}
                         </button>
-                        <button class="card-btn detail" data-action="detail" data-anime-id="${anime.animeId}">
+                        <button class="card-btn detail" data-action="detail" data-anime-id="${animeId}">
                             <i class="fas fa-info-circle"></i>
                             ${compact ? '' : 'Detail'}
                         </button>
@@ -49,7 +53,7 @@ class Components {
                     <div class="card-actions" style="margin-top: 8px;">
                         <button class="card-btn ${isFavorite ? 'watch' : 'detail'}" 
                                 data-action="favorite" 
-                                data-anime-id="${anime.animeId}"
+                                data-anime-id="${animeId}"
                                 style="flex: none; padding: 8px 12px; width: 100%;">
                             <i class="fas fa-heart${isFavorite ? '' : '-broken'}"></i>
                             ${isFavorite ? 'Favorit' : 'Tambah Favorit'}
@@ -181,7 +185,18 @@ class Components {
 
     // Create Anime Detail Page
     createAnimeDetail(anime) {
-        const isFavorite = this.utils.isFavorite(anime.animeId);
+        // Gunakan slug jika animeId tidak ada
+        const animeId = anime.animeId || anime.slug || anime.id;
+        console.log('Creating detail for animeId:', animeId); // Debug
+        
+        const isFavorite = this.utils.isFavorite(animeId);
+        
+        // Cari episode pertama
+        let firstEpisodeId = null;
+        if (anime.episodeList?.length > 0) {
+            const firstEpisode = anime.episodeList[0];
+            firstEpisodeId = firstEpisode.episodeId || firstEpisode.slug || `episode-1`;
+        }
         
         return `
             <div class="mobile-detail-page">
@@ -199,7 +214,7 @@ class Components {
                              class="poster-img"
                              onerror="this.src='data:image/svg+xml,%3Csvg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 300 450\"%3E%3Crect width=\"300\" height=\"450\" fill=\"%231a1a2e\"/%3E%3Ctext x=\"150\" y=\"200\" font-family=\"Arial\" font-size=\"16\" fill=\"%23ffffff\" text-anchor=\"middle\"%3E${encodeURIComponent(anime.title)}%3C/text%3E%3Ctext x=\"150\" y=\"230\" font-family=\"Arial\" font-size=\"12\" fill=\"%23FF4081\" text-anchor=\"middle\"%3ENo Image%3C/text%3E%3C/svg%3E'">
                         <div class="poster-overlay">
-                            <button class="btn-play" data-action="play-first" data-anime-id="${anime.animeId}">
+                            <button class="btn-play" data-action="play-first" data-anime-id="${animeId}" ${firstEpisodeId ? `data-first-episode="${firstEpisodeId}"` : ''}>
                                 <i class="fas fa-play"></i> Tonton Sekarang
                             </button>
                         </div>
@@ -225,7 +240,7 @@ class Components {
                         ${anime.genreList ? `
                             <div class="detail-genres">
                                 ${anime.genreList.map(genre => `
-                                    <a href="#/genre/${genre.genreId}" class="genre-tag">${genre.title}</a>
+                                    <a href="#/genre/${genre.genreId || genre.slug}" class="genre-tag">${genre.title}</a>
                                 `).join('')}
                             </div>
                         ` : ''}
@@ -243,12 +258,12 @@ class Components {
                         ` : ''}
                         
                         <div class="detail-actions" style="margin-top: 20px; display: flex; gap: 10px;">
-                            <button class="card-btn watch" data-action="play-first" data-anime-id="${anime.animeId}" style="flex: 2;">
+                            <button class="card-btn watch" data-action="play-first" data-anime-id="${animeId}" ${firstEpisodeId ? `data-first-episode="${firstEpisodeId}"` : ''} style="flex: 2;">
                                 <i class="fas fa-play"></i> Tonton
                             </button>
                             <button class="card-btn ${isFavorite ? 'watch' : 'detail'}" 
                                     data-action="favorite" 
-                                    data-anime-id="${anime.animeId}"
+                                    data-anime-id="${animeId}"
                                     style="flex: 1;">
                                 <i class="fas fa-heart${isFavorite ? '' : '-broken'}"></i>
                             </button>
@@ -261,7 +276,10 @@ class Components {
                                 <h5>Daftar Episode (${anime.episodeList.length})</h5>
                             </div>
                             <div class="episodes-grid">
-                                ${anime.episodeList.slice(0, 20).map(ep => this.createEpisodeCard(ep, anime.animeId)).join('')}
+                                ${anime.episodeList.slice(0, 20).map(ep => {
+                                    const episodeId = ep.episodeId || ep.slug || `episode-${ep.episodeNumber || 1}`;
+                                    return this.createEpisodeCard(ep, animeId);
+                                }).join('')}
                             </div>
                             ${anime.episodeList.length > 20 ? `
                                 <div style="text-align: center; margin-top: 15px;">

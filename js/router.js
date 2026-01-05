@@ -814,25 +814,42 @@ class Router {
 
     async renderAnimeDetail(params) {
         const { id } = params;
+        console.log('Detail params:', params, 'ID:', id); // Debug
+        
         this.currentPage = { type: 'anime-detail', id, data: null };
         
         const content = document.getElementById('app-content');
         content.innerHTML = components.utils.generateSkeletonCards(1);
-
+    
         try {
-            const data = await api.getAnimeDetail(id);
+            // Decode URL jika diperlukan
+            const animeId = decodeURIComponent(id);
+            console.log('Fetching detail for:', animeId);
+            
+            const data = await api.getAnimeDetail(animeId);
             
             if (data.error) {
                 content.innerHTML = components.createErrorPage('Gagal memuat detail anime', 'window.history.back()');
                 return;
             }
-
+    
             if (!data.data?.details) {
                 content.innerHTML = components.createErrorPage('Anime tidak ditemukan', 'window.history.back()');
                 return;
             }
-
+    
             const detail = data.data.details;
+            
+            // Debug: Log detail untuk memastikan struktur data
+            console.log('Anime Detail:', detail);
+            
+            // Pastikan animeId tersedia dalam detail
+            if (!detail.animeId && detail.slug) {
+                detail.animeId = detail.slug;
+            } else if (!detail.animeId) {
+                detail.animeId = animeId;
+            }
+            
             content.innerHTML = components.createAnimeDetail(detail);
             
             // Add to history
@@ -1090,7 +1107,12 @@ class Router {
                 e.stopPropagation();
                 
                 const animeId = btn.dataset.animeId;
-                if (!animeId) return;
+                console.log('Watch button clicked, animeId:', animeId); // Debug
+                
+                if (!animeId || animeId === 'undefined') {
+                    utils.showToast('ID anime tidak valid', 'error');
+                    return;
+                }
                 
                 // Show loading
                 utils.showLoading();
@@ -1098,17 +1120,48 @@ class Router {
                 // Get anime detail to get first episode
                 try {
                     const data = await api.getAnimeDetail(animeId);
+                    console.log('Anime data for first episode:', data); // Debug
+                    
                     if (data.data?.details?.episodeList?.length > 0) {
                         const firstEpisode = data.data.details.episodeList[0];
-                        this.navigateTo(`/watch/${firstEpisode.episodeId}`);
+                        console.log('First episode:', firstEpisode); // Debug
+                        
+                        // Pastikan episodeId ada
+                        if (firstEpisode.episodeId) {
+                            this.navigateTo(`/watch/${firstEpisode.episodeId}`);
+                        } else {
+                            // Fallback: gunakan slug atau ID lain
+                            const episodeSlug = firstEpisode.slug || `episode-1`;
+                            this.navigateTo(`/watch/${episodeSlug}`);
+                        }
                     } else {
+                        utils.showToast('Episode tidak ditemukan', 'error');
                         this.navigateTo(`/anime/${animeId}`);
                     }
                 } catch (error) {
                     console.error('Error getting first episode:', error);
+                    utils.showToast('Gagal memuat episode', 'error');
                     this.navigateTo(`/anime/${animeId}`);
                 } finally {
                     utils.hideLoading();
+                }
+            });
+        });
+        document.querySelectorAll('[data-first-episode]').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                
+                const firstEpisodeId = btn.dataset.firstEpisode;
+                const animeId = btn.dataset.animeId;
+                
+                console.log('Play first episode clicked:', { firstEpisodeId, animeId });
+                
+                if (firstEpisodeId) {
+                    this.navigateTo(`/watch/${firstEpisodeId}`);
+                } else if (animeId) {
+                    // Fallback ke halaman detail
+                    this.navigateTo(`/anime/${animeId}`);
                 }
             });
         });
