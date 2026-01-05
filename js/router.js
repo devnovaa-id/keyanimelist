@@ -589,9 +589,6 @@ class Router {
             // Focus on input
             searchInput.focus();
             
-            // Remove the old input event listener that caused automatic search
-            // and replace with just enter key support
-            
             // Enter key for search
             searchInput.addEventListener('keypress', (e) => {
                 if (e.key === 'Enter') {
@@ -1100,15 +1097,24 @@ class Router {
 
     // Attach event listeners to cards
     attachCardEventListeners() {
-        // Watch buttons
+        // Watch buttons - SELALU AMBIL EPISODE 1
         document.querySelectorAll('[data-action="watch"], [data-action="play-first"]').forEach(btn => {
             btn.addEventListener('click', async (e) => {
                 e.preventDefault();
                 e.stopPropagation();
                 
                 const animeId = btn.dataset.animeId;
-                console.log('Watch button clicked, animeId:', animeId); // Debug
+                const firstEpisodeId = btn.dataset.firstEpisode;
                 
+                console.log('Watch button clicked, animeId:', animeId, 'firstEpisodeId:', firstEpisodeId);
+                
+                // Jika tombol memiliki firstEpisodeId, langsung gunakan
+                if (firstEpisodeId) {
+                    this.navigateTo(`/watch/${firstEpisodeId}`);
+                    return;
+                }
+                
+                // Jika tidak, fetch anime detail dan ambil episode pertama
                 if (!animeId || animeId === 'undefined') {
                     utils.showToast('ID anime tidak valid', 'error');
                     return;
@@ -1120,11 +1126,30 @@ class Router {
                 // Get anime detail to get first episode
                 try {
                     const data = await api.getAnimeDetail(animeId);
-                    console.log('Anime data for first episode:', data); // Debug
+                    console.log('Anime data for first episode:', data);
                     
                     if (data.data?.details?.episodeList?.length > 0) {
-                        const firstEpisode = data.data.details.episodeList[0];
-                        console.log('First episode:', firstEpisode); // Debug
+                        // Urutkan episode untuk mendapatkan episode 1
+                        const sortedEpisodes = [...data.data.details.episodeList].sort((a, b) => {
+                            const getEpisodeNumber = (ep) => {
+                                if (ep.episodeNumber) {
+                                    return parseInt(ep.episodeNumber);
+                                }
+                                const match = ep.title?.match(/Episode\s*(\d+)/i);
+                                if (match) {
+                                    return parseInt(match[1]);
+                                }
+                                const slugMatch = ep.slug?.match(/episode-(\d+)/i);
+                                if (slugMatch) {
+                                    return parseInt(slugMatch[1]);
+                                }
+                                return 0;
+                            };
+                            return getEpisodeNumber(a) - getEpisodeNumber(b);
+                        });
+                        
+                        const firstEpisode = sortedEpisodes[0];
+                        console.log('First episode after sorting:', firstEpisode);
                         
                         // Pastikan episodeId ada
                         if (firstEpisode.episodeId) {
@@ -1144,24 +1169,6 @@ class Router {
                     this.navigateTo(`/anime/${animeId}`);
                 } finally {
                     utils.hideLoading();
-                }
-            });
-        });
-        document.querySelectorAll('[data-first-episode]').forEach(btn => {
-            btn.addEventListener('click', (e) => {
-                e.preventDefault();
-                e.stopPropagation();
-                
-                const firstEpisodeId = btn.dataset.firstEpisode;
-                const animeId = btn.dataset.animeId;
-                
-                console.log('Play first episode clicked:', { firstEpisodeId, animeId });
-                
-                if (firstEpisodeId) {
-                    this.navigateTo(`/watch/${firstEpisodeId}`);
-                } else if (animeId) {
-                    // Fallback ke halaman detail
-                    this.navigateTo(`/anime/${animeId}`);
                 }
             });
         });
@@ -1236,7 +1243,25 @@ class Router {
                 try {
                     const data = await api.getAnimeDetail(animeId);
                     if (data.data?.details?.episodeList?.length > 0) {
-                        const firstEpisode = data.data.details.episodeList[0];
+                        // Urutkan episode untuk mendapatkan episode 1
+                        const sortedEpisodes = [...data.data.details.episodeList].sort((a, b) => {
+                            const getEpisodeNumber = (ep) => {
+                                if (ep.episodeNumber) {
+                                    return parseInt(ep.episodeNumber);
+                                }
+                                const match = ep.title?.match(/Episode\s*(\d+)/i);
+                                if (match) {
+                                    return parseInt(match[1]);
+                                }
+                                const slugMatch = ep.slug?.match(/episode-(\d+)/i);
+                                if (slugMatch) {
+                                    return parseInt(slugMatch[1]);
+                                }
+                                return 0;
+                            };
+                            return getEpisodeNumber(a) - getEpisodeNumber(b);
+                        });
+                        const firstEpisode = sortedEpisodes[0];
                         this.navigateTo(`/watch/${firstEpisode.episodeId}`);
                     } else {
                         this.navigateTo(`/anime/${animeId}`);

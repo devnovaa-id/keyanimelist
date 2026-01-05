@@ -13,7 +13,7 @@ class Components {
         console.log('Creating card for animeId:', animeId); // Debug
         
         const isFavorite = this.utils.isFavorite(animeId);
-        const watchBtnText = anime.episodes ? `Tonton Eps ${anime.episodes}` : 'Tonton';
+        const watchBtnText = 'Tonton Eps 1'; // SELALU TAMPILKAN KE EPISODE 1
         const showType = options.showType !== false;
         const compact = options.compact || false;
         
@@ -191,11 +191,40 @@ class Components {
         
         const isFavorite = this.utils.isFavorite(animeId);
         
-        // Cari episode pertama
+        // Urutkan episode berdasarkan nomor episode (ascending) dan ambil episode 1
+        let sortedEpisodes = [];
         let firstEpisodeId = null;
+        
         if (anime.episodeList?.length > 0) {
-            const firstEpisode = anime.episodeList[0];
+            // Urutkan episode berdasarkan nomor episode
+            sortedEpisodes = [...anime.episodeList].sort((a, b) => {
+                const getEpisodeNumber = (ep) => {
+                    if (ep.episodeNumber) {
+                        return parseInt(ep.episodeNumber);
+                    }
+                    // Coba ekstrak angka dari title, misal "Episode 1"
+                    const match = ep.title?.match(/Episode\s*(\d+)/i);
+                    if (match) {
+                        return parseInt(match[1]);
+                    }
+                    // Coba ekstrak dari slug
+                    const slugMatch = ep.slug?.match(/episode-(\d+)/i);
+                    if (slugMatch) {
+                        return parseInt(slugMatch[1]);
+                    }
+                    return 0;
+                };
+                const numA = getEpisodeNumber(a);
+                const numB = getEpisodeNumber(b);
+                return numA - numB;
+            });
+            
+            console.log('Sorted episodes:', sortedEpisodes);
+            
+            // Ambil episode pertama setelah diurutkan (Episode 1)
+            const firstEpisode = sortedEpisodes[0];
             firstEpisodeId = firstEpisode.episodeId || firstEpisode.slug || `episode-1`;
+            console.log('First episode ID:', firstEpisodeId);
         }
         
         return `
@@ -214,7 +243,7 @@ class Components {
                              class="poster-img"
                              onerror="this.src='data:image/svg+xml,%3Csvg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 300 450\"%3E%3Crect width=\"300\" height=\"450\" fill=\"%231a1a2e\"/%3E%3Ctext x=\"150\" y=\"200\" font-family=\"Arial\" font-size=\"16\" fill=\"%23ffffff\" text-anchor=\"middle\"%3E${encodeURIComponent(anime.title)}%3C/text%3E%3Ctext x=\"150\" y=\"230\" font-family=\"Arial\" font-size=\"12\" fill=\"%23FF4081\" text-anchor=\"middle\"%3ENo Image%3C/text%3E%3C/svg%3E'">
                         <div class="poster-overlay">
-                            <button class="btn-play" data-action="play-first" data-anime-id="${animeId}" ${firstEpisodeId ? `data-first-episode="${firstEpisodeId}"` : ''}>
+                            <button class="btn-play" data-action="play-first" data-anime-id="${animeId}" data-first-episode="${firstEpisodeId}">
                                 <i class="fas fa-play"></i> Tonton Sekarang
                             </button>
                         </div>
@@ -258,7 +287,7 @@ class Components {
                         ` : ''}
                         
                         <div class="detail-actions" style="margin-top: 20px; display: flex; gap: 10px;">
-                            <button class="card-btn watch" data-action="play-first" data-anime-id="${animeId}" ${firstEpisodeId ? `data-first-episode="${firstEpisodeId}"` : ''} style="flex: 2;">
+                            <button class="card-btn watch" data-action="play-first" data-anime-id="${animeId}" data-first-episode="${firstEpisodeId}" style="flex: 2;">
                                 <i class="fas fa-play"></i> Tonton
                             </button>
                             <button class="card-btn ${isFavorite ? 'watch' : 'detail'}" 
@@ -270,24 +299,18 @@ class Components {
                         </div>
                     </div>
                     
-                    ${anime.episodeList?.length > 0 ? `
+                    ${sortedEpisodes.length > 0 ? `
                         <div class="detail-episodes">
                             <div class="episodes-header">
-                                <h5>Daftar Episode (${anime.episodeList.length})</h5>
+                                <h5>Daftar Episode (${sortedEpisodes.length})</h5>
                             </div>
                             <div class="episodes-grid">
-                                ${anime.episodeList.slice(0, 20).map(ep => {
+                                ${sortedEpisodes.map(ep => {
                                     const episodeId = ep.episodeId || ep.slug || `episode-${ep.episodeNumber || 1}`;
                                     return this.createEpisodeCard(ep, animeId);
                                 }).join('')}
                             </div>
-                            ${anime.episodeList.length > 20 ? `
-                                <div style="text-align: center; margin-top: 15px;">
-                                    <button class="card-btn detail" onclick="alert('Total episode: ${anime.episodeList.length}')">
-                                        <i class="fas fa-eye"></i> Lihat Semua Episode
-                                    </button>
-                                </div>
-                            ` : ''}
+                            <!-- TOMBOL LIHAT SEMUA EPISODE DIHAPUS -->
                         </div>
                     ` : ''}
                 </div>
@@ -522,7 +545,7 @@ class Components {
         `;
     }
 
-    // Create Load More Button (for other pages)
+    // Create Load More Button
     createLoadMoreButton(hasNextPage, onClick) {
         if (!hasNextPage) return '';
         
