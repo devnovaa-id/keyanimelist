@@ -1461,3 +1461,247 @@ main.container-fluid {
     background-color: var(--primary-color);
     color: white;
 }
+
+/* Hero Carousel Dots */
+.hero-dots {
+    position: absolute;
+    bottom: 20px;
+    left: 50%;
+    transform: translateX(-50%);
+    display: flex;
+    gap: 8px;
+    z-index: 10;
+}
+
+.hero-dot {
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    border: none;
+    background: rgba(255, 255, 255, 0.5);
+    cursor: pointer;
+    transition: all 0.3s ease;
+    padding: 0;
+    font-size: 0;
+    color: transparent;
+}
+
+.hero-dot.active {
+    background: var(--primary-color);
+    transform: scale(1.2);
+}
+
+.hero-dot:hover {
+    background: var(--secondary-color);
+}
+
+/* Pagination Styles */
+.pagination-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 8px;
+    margin: 30px 0;
+    flex-wrap: wrap;
+}
+
+.pagination-btn {
+    padding: 10px 15px;
+    background: var(--card-bg);
+    border-radius: 8px;
+    color: var(--light-color);
+    text-decoration: none;
+    border: 1px solid var(--card-border);
+    font-size: 0.9rem;
+    transition: all 0.3s ease;
+    min-width: 40px;
+    text-align: center;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 5px;
+}
+
+.pagination-btn:hover {
+    background: rgba(255, 255, 255, 0.1);
+    transform: translateY(-2px);
+}
+
+.pagination-btn.active {
+    background: var(--primary-color);
+    border-color: var(--primary-color);
+    color: white;
+    font-weight: bold;
+}
+
+.pagination-btn.prev,
+.pagination-btn.next {
+    padding: 10px 20px;
+}
+
+/* Search improvements */
+.search-box {
+    position: relative;
+}
+
+.clear-search {
+    position: absolute;
+    right: 10px;
+    top: 50%;
+    transform: translateY(-50%);
+    background: transparent;
+    border: none;
+    color: rgba(255, 255, 255, 0.5);
+    cursor: pointer;
+    padding: 5px;
+    border-radius: 50%;
+    display: none;
+}
+
+.clear-search:hover {
+    background: rgba(255, 255, 255, 0.1);
+}
+
+/* Animation for carousel */
+@keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+
+.hero-slide {
+    animation: fadeIn 1s ease;
+}
+
+/* Better error states */
+.error-page {
+    min-height: 60vh;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    text-align: center;
+    padding: 40px 20px;
+}
+
+.error-page i {
+    font-size: 4rem;
+    color: var(--primary-color);
+    margin-bottom: 20px;
+}
+
+.error-page h2 {
+    font-size: 1.8rem;
+    margin-bottom: 15px;
+}
+
+.error-page p {
+    font-size: 1rem;
+    color: rgba(255, 255, 255, 0.7);
+    margin-bottom: 30px;
+    line-height: 1.5;
+    max-width: 400px;
+}
+
+/* Toast improvements */
+.toast-actions {
+    display: flex;
+    gap: 10px;
+    margin-left: 10px;
+}
+
+.toast-btn {
+    padding: 5px 15px;
+    background: var(--primary-color);
+    border: none;
+    border-radius: 5px;
+    color: white;
+    font-size: 0.8rem;
+    cursor: pointer;
+    transition: background 0.3s ease;
+}
+
+.toast-btn:hover {
+    background: #E91E63;
+}
+
+/* Page info */
+.page-info {
+    font-size: 0.9rem;
+    color: rgba(255, 255, 255, 0.7);
+    display: flex;
+    align-items: center;
+    gap: 5px;
+}
+
+/* Loading improvements */
+.loading-video {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    text-align: center;
+    color: rgba(255, 255, 255, 0.7);
+}
+
+.loading-video i {
+    font-size: 2rem;
+    margin-bottom: 10px;
+}
+
+.no-video {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    text-align: center;
+    color: rgba(255, 255, 255, 0.7);
+    padding: 20px;
+}
+
+.no-video i {
+    font-size: 3rem;
+    color: var(--accent-color);
+    margin-bottom: 15px;
+}
+
+/* Responsive pagination */
+@media (max-width: 576px) {
+    .pagination-btn {
+        padding: 8px 12px;
+        font-size: 0.8rem;
+        min-width: 35px;
+    }
+    
+    .pagination-btn.prev,
+    .pagination-btn.next {
+        padding: 8px 15px;
+    }
+    
+    .page-info {
+        font-size: 0.8rem;
+    }
+}
+
+/* Dark mode adjustments */
+body.light-mode .pagination-btn {
+    background: rgba(0, 0, 0, 0.05);
+    color: var(--light-color);
+    border-color: rgba(0, 0, 0, 0.1);
+}
+
+body.light-mode .pagination-btn:hover {
+    background: rgba(0, 0, 0, 0.1);
+}
+
+body.light-mode .pagination-btn.active {
+    background: var(--primary-color);
+    color: white;
+}
+
+body.light-mode .hero-dot {
+    background: rgba(0, 0, 0, 0.3);
+}
+
+body.light-mode .hero-dot.active {
+    background: var(--primary-color);
+}

@@ -14,15 +14,25 @@ class APIService {
         
         // Return cached data if not expired
         if (cached && Date.now() - cached.timestamp < this.cacheDuration) {
+            console.log('Cache hit:', endpoint);
             return cached.data;
         }
 
         try {
             utils.showLoading();
-            const response = await fetch(`${this.baseURL}${endpoint}`, options);
+            const url = `${this.baseURL}${endpoint}`;
+            console.log('Fetching:', url);
+            
+            const response = await fetch(url, {
+                ...options,
+                headers: {
+                    'Accept': 'application/json',
+                    ...options.headers
+                }
+            });
             
             if (!response.ok) {
-                throw new Error(`HTTP ${response.status}`);
+                throw new Error(`HTTP ${response.status}: ${response.statusText}`);
             }
             
             const data = await response.json();
@@ -39,7 +49,7 @@ class APIService {
             utils.showToast('Gagal memuat data. Silakan coba lagi.', 'error');
             return {
                 error: true,
-                message: 'Gagal memuat data'
+                message: error.message || 'Gagal memuat data'
             };
         } finally {
             utils.hideLoading();
@@ -49,6 +59,8 @@ class APIService {
     // Clear cache
     clearCache() {
         this.cache.clear();
+        console.log('Cache cleared');
+        return true;
     }
 
     // Home Page
@@ -73,20 +85,54 @@ class APIService {
 
     // Ongoing Anime
     async getOngoing(page = 1) {
-        return await this.fetch(`/ongoing?page=${page}`);
+        const data = await this.fetch(`/ongoing?page=${page}`);
+        
+        // Ensure pagination data exists
+        if (data.data && !data.pagination) {
+            const itemsPerPage = 24;
+            data.pagination = {
+                currentPage: page,
+                hasNextPage: true,
+                totalPages: page + 1,
+                totalItems: (page + 1) * itemsPerPage
+            };
+        }
+        
+        return data;
     }
 
     // Completed Anime
     async getCompleted(page = 1) {
-        return await this.fetch(`/completed?page=${page}`);
+        const data = await this.fetch(`/completed?page=${page}`);
+        
+        // Ensure pagination data exists
+        if (data.data && !data.pagination) {
+            const itemsPerPage = 24;
+            data.pagination = {
+                currentPage: page,
+                hasNextPage: true,
+                totalPages: page + 1,
+                totalItems: (page + 1) * itemsPerPage
+            };
+        }
+        
+        return data;
     }
 
     // Search Anime
     async searchAnime(query, page = 1) {
         if (!query || query.trim() === '') {
-            return { data: { animeList: [] }, pagination: null };
+            return { 
+                data: { animeList: [] }, 
+                pagination: {
+                    currentPage: 1,
+                    hasNextPage: false,
+                    totalPages: 1,
+                    totalItems: 0
+                }
+            };
         }
-        return await this.fetch(`/search?q=${encodeURIComponent(query)}&page=${page}`);
+        return await this.fetch(`/search?q=${encodeURIComponent(query.trim())}&page=${page}`);
     }
 
     // Anime by Genre
@@ -117,34 +163,47 @@ class APIService {
     // Get video URL from episode data
     async getVideoUrl(episodeData, quality = '480p', serverIndex = 0) {
         try {
-            const qualityList = episodeData?.data?.details?.server?.qualityList;
-            if (!qualityList) {
-                return episodeData?.data?.details?.defaultStreamingUrl || null;
+            // If direct streaming URL is available
+            if (episodeData?.data?.details?.defaultStreamingUrl) {
+                return episodeData.data.details.defaultStreamingUrl;
             }
 
-            const qualityData = qualityList.find(q => q.title.includes(quality));
-            if (!qualityData) {
-                // Fallback to first quality
-                const firstQuality = qualityList[0];
-                if (firstQuality?.serverList?.length > 0) {
-                    const serverId = firstQuality.serverList[0].serverId;
-                    const serverData = await this.getServerVideo(serverId);
+            const qualityList = episodeData?.data?.details?.server?.qualityList;
+            if (!qualityList || qualityList.length === 0) {
+                return null;
+            }
+
+            // Try to find the requested quality
+            const qualityData = qualityList.find(q => 
+                q.title && q.title.toLowerCase().includes(quality.toLowerCase())
+            );
+            
+            // Fallback to first available quality
+            const targetQuality = qualityData || qualityList[0];
+            
+            if (targetQuality?.serverList?.length > 0) {
+                const server = targetQuality.serverList[serverIndex] || targetQuality.serverList[0];
+                if (server?.serverId) {
+                    const serverData = await this.getServerVideo(server.serverId);
                     return serverData?.data?.details?.url || null;
                 }
-                return null;
             }
-
-            const server = qualityData.serverList[serverIndex];
-            if (!server) {
-                return null;
-            }
-
-            const serverData = await this.getServerVideo(server.serverId);
-            return serverData?.data?.details?.url || null;
+            
+            return null;
         } catch (error) {
             console.error('Error getting video URL:', error);
             return null;
         }
+    }
+
+    // Get recommended anime
+    async getRecommendations(animeId) {
+        return await this.fetch(`/recommendations/${animeId}`);
+    }
+
+    // Get popular anime
+    async getPopular(page = 1) {
+        return await this.fetch(`/popular?page=${page}`);
     }
 }
 

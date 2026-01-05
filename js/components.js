@@ -10,13 +10,16 @@ class Components {
     createAnimeCard(anime, options = {}) {
         const isFavorite = this.utils.isFavorite(anime.animeId);
         const watchBtnText = anime.episodes ? `Tonton Eps ${anime.episodes}` : 'Tonton';
+        const showType = options.showType !== false;
+        const compact = options.compact || false;
         
         return `
             <div class="anime-card" data-anime-id="${anime.animeId}">
                 <div class="card-image">
                     <img src="${this.utils.getImageUrl(anime.poster)}" 
                          alt="${anime.title}"
-                         loading="lazy">
+                         loading="lazy"
+                         onerror="this.src='data:image/svg+xml,%3Csvg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 300 450\"%3E%3Crect width=\"300\" height=\"450\" fill=\"%231a1a2e\"/%3E%3Ctext x=\"150\" y=\"200\" font-family=\"Arial\" font-size=\"16\" fill=\"%23ffffff\" text-anchor=\"middle\"%3EKeyAnime%3C/text%3E%3Ctext x=\"150\" y=\"230\" font-family=\"Arial\" font-size=\"12\" fill=\"%23FF4081\" text-anchor=\"middle\"%3ENo Image%3C/text%3E%3C/svg%3E'">
                     ${anime.episodes ? `<div class="episode-badge">${anime.episodes}</div>` : ''}
                     ${anime.score ? `
                         <div class="rating-badge">
@@ -27,29 +30,32 @@ class Components {
                 </div>
                 <div class="card-content">
                     <h3 class="card-title" title="${anime.title}">
-                        ${this.utils.truncateText(anime.title, 40)}
+                        ${this.utils.truncateText(anime.title, compact ? 30 : 40)}
                     </h3>
-                    ${anime.season ? `
+                    ${showType && anime.season ? `
                         <div class="card-subtitle">${anime.season}</div>
                     ` : ''}
                     <div class="card-actions">
                         <button class="card-btn watch" data-action="watch" data-anime-id="${anime.animeId}">
                             <i class="fas fa-play"></i>
-                            ${watchBtnText}
+                            ${compact ? '' : watchBtnText}
                         </button>
                         <button class="card-btn detail" data-action="detail" data-anime-id="${anime.animeId}">
                             <i class="fas fa-info-circle"></i>
-                            Detail
+                            ${compact ? '' : 'Detail'}
                         </button>
                     </div>
+                    ${!compact ? `
                     <div class="card-actions" style="margin-top: 8px;">
                         <button class="card-btn ${isFavorite ? 'watch' : 'detail'}" 
                                 data-action="favorite" 
                                 data-anime-id="${anime.animeId}"
-                                style="flex: none; padding: 8px 12px;">
+                                style="flex: none; padding: 8px 12px; width: 100%;">
                             <i class="fas fa-heart${isFavorite ? '' : '-broken'}"></i>
+                            ${isFavorite ? 'Favorit' : 'Tambah Favorit'}
                         </button>
                     </div>
+                    ` : ''}
                 </div>
             </div>
         `;
@@ -64,26 +70,29 @@ class Components {
                 <div class="result-image">
                     <img src="${this.utils.getImageUrl(anime.poster)}" 
                          alt="${anime.title}"
-                         loading="lazy">
+                         loading="lazy"
+                         onerror="this.src='data:image/svg+xml,%3Csvg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 300 450\"%3E%3Crect width=\"300\" height=\"450\" fill=\"%231a1a2e\"/%3E%3Ctext x=\"150\" y=\"200\" font-family=\"Arial\" font-size=\"16\" fill=\"%23ffffff\" text-anchor=\"middle\"%3EKeyAnime%3C/text%3E%3Ctext x=\"150\" y=\"230\" font-family=\"Arial\" font-size=\"12\" fill=\"%23FF4081\" text-anchor=\"middle\"%3ENo Image%3C/text%3E%3C/svg%3E'">
                 </div>
                 <div class="result-content">
                     <h3 class="result-title">${anime.title}</h3>
                     <div class="result-meta">
-                        <span>${anime.status || ''}</span>
+                        ${anime.status ? `<span>${anime.status}</span>` : ''}
                         ${anime.score ? `<span>⭐ ${anime.score}</span>` : ''}
+                        ${anime.type ? `<span>${anime.type}</span>` : ''}
                     </div>
-                    <div class="result-genres">
+                    <div class="result-genres" style="display: flex; flex-wrap: wrap; gap: 5px; margin: 10px 0;">
                         ${anime.genreList ? anime.genreList.slice(0, 3).map(genre => 
-                            `<span class="genre-tag">${genre.title}</span>`
+                            `<span class="genre-tag" style="font-size: 0.75rem; padding: 4px 8px;">${genre.title}</span>`
                         ).join('') : ''}
                     </div>
-                    <div class="result-actions">
-                        <button class="btn watch" data-action="watch" data-anime-id="${anime.animeId}">
+                    <div class="result-actions" style="display: flex; gap: 10px; margin-top: 10px;">
+                        <button class="btn watch" data-action="watch" data-anime-id="${anime.animeId}" style="padding: 8px 15px; font-size: 0.85rem;">
                             <i class="fas fa-play"></i> Tonton
                         </button>
                         <button class="btn ${isFavorite ? 'watch' : 'detail'}" 
                                 data-action="favorite" 
-                                data-anime-id="${anime.animeId}">
+                                data-anime-id="${anime.animeId}"
+                                style="padding: 8px 15px; font-size: 0.85rem;">
                             <i class="fas fa-heart${isFavorite ? '' : '-broken'}"></i>
                         </button>
                     </div>
@@ -96,9 +105,9 @@ class Components {
     createEpisodeCard(episode, animeId) {
         return `
             <a href="#/watch/${episode.episodeId}" class="episode-card" data-episode-id="${episode.episodeId}">
-                <div class="episode-number">${episode.title}</div>
+                <div class="episode-number">${episode.episodeNumber || episode.title || '?'}</div>
                 <div class="episode-info">
-                    <div class="episode-title">Episode ${episode.title}</div>
+                    <div class="episode-title">Episode ${episode.title || episode.episodeNumber || '?'}</div>
                     <div class="episode-date">${animeId}</div>
                 </div>
                 <div class="episode-play">
@@ -121,14 +130,26 @@ class Components {
     // Create Schedule Day
     createScheduleDay(day) {
         return `
-            <div class="schedule-day">
-                <h4>${day.title}</h4>
+            <div class="schedule-day" style="background: var(--card-bg); border-radius: var(--card-radius); padding: 15px; margin-bottom: 15px;">
+                <h4 style="margin-bottom: 10px; color: var(--primary-color); display: flex; align-items: center; gap: 10px;">
+                    <i class="fas fa-calendar-day"></i> ${day.title}
+                </h4>
                 <div class="schedule-list">
-                    ${day.animeList.map(anime => `
-                        <div class="schedule-item">
-                            <a href="#/anime/${anime.animeId}">${anime.title}</a>
+                    ${day.animeList?.map(anime => `
+                        <div class="schedule-item" style="padding: 10px; border-bottom: 1px solid rgba(255,255,255,0.1);">
+                            <a href="#/anime/${anime.animeId}" style="color: var(--light-color); text-decoration: none; display: block;">
+                                <div style="display: flex; align-items: center; gap: 10px;">
+                                    <div style="width: 40px; height: 40px; border-radius: 5px; overflow: hidden; flex-shrink: 0;">
+                                        <img src="${this.utils.getImageUrl(anime.poster)}" alt="${anime.title}" style="width: 100%; height: 100%; object-fit: cover;">
+                                    </div>
+                                    <div>
+                                        <div style="font-weight: 500; font-size: 0.9rem;">${anime.title}</div>
+                                        ${anime.time ? `<div style="font-size: 0.8rem; color: rgba(255,255,255,0.6);">${anime.time}</div>` : ''}
+                                    </div>
+                                </div>
+                            </a>
                         </div>
-                    `).join('')}
+                    `).join('') || '<div style="padding: 10px; color: rgba(255,255,255,0.5);">Tidak ada jadwal</div>'}
                 </div>
             </div>
         `;
@@ -140,11 +161,11 @@ class Components {
         
         const slidesHtml = slides.map((slide, index) => `
             <div class="hero-slide ${index === 0 ? 'active' : ''}" 
-                 style="background-image: url('${this.utils.getImageUrl(slide.poster)}')">
+                 style="background-image: linear-gradient(rgba(0,0,0,0.3), rgba(0,0,0,0.7)), url('${this.utils.getImageUrl(slide.poster)}')">
                 <div class="hero-content">
                     <h2 class="hero-title">${slide.title}</h2>
-                    <p class="hero-subtitle">Episode ${slide.episodes} • ${slide.latestReleaseDate || ''}</p>
-                    <button class="btn-play" data-anime-id="${slide.animeId}">
+                    <p class="hero-subtitle">${slide.episodes ? `Episode ${slide.episodes}` : ''} ${slide.latestReleaseDate ? `• ${slide.latestReleaseDate}` : ''}</p>
+                    <button class="btn-play" data-anime-id="${slide.animeId}" data-action="watch">
                         <i class="fas fa-play"></i> Tonton Sekarang
                     </button>
                 </div>
@@ -152,7 +173,7 @@ class Components {
         `).join('');
 
         return `
-            <div class="hero-section">
+            <div class="hero-section" id="heroCarousel">
                 ${slidesHtml}
             </div>
         `;
@@ -175,7 +196,8 @@ class Components {
                     <div class="detail-poster">
                         <img src="${this.utils.getImageUrl(anime.poster)}" 
                              alt="${anime.title}" 
-                             class="poster-img">
+                             class="poster-img"
+                             onerror="this.src='data:image/svg+xml,%3Csvg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 300 450\"%3E%3Crect width=\"300\" height=\"450\" fill=\"%231a1a2e\"/%3E%3Ctext x=\"150\" y=\"200\" font-family=\"Arial\" font-size=\"16\" fill=\"%23ffffff\" text-anchor=\"middle\"%3E${encodeURIComponent(anime.title)}%3C/text%3E%3Ctext x=\"150\" y=\"230\" font-family=\"Arial\" font-size=\"12\" fill=\"%23FF4081\" text-anchor=\"middle\"%3ENo Image%3C/text%3E%3C/svg%3E'">
                         <div class="poster-overlay">
                             <button class="btn-play" data-action="play-first" data-anime-id="${anime.animeId}">
                                 <i class="fas fa-play"></i> Tonton Sekarang
@@ -197,7 +219,7 @@ class Components {
                             ${anime.type ? `<span><i class="fas fa-tv"></i> ${anime.type}</span>` : ''}
                             ${anime.episodes ? `<span><i class="fas fa-list-ol"></i> ${anime.episodes} Episode</span>` : ''}
                             ${anime.duration ? `<span><i class="fas fa-clock"></i> ${anime.duration}</span>` : ''}
-                            ${anime.status ? `<span><i class="fas fa-circle"></i> ${anime.status}</span>` : ''}
+                            ${anime.status ? `<span><i class="fas fa-circle" style="color: ${anime.status === 'Ongoing' ? '#00ff00' : '#ff4081'};"></i> ${anime.status}</span>` : ''}
                         </div>
                         
                         ${anime.genreList ? `
@@ -212,6 +234,11 @@ class Components {
                             <div class="detail-synopsis">
                                 <h6>Sinopsis</h6>
                                 <p>${anime.synopsis.paragraphList.join(' ')}</p>
+                            </div>
+                        ` : anime.description ? `
+                            <div class="detail-synopsis">
+                                <h6>Sinopsis</h6>
+                                <p>${anime.description}</p>
                             </div>
                         ` : ''}
                         
@@ -231,11 +258,18 @@ class Components {
                     ${anime.episodeList?.length > 0 ? `
                         <div class="detail-episodes">
                             <div class="episodes-header">
-                                <h5>Daftar Episode</h5>
+                                <h5>Daftar Episode (${anime.episodeList.length})</h5>
                             </div>
                             <div class="episodes-grid">
-                                ${anime.episodeList.map(ep => this.createEpisodeCard(ep, anime.animeId)).join('')}
+                                ${anime.episodeList.slice(0, 20).map(ep => this.createEpisodeCard(ep, anime.animeId)).join('')}
                             </div>
+                            ${anime.episodeList.length > 20 ? `
+                                <div style="text-align: center; margin-top: 15px;">
+                                    <button class="card-btn detail" onclick="alert('Total episode: ${anime.episodeList.length}')">
+                                        <i class="fas fa-eye"></i> Lihat Semua Episode
+                                    </button>
+                                </div>
+                            ` : ''}
                         </div>
                     ` : ''}
                 </div>
@@ -269,10 +303,10 @@ class Components {
                         <h6>Pilih Kualitas</h6>
                         <div class="quality-buttons" id="qualityButtons">
                             ${anime.server.qualityList.map((quality, index) => `
-                                <button class="quality-btn ${index === 1 ? 'active' : ''}" 
-                                        data-quality="${quality.title.trim()}"
+                                <button class="quality-btn ${index === 0 ? 'active' : ''}" 
+                                        data-quality="${quality.title?.trim() || '480p'}"
                                         data-server-index="0">
-                                    ${quality.title.trim()}
+                                    ${quality.title?.trim() || '480p'}
                                 </button>
                             `).join('')}
                         </div>
@@ -286,29 +320,30 @@ class Components {
                             <div class="quality-download">
                                 <div class="quality-title">${quality.title}</div>
                                 <div class="download-buttons">
-                                    ${quality.urlList.map((url, idx) => `
+                                    ${quality.urlList?.map((url, idx) => `
                                         <a href="${url.url}" 
                                            class="download-btn" 
                                            target="_blank" 
-                                           rel="noopener noreferrer">
+                                           rel="noopener noreferrer"
+                                           onclick="event.stopPropagation();">
                                             <i class="fas fa-download"></i>
-                                            ${url.title}
+                                            ${url.title || 'Download'}
                                         </a>
-                                    `).join('')}
+                                    `).join('') || ''}
                                 </div>
                             </div>
                         `).join('')}
                     </div>
                 ` : ''}
                 
-                <div class="episode-navigation" style="margin-top: 20px;">
+                <div class="episode-navigation" style="margin-top: 20px; display: flex; flex-direction: column; gap: 10px;">
                     ${anime.hasPrevEpisode ? `
-                        <a href="#/watch/${anime.prevEpisode.episodeId}" class="card-btn detail">
+                        <a href="#/watch/${anime.prevEpisode?.episodeId}" class="card-btn detail">
                             <i class="fas fa-arrow-left"></i> Episode Sebelumnya
                         </a>
                     ` : ''}
                     ${anime.hasNextEpisode ? `
-                        <a href="#/watch/${anime.nextEpisode.episodeId}" class="card-btn watch" style="margin-top: 10px;">
+                        <a href="#/watch/${anime.nextEpisode?.episodeId}" class="card-btn watch">
                             Episode Selanjutnya <i class="fas fa-arrow-right"></i>
                         </a>
                     ` : ''}
@@ -317,45 +352,175 @@ class Components {
         `;
     }
 
+    // Create Pagination
+    createPagination(currentPage, totalPages, baseRoute) {
+        if (totalPages <= 1) return '';
+        
+        const pages = [];
+        const maxVisible = 5;
+        
+        // Calculate visible page range
+        let startPage = Math.max(1, currentPage - Math.floor(maxVisible / 2));
+        let endPage = startPage + maxVisible - 1;
+        
+        if (endPage > totalPages) {
+            endPage = totalPages;
+            startPage = Math.max(1, endPage - maxVisible + 1);
+        }
+        
+        // Build pagination HTML
+        return `
+            <div class="pagination-container" style="
+                display: flex;
+                justify-content: center;
+                align-items: center;
+                gap: 8px;
+                margin: 30px 0;
+                flex-wrap: wrap;
+            ">
+                <!-- Previous Button -->
+                ${currentPage > 1 ? `
+                    <a href="${baseRoute}?page=${currentPage - 1}" class="pagination-btn prev" style="
+                        padding: 10px 15px;
+                        background: var(--card-bg);
+                        border-radius: 8px;
+                        color: var(--light-color);
+                        text-decoration: none;
+                        border: 1px solid var(--card-border);
+                        display: flex;
+                        align-items: center;
+                        gap: 5px;
+                        font-size: 0.9rem;
+                        transition: all 0.3s ease;
+                    ">
+                        <i class="fas fa-chevron-left"></i> Sebelumnya
+                    </a>
+                ` : ''}
+                
+                <!-- First Page -->
+                ${startPage > 1 ? `
+                    <a href="${baseRoute}?page=1" class="pagination-btn" style="
+                        padding: 10px 15px;
+                        background: var(--card-bg);
+                        border-radius: 8px;
+                        color: var(--light-color);
+                        text-decoration: none;
+                        border: 1px solid var(--card-border);
+                        font-size: 0.9rem;
+                        transition: all 0.3s ease;
+                    ">1</a>
+                    ${startPage > 2 ? '<span style="color: var(--light-color); opacity: 0.5; padding: 0 5px;">...</span>' : ''}
+                ` : ''}
+                
+                <!-- Page Numbers -->
+                ${Array.from({ length: endPage - startPage + 1 }, (_, i) => startPage + i).map(page => `
+                    <a href="${baseRoute}?page=${page}" 
+                       class="pagination-btn ${page === currentPage ? 'active' : ''}" 
+                       style="
+                        padding: 10px 15px;
+                        background: ${page === currentPage ? 'var(--primary-color)' : 'var(--card-bg)'};
+                        border-radius: 8px;
+                        color: ${page === currentPage ? 'white' : 'var(--light-color)'};
+                        text-decoration: none;
+                        border: 1px solid ${page === currentPage ? 'var(--primary-color)' : 'var(--card-border)'};
+                        font-size: 0.9rem;
+                        font-weight: ${page === currentPage ? 'bold' : 'normal'};
+                        transition: all 0.3s ease;
+                        min-width: 40px;
+                        text-align: center;
+                    ">
+                        ${page}
+                    </a>
+                `).join('')}
+                
+                <!-- Last Page -->
+                ${endPage < totalPages ? `
+                    ${endPage < totalPages - 1 ? '<span style="color: var(--light-color); opacity: 0.5; padding: 0 5px;">...</span>' : ''}
+                    <a href="${baseRoute}?page=${totalPages}" class="pagination-btn" style="
+                        padding: 10px 15px;
+                        background: var(--card-bg);
+                        border-radius: 8px;
+                        color: var(--light-color);
+                        text-decoration: none;
+                        border: 1px solid var(--card-border);
+                        font-size: 0.9rem;
+                        transition: all 0.3s ease;
+                    ">${totalPages}</a>
+                ` : ''}
+                
+                <!-- Next Button -->
+                ${currentPage < totalPages ? `
+                    <a href="${baseRoute}?page=${currentPage + 1}" class="pagination-btn next" style="
+                        padding: 10px 15px;
+                        background: var(--card-bg);
+                        border-radius: 8px;
+                        color: var(--light-color);
+                        text-decoration: none;
+                        border: 1px solid var(--card-border);
+                        display: flex;
+                        align-items: center;
+                        gap: 5px;
+                        font-size: 0.9rem;
+                        transition: all 0.3s ease;
+                    ">
+                        Selanjutnya <i class="fas fa-chevron-right"></i>
+                    </a>
+                ` : ''}
+            </div>
+        `;
+    }
+
     // Create Empty State
-    createEmptyState(message = 'Tidak ada data', icon = 'fas fa-inbox') {
+    createEmptyState(message = 'Tidak ada data', icon = 'fas fa-inbox', submessage = '') {
         return `
             <div class="empty-state">
                 <div class="empty-icon">
                     <i class="${icon}"></i>
                 </div>
                 <h5>${message}</h5>
-                <p>Coba cari dengan kata kunci yang berbeda</p>
+                ${submessage ? `<p>${submessage}</p>` : ''}
             </div>
         `;
     }
 
     // Create Error Page
-    createErrorPage(message = 'Terjadi kesalahan') {
+    createErrorPage(message = 'Terjadi kesalahan', retryAction = null) {
         return `
             <div class="error-page">
                 <i class="fas fa-exclamation-triangle"></i>
                 <h2>Oops!</h2>
                 <p>${message}</p>
-                <button class="btn watch" onclick="window.history.back()">
-                    <i class="fas fa-arrow-left"></i> Kembali
-                </button>
+                <div style="display: flex; gap: 10px; justify-content: center; margin-top: 20px;">
+                    <button class="btn watch" onclick="window.history.back()">
+                        <i class="fas fa-arrow-left"></i> Kembali
+                    </button>
+                    ${retryAction ? `
+                        <button class="btn detail" onclick="${retryAction}">
+                            <i class="fas fa-redo"></i> Coba Lagi
+                        </button>
+                    ` : ''}
+                </div>
             </div>
         `;
     }
 
-    // Load More Button
+    // Create Load More Button (for other pages)
     createLoadMoreButton(hasNextPage, onClick) {
         if (!hasNextPage) return '';
         
         return `
             <div class="load-more">
-                <button class="btn watch" id="loadMoreBtn">
+                <button class="btn watch" id="loadMoreBtn" onclick="${onClick}">
                     <i class="fas fa-spinner fa-spin" style="display: none;"></i>
                     <span>Muat Lebih Banyak</span>
                 </button>
             </div>
         `;
+    }
+
+    // Initialize carousel
+    initCarousel() {
+        utils.initCarousel('heroCarousel');
     }
 }
 

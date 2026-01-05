@@ -8,6 +8,7 @@ class Router {
         this.api = api;
         this.components = components;
         this.currentPage = {};
+        this.searchTimeout = null;
         this.init();
     }
 
@@ -63,7 +64,7 @@ class Router {
         const params = new URLSearchParams(queryString);
         const result = {};
         for (const [key, value] of params) {
-            result[key] = value;
+            result[key] = decodeURIComponent(value);
         }
         return result;
     }
@@ -137,9 +138,16 @@ class Router {
         // Update active nav
         this.updateActiveNav(path);
 
+        // Clear search timeout
+        if (this.searchTimeout) {
+            clearTimeout(this.searchTimeout);
+            this.searchTimeout = null;
+        }
+
         if (route) {
             try {
                 await route.handler(route.params, queryParams);
+                this.utils.scrollToTop();
             } catch (error) {
                 console.error('Route error:', error);
                 this.renderError('Terjadi kesalahan saat memuat halaman');
@@ -187,7 +195,10 @@ class Router {
         let url = `#${path}`;
         
         if (Object.keys(queryParams).length > 0) {
-            const params = new URLSearchParams(queryParams);
+            const params = new URLSearchParams();
+            for (const [key, value] of Object.entries(queryParams)) {
+                params.set(key, encodeURIComponent(value));
+            }
             url += `?${params.toString()}`;
         }
         
@@ -210,7 +221,7 @@ class Router {
             const data = await api.getHome();
             
             if (data.error) {
-                content.innerHTML = components.createErrorPage('Gagal memuat halaman beranda');
+                content.innerHTML = components.createErrorPage('Gagal memuat halaman beranda', 'router.handleRoute()');
                 return;
             }
 
@@ -249,10 +260,16 @@ class Router {
             `;
 
             content.innerHTML = html;
+            
+            // Initialize carousel
+            setTimeout(() => {
+                components.initCarousel();
+            }, 100);
+            
             this.attachCardEventListeners();
         } catch (error) {
             console.error('Home render error:', error);
-            content.innerHTML = components.createErrorPage('Gagal memuat halaman beranda');
+            content.innerHTML = components.createErrorPage('Gagal memuat halaman beranda', 'router.handleRoute()');
         }
     }
 
@@ -272,18 +289,23 @@ class Router {
             const data = await api.getOngoing(page);
             
             if (data.error) {
-                content.innerHTML = components.createErrorPage('Gagal memuat anime ongoing');
+                content.innerHTML = components.createErrorPage('Gagal memuat anime ongoing', 'router.handleRoute()');
                 return;
             }
 
             if (!data.data?.animeList?.length) {
-                content.innerHTML = components.createEmptyState('Tidak ada anime ongoing');
+                content.innerHTML = components.createEmptyState('Tidak ada anime ongoing', 'fas fa-fire');
                 return;
             }
 
+            const totalPages = data.pagination?.totalPages || 1;
+            
             let html = `
                 <div class="page-header">
                     <h4><i class="fas fa-fire"></i> Anime Sedang Tayang</h4>
+                    <div class="page-info" style="font-size: 0.9rem; color: rgba(255,255,255,0.7)">
+                        Halaman ${page} dari ${totalPages}
+                    </div>
                 </div>
                 <div class="mobile-grid" id="ongoingList">
                     ${data.data.animeList.map(anime => 
@@ -293,17 +315,13 @@ class Router {
             `;
 
             // Add pagination
-            if (data.pagination?.hasNextPage) {
-                html += components.createLoadMoreButton(true, () => {
-                    this.navigateTo('/ongoing', { page: page + 1 });
-                });
-            }
+            html += components.createPagination(page, totalPages, '#/ongoing');
 
             content.innerHTML = html;
             this.attachCardEventListeners();
         } catch (error) {
             console.error('Ongoing render error:', error);
-            content.innerHTML = components.createErrorPage('Gagal memuat anime ongoing');
+            content.innerHTML = components.createErrorPage('Gagal memuat anime ongoing', 'router.handleRoute()');
         }
     }
 
@@ -323,18 +341,23 @@ class Router {
             const data = await api.getCompleted(page);
             
             if (data.error) {
-                content.innerHTML = components.createErrorPage('Gagal memuat anime selesai');
+                content.innerHTML = components.createErrorPage('Gagal memuat anime selesai', 'router.handleRoute()');
                 return;
             }
 
             if (!data.data?.animeList?.length) {
-                content.innerHTML = components.createEmptyState('Tidak ada anime selesai');
+                content.innerHTML = components.createEmptyState('Tidak ada anime selesai', 'fas fa-check-circle');
                 return;
             }
 
+            const totalPages = data.pagination?.totalPages || 1;
+            
             let html = `
                 <div class="page-header">
                     <h4><i class="fas fa-check-circle"></i> Anime Selesai</h4>
+                    <div class="page-info" style="font-size: 0.9rem; color: rgba(255,255,255,0.7)">
+                        Halaman ${page} dari ${totalPages}
+                    </div>
                 </div>
                 <div class="mobile-grid" id="completedList">
                     ${data.data.animeList.map(anime => 
@@ -344,17 +367,13 @@ class Router {
             `;
 
             // Add pagination
-            if (data.pagination?.hasNextPage) {
-                html += components.createLoadMoreButton(true, () => {
-                    this.navigateTo('/complete', { page: page + 1 });
-                });
-            }
+            html += components.createPagination(page, totalPages, '#/complete');
 
             content.innerHTML = html;
             this.attachCardEventListeners();
         } catch (error) {
             console.error('Complete render error:', error);
-            content.innerHTML = components.createErrorPage('Gagal memuat anime selesai');
+            content.innerHTML = components.createErrorPage('Gagal memuat anime selesai', 'router.handleRoute()');
         }
     }
 
@@ -377,12 +396,12 @@ class Router {
             const data = await api.getGenres();
             
             if (data.error) {
-                content.innerHTML = components.createErrorPage('Gagal memuat genre');
+                content.innerHTML = components.createErrorPage('Gagal memuat genre', 'router.handleRoute()');
                 return;
             }
 
             if (!data.data?.genreList?.length) {
-                content.innerHTML = components.createEmptyState('Tidak ada genre');
+                content.innerHTML = components.createEmptyState('Tidak ada genre', 'fas fa-tags');
                 return;
             }
 
@@ -400,7 +419,7 @@ class Router {
             content.innerHTML = html;
         } catch (error) {
             console.error('Genres render error:', error);
-            content.innerHTML = components.createErrorPage('Gagal memuat genre');
+            content.innerHTML = components.createErrorPage('Gagal memuat genre', 'router.handleRoute()');
         }
     }
 
@@ -412,7 +431,7 @@ class Router {
         const content = document.getElementById('app-content');
         content.innerHTML = `
             <div class="page-header">
-                <h4><i class="fas fa-tag"></i> Genre</h4>
+                <h4><i class="fas fa-tag"></i> Memuat...</h4>
             </div>
             ${components.utils.generateSkeletonCards(6)}
         `;
@@ -421,18 +440,31 @@ class Router {
             const data = await api.getAnimeByGenre(id, page);
             
             if (data.error) {
-                content.innerHTML = components.createErrorPage('Gagal memuat anime genre');
+                content.innerHTML = components.createErrorPage('Gagal memuat anime genre', 'router.handleRoute()');
                 return;
             }
 
             if (!data.data?.animeList?.length) {
-                content.innerHTML = components.createEmptyState('Tidak ada anime untuk genre ini');
+                content.innerHTML = components.createEmptyState(
+                    'Tidak ada anime untuk genre ini',
+                    'fas fa-tag',
+                    'Coba genre lain atau halaman lain'
+                );
                 return;
             }
 
+            const genreName = id.split('-').map(word => 
+                word.charAt(0).toUpperCase() + word.slice(1)
+            ).join(' ');
+            
+            const totalPages = data.pagination?.totalPages || 1;
+            
             let html = `
                 <div class="page-header">
-                    <h4><i class="fas fa-tag"></i> ${id.charAt(0).toUpperCase() + id.slice(1)}</h4>
+                    <h4><i class="fas fa-tag"></i> ${genreName}</h4>
+                    <div class="page-info" style="font-size: 0.9rem; color: rgba(255,255,255,0.7)">
+                        Halaman ${page} dari ${totalPages}
+                    </div>
                 </div>
                 <div class="mobile-grid" id="genreList">
                     ${data.data.animeList.map(anime => 
@@ -442,17 +474,13 @@ class Router {
             `;
 
             // Add pagination
-            if (data.pagination?.hasNextPage) {
-                html += components.createLoadMoreButton(true, () => {
-                    this.navigateTo(`/genre/${id}`, { page: page + 1 });
-                });
-            }
+            html += components.createPagination(page, totalPages, `#/genre/${id}`);
 
             content.innerHTML = html;
             this.attachCardEventListeners();
         } catch (error) {
             console.error('Genre anime render error:', error);
-            content.innerHTML = components.createErrorPage('Gagal memuat anime genre');
+            content.innerHTML = components.createErrorPage('Gagal memuat anime genre', 'router.handleRoute()');
         }
     }
 
@@ -473,12 +501,12 @@ class Router {
             const data = await api.getSchedule();
             
             if (data.error) {
-                content.innerHTML = components.createErrorPage('Gagal memuat jadwal');
+                content.innerHTML = components.createErrorPage('Gagal memuat jadwal', 'router.handleRoute()');
                 return;
             }
 
             if (!data.data?.scheduleList?.length) {
-                content.innerHTML = components.createEmptyState('Tidak ada jadwal');
+                content.innerHTML = components.createEmptyState('Tidak ada jadwal', 'fas fa-calendar-alt');
                 return;
             }
 
@@ -494,7 +522,7 @@ class Router {
             content.innerHTML = html;
         } catch (error) {
             console.error('Schedule render error:', error);
-            content.innerHTML = components.createErrorPage('Gagal memuat jadwal');
+            content.innerHTML = components.createErrorPage('Gagal memuat jadwal', 'router.handleRoute()');
         }
     }
 
@@ -512,7 +540,7 @@ class Router {
                         <input type="text" 
                                id="searchInput" 
                                placeholder="Cari anime..." 
-                               value="${searchQuery}"
+                               value="${searchQuery.replace(/"/g, '&quot;')}"
                                autocomplete="off">
                         ${searchQuery ? `
                             <button class="clear-search" id="clearSearch">
@@ -525,41 +553,85 @@ class Router {
         `;
 
         if (searchQuery) {
-            html += components.utils.generateSkeletonCards(3);
+            html += components.utils.generateSearchSkeleton(3);
         } else {
-            html += components.createEmptyState('Masukkan kata kunci pencarian', 'fas fa-search');
+            html += components.createEmptyState(
+                'Masukkan kata kunci pencarian',
+                'fas fa-search',
+                'Minimal 3 karakter untuk memulai pencarian'
+            );
         }
 
         html += `</div></div>`;
         content.innerHTML = html;
 
-        // Setup search input
+        // Setup search input with debounce
         const searchInput = document.getElementById('searchInput');
         const clearSearch = document.getElementById('clearSearch');
         
         if (searchInput) {
             searchInput.focus();
             
-            // Debounced search
-            const debouncedSearch = utils.debounce((value) => {
-                if (value.trim()) {
-                    this.navigateTo('/search', { q: value });
-                }
-            }, 500);
+            // Clear previous timeout
+            if (this.searchTimeout) {
+                clearTimeout(this.searchTimeout);
+            }
             
             searchInput.addEventListener('input', (e) => {
-                const value = e.target.value;
+                const value = e.target.value.trim();
+                
+                // Show/hide clear button
                 if (clearSearch) {
                     clearSearch.style.display = value ? 'block' : 'none';
                 }
-                debouncedSearch(value);
+                
+                // Clear previous timeout
+                if (this.searchTimeout) {
+                    clearTimeout(this.searchTimeout);
+                }
+                
+                // If empty, show empty state
+                if (!value) {
+                    document.getElementById('searchResults').innerHTML = 
+                        components.createEmptyState(
+                            'Masukkan kata kunci pencarian',
+                            'fas fa-search',
+                            'Minimal 3 karakter untuk memulai pencarian'
+                        );
+                    this.navigateTo('/search');
+                    return;
+                }
+                
+                // Show loading skeleton for short queries
+                if (value.length < 3) {
+                    document.getElementById('searchResults').innerHTML = 
+                        components.createEmptyState(
+                            'Masukkan minimal 3 karakter',
+                            'fas fa-search',
+                            'Mencari: ' + value
+                        );
+                    return;
+                }
+                
+                // Show skeleton loading
+                document.getElementById('searchResults').innerHTML = 
+                    components.utils.generateSearchSkeleton(3);
+                
+                // Set new timeout with 800ms delay
+                this.searchTimeout = setTimeout(() => {
+                    this.navigateTo('/search', { q: value });
+                }, 800);
             });
             
-            // Enter key search
+            // Enter key for immediate search
             searchInput.addEventListener('keypress', (e) => {
                 if (e.key === 'Enter') {
                     const value = e.target.value.trim();
-                    if (value) {
+                    if (value && value.length >= 3) {
+                        // Clear timeout
+                        if (this.searchTimeout) {
+                            clearTimeout(this.searchTimeout);
+                        }
                         this.navigateTo('/search', { q: value });
                     }
                 }
@@ -571,43 +643,70 @@ class Router {
                 searchInput.value = '';
                 searchInput.focus();
                 clearSearch.style.display = 'none';
+                
+                // Clear search results
+                document.getElementById('searchResults').innerHTML = 
+                    components.createEmptyState(
+                        'Masukkan kata kunci pencarian',
+                        'fas fa-search',
+                        'Minimal 3 karakter untuk memulai pencarian'
+                    );
+                
+                // Navigate without query
                 this.navigateTo('/search');
             });
         }
 
-        // Perform search if query exists
-        if (searchQuery) {
-            try {
-                const data = await api.searchAnime(searchQuery);
-                
-                const resultsContainer = document.getElementById('searchResults');
-                if (!resultsContainer) return;
-                
-                if (data.error) {
-                    resultsContainer.innerHTML = components.createErrorPage('Gagal melakukan pencarian');
-                    return;
-                }
+        // Perform search if query exists and has at least 3 characters
+        if (searchQuery && searchQuery.length >= 3) {
+            await this.performSearchOperation(searchQuery);
+        }
+    }
 
-                if (!data.data?.animeList?.length) {
-                    resultsContainer.innerHTML = components.createEmptyState('Tidak ditemukan anime dengan kata kunci tersebut');
-                    return;
-                }
+    async performSearchOperation(searchQuery) {
+        try {
+            const data = await api.searchAnime(searchQuery);
+            
+            const resultsContainer = document.getElementById('searchResults');
+            if (!resultsContainer) return;
+            
+            if (data.error) {
+                resultsContainer.innerHTML = components.createErrorPage(
+                    'Gagal melakukan pencarian',
+                    'router.navigateTo(\'/search\', { q: \'' + searchQuery + '\' })'
+                );
+                return;
+            }
 
-                resultsContainer.innerHTML = `
-                    <div class="search-results">
-                        ${data.data.animeList.map(anime => 
-                            components.createSearchResultItem(anime)
-                        ).join('')}
-                    </div>
-                `;
+            if (!data.data?.animeList?.length) {
+                resultsContainer.innerHTML = components.createEmptyState(
+                    `Tidak ditemukan hasil untuk "${searchQuery}"`,
+                    'fas fa-search',
+                    'Coba kata kunci yang berbeda'
+                );
+                return;
+            }
 
-                this.attachCardEventListeners();
-            } catch (error) {
-                console.error('Search render error:', error);
-                const resultsContainer = document.getElementById('searchResults');
-                if (resultsContainer) {
-                    resultsContainer.innerHTML = components.createErrorPage('Gagal melakukan pencarian');
-                }
+            resultsContainer.innerHTML = `
+                <div style="margin-bottom: 10px; color: rgba(255,255,255,0.7);">
+                    <i class="fas fa-info-circle"></i> Ditemukan ${data.data.animeList.length} hasil untuk "${searchQuery}"
+                </div>
+                <div class="search-results">
+                    ${data.data.animeList.map(anime => 
+                        components.createSearchResultItem(anime)
+                    ).join('')}
+                </div>
+            `;
+
+            this.attachCardEventListeners();
+        } catch (error) {
+            console.error('Search render error:', error);
+            const resultsContainer = document.getElementById('searchResults');
+            if (resultsContainer) {
+                resultsContainer.innerHTML = components.createErrorPage(
+                    'Gagal melakukan pencarian',
+                    'router.navigateTo(\'/search\', { q: \'' + searchQuery + '\' })'
+                );
             }
         }
     }
@@ -623,7 +722,11 @@ class Router {
                 <div class="page-header">
                     <h4><i class="fas fa-heart"></i> Favorit</h4>
                 </div>
-                ${components.createEmptyState('Belum ada anime favorit', 'fas fa-heart-broken')}
+                ${components.createEmptyState(
+                    'Belum ada anime favorit',
+                    'fas fa-heart-broken',
+                    'Tambahkan anime ke favorit dengan menekan tombol hati'
+                )}
             `;
             return;
         }
@@ -642,6 +745,11 @@ class Router {
                     })
                 ).join('')}
             </div>
+            <div style="text-align: center; margin: 20px 0;">
+                <button class="card-btn detail" onclick="if(confirm('Hapus semua favorit?')){localStorage.removeItem('favorites'); router.handleRoute();}">
+                    <i class="fas fa-trash"></i> Hapus Semua Favorit
+                </button>
+            </div>
         `;
 
         this.attachCardEventListeners();
@@ -658,7 +766,11 @@ class Router {
                 <div class="page-header">
                     <h4><i class="fas fa-history"></i> Riwayat</h4>
                 </div>
-                ${components.createEmptyState('Belum ada riwayat tontonan', 'fas fa-history')}
+                ${components.createEmptyState(
+                    'Belum ada riwayat tontonan',
+                    'fas fa-history',
+                    'Tonton anime untuk melihat riwayat di sini'
+                )}
             `;
             return;
         }
@@ -698,6 +810,11 @@ class Router {
                     })
                 ).join('')}
             </div>
+            <div style="text-align: center; margin: 20px 0;">
+                <button class="card-btn detail" onclick="if(confirm('Hapus semua riwayat?')){localStorage.removeItem('watchHistory'); router.handleRoute();}">
+                    <i class="fas fa-trash"></i> Hapus Semua Riwayat
+                </button>
+            </div>
         `;
 
         this.attachCardEventListeners();
@@ -714,12 +831,12 @@ class Router {
             const data = await api.getAnimeDetail(id);
             
             if (data.error) {
-                content.innerHTML = components.createErrorPage('Gagal memuat detail anime');
+                content.innerHTML = components.createErrorPage('Gagal memuat detail anime', 'window.history.back()');
                 return;
             }
 
             if (!data.data?.details) {
-                content.innerHTML = components.createErrorPage('Anime tidak ditemukan');
+                content.innerHTML = components.createErrorPage('Anime tidak ditemukan', 'window.history.back()');
                 return;
             }
 
@@ -732,7 +849,7 @@ class Router {
             this.attachCardEventListeners();
         } catch (error) {
             console.error('Anime detail render error:', error);
-            content.innerHTML = components.createErrorPage('Gagal memuat detail anime');
+            content.innerHTML = components.createErrorPage('Gagal memuat detail anime', 'window.history.back()');
         }
     }
 
@@ -747,12 +864,12 @@ class Router {
             const data = await api.getEpisodeDetail(id);
             
             if (data.error) {
-                content.innerHTML = components.createErrorPage('Gagal memuat episode');
+                content.innerHTML = components.createErrorPage('Gagal memuat episode', 'window.history.back()');
                 return;
             }
 
             if (!data.data?.details) {
-                content.innerHTML = components.createErrorPage('Episode tidak ditemukan');
+                content.innerHTML = components.createErrorPage('Episode tidak ditemukan', 'window.history.back()');
                 return;
             }
 
@@ -766,17 +883,17 @@ class Router {
             const animeData = {
                 animeId: episode.animeId,
                 title: episode.title,
-                poster: '' // We don't have poster in episode data
+                poster: episode.poster || ''
             };
             utils.addToHistory(animeData, {
                 episodeId: id,
-                title: episode.title.split('Episode')[1]?.trim() || 'Episode'
+                title: `Episode ${episode.title?.split('Episode')[1]?.trim() || '1'}`
             });
             
             this.attachCardEventListeners();
         } catch (error) {
             console.error('Watch render error:', error);
-            content.innerHTML = components.createErrorPage('Gagal memuat episode');
+            content.innerHTML = components.createErrorPage('Gagal memuat episode', 'window.history.back()');
         }
     }
 
@@ -856,18 +973,28 @@ class Router {
                                     </div>
                                 </button>
                                 
-                                <button class="episode-card" onclick="if(confirm('Hapus semua riwayat?')){localStorage.removeItem('watchHistory'); utils.showToast('Riwayat dihapus', 'success'); router.handleRoute();}">
+                                <button class="episode-card" onclick="if(confirm('Hapus semua data aplikasi?')){localStorage.clear(); location.reload();}">
                                     <div class="episode-number">
                                         <i class="fas fa-trash"></i>
                                     </div>
                                     <div class="episode-info">
-                                        <div class="episode-title">Hapus Riwayat</div>
-                                        <div class="episode-date">Bersihkan riwayat tontonan</div>
+                                        <div class="episode-title">Reset Aplikasi</div>
+                                        <div class="episode-date">Hapus semua data lokal</div>
                                     </div>
                                     <div class="episode-play">
                                         <i class="fas fa-chevron-right"></i>
                                     </div>
                                 </button>
+                            </div>
+                        </div>
+                        
+                        <div class="developer-info" style="margin-top: 30px; padding-top: 20px; border-top: 1px solid rgba(255,255,255,0.1); text-align: center;">
+                            <div style="color: var(--accent-color); margin-bottom: 5px;">
+                                <i class="fas fa-code"></i>
+                                <span>this.key@devnova.icu</span>
+                            </div>
+                            <div style="font-size: 0.8rem; color: rgba(255,255,255,0.5);">
+                                KeyAnime v2.0 • Made with <i class="fas fa-heart" style="color: var(--primary-color);"></i>
                             </div>
                         </div>
                     </div>
@@ -899,6 +1026,7 @@ class Router {
             // Create iframe for video
             container.innerHTML = `
                 <iframe src="${videoUrl}" 
+                        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" 
                         allowfullscreen 
                         scrolling="no" 
                         frameborder="0" 
@@ -914,6 +1042,14 @@ class Router {
                     qualityButtons.forEach(b => b.classList.remove('active'));
                     btn.classList.add('active');
                     
+                    // Show loading
+                    container.innerHTML = `
+                        <div class="loading-video">
+                            <i class="fas fa-spinner fa-spin"></i>
+                            <p>Memuat video...</p>
+                        </div>
+                    `;
+                    
                     // Get new video URL
                     const quality = btn.dataset.quality;
                     const serverIndex = parseInt(btn.dataset.serverIndex) || 0;
@@ -922,11 +1058,20 @@ class Router {
                     if (newVideoUrl) {
                         container.innerHTML = `
                             <iframe src="${newVideoUrl}" 
+                                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" 
                                     allowfullscreen 
                                     scrolling="no" 
                                     frameborder="0" 
                                     webkitallowfullscreen 
                                     mozallowfullscreen></iframe>
+                        `;
+                    } else {
+                        container.innerHTML = `
+                            <div class="no-video">
+                                <i class="fas fa-exclamation-triangle"></i>
+                                <p>Gagal memuat video</p>
+                                <p>Silakan coba lagi nanti</p>
+                            </div>
                         `;
                     }
                 });
@@ -955,6 +1100,9 @@ class Router {
                 const animeId = btn.dataset.animeId;
                 if (!animeId) return;
                 
+                // Show loading
+                utils.showLoading();
+                
                 // Get anime detail to get first episode
                 try {
                     const data = await api.getAnimeDetail(animeId);
@@ -967,6 +1115,8 @@ class Router {
                 } catch (error) {
                     console.error('Error getting first episode:', error);
                     this.navigateTo(`/anime/${animeId}`);
+                } finally {
+                    utils.hideLoading();
                 }
             });
         });
@@ -996,16 +1146,18 @@ class Router {
                 if (animeId) {
                     if (utils.isFavorite(animeId)) {
                         utils.removeFromFavorites(animeId);
-                        btn.innerHTML = '<i class="fas fa-heart-broken"></i>';
+                        btn.innerHTML = '<i class="fas fa-heart-broken"></i>' + (btn.textContent.includes('Favorit') ? ' Tambah Favorit' : '');
                         btn.classList.remove('watch');
                         btn.classList.add('detail');
                     } else {
+                        const title = card.querySelector('.card-title, .result-title')?.textContent || 'Anime';
+                        const poster = card.querySelector('img')?.src || '';
                         utils.addToFavorites({
                             animeId: animeId,
-                            title: card.querySelector('.card-title, .result-title')?.textContent || 'Anime',
-                            poster: card.querySelector('img')?.src || ''
+                            title: title,
+                            poster: poster
                         });
-                        btn.innerHTML = '<i class="fas fa-heart"></i>';
+                        btn.innerHTML = '<i class="fas fa-heart"></i>' + (btn.textContent.includes('Favorit') ? ' Favorit' : '');
                         btn.classList.remove('detail');
                         btn.classList.add('watch');
                     }
@@ -1024,6 +1176,33 @@ class Router {
                     }
                 });
             }
+        });
+
+        // Play buttons in hero carousel
+        document.querySelectorAll('.btn-play[data-anime-id]').forEach(btn => {
+            btn.addEventListener('click', async (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                
+                const animeId = btn.dataset.animeId;
+                if (!animeId) return;
+                
+                utils.showLoading();
+                try {
+                    const data = await api.getAnimeDetail(animeId);
+                    if (data.data?.details?.episodeList?.length > 0) {
+                        const firstEpisode = data.data.details.episodeList[0];
+                        this.navigateTo(`/watch/${firstEpisode.episodeId}`);
+                    } else {
+                        this.navigateTo(`/anime/${animeId}`);
+                    }
+                } catch (error) {
+                    console.error('Error getting first episode from carousel:', error);
+                    this.navigateTo(`/anime/${animeId}`);
+                } finally {
+                    utils.hideLoading();
+                }
+            });
         });
     }
 }
