@@ -5,7 +5,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>KeyAnime - Anime Streaming Premium</title>
+    <title>NoNim - Anime Streaming Premium</title>
     <meta name="author" content="this.key@devnova.icu">
     <meta name="description" content="Streaming anime premium dengan kualitas tinggi">
     
@@ -14,7 +14,7 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" href="css/style.css">
     <link rel="stylesheet" href="css/responsive.css">
-    <link rel="icon" href="assets/favicon.ico" type="image/x-icon">
+    <link rel="icon" href="asset/favicon.png" type="image/x-icon">
     
     <!-- Mobile App Meta -->
     <meta name="apple-mobile-web-app-capable" content="yes">
@@ -27,7 +27,7 @@
     <div id="loading-overlay" class="mobile-loading">
         <div class="key-loader">
             <div class="key-icon">
-                <img src="asset/icon.png" alt="KeyAnime Icon" style="width: 120px; height: 50px;">
+                <img src="asset/loading.png" alt="KeyAnime Icon" style="width: 400px; height: 220px;">
             </div>
             <div class="loading-subtext">by this.key@devnova.icu</div>
         </div>
@@ -41,7 +41,7 @@
                     <i class="fas fa-bars"></i>
                 </button>
                 <a class="navbar-brand" href="#/" aria-label="Beranda KeyAnime">
-                    <img src="asset/icon.png" alt="KeyAnime Icon" style="width: 120px; height: 50px;">
+                    <img src="asset/nav_icon.png" alt="KeyAnime Icon" style="width: 150px; height: 100px; margin-left: 40px;">
                 </a>
                 <div class="nav-actions">
                     <button class="nav-btn" id="searchToggle" aria-label="Cari anime">
@@ -71,7 +71,7 @@
     <!-- Sidebar Menu -->
     <div class="sidebar-menu" id="sidebarMenu">
         <div class="sidebar-header">
-            <h5><img src="asset/icon.png" alt="KeyAnime Icon" style="width: 120px; height: 50px;"></h5>
+            <h5><img src="asset/nav_icon.png" alt="KeyAnime Icon" style="width: 150px; height: 100px; margin-left: -30px;"></h5>
             <button class="close-sidebar" id="closeMenu" aria-label="Tutup menu">
                 <i class="fas fa-times"></i>
             </button>
