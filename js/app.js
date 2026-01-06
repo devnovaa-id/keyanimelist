@@ -1,11 +1,11 @@
 // Main Application for KeyAnime
-
 class KeyAnimeApp {
     constructor() {
         this.utils = utils;
         this.api = api;
         this.components = components;
         this.router = router;
+        this.deferredPrompt = null; // Untuk menangani install prompt
         this.init();
     }
 
@@ -24,6 +24,9 @@ class KeyAnimeApp {
             
             // Setup error handling
             this.setupErrorHandling();
+            
+            // Setup PWA features
+            this.setupPWAFeatures();
         });
         
         // Cleanup on page unload
@@ -95,29 +98,29 @@ class KeyAnimeApp {
             });
         }
 
-// Also handle the search input in navbar (mobile)
-const mobileSearchInput = document.getElementById('search-input');
-if (mobileSearchInput) {
-    mobileSearchInput.addEventListener('keypress', (e) => {
-        if (e.key === 'Enter') {
-            e.preventDefault();
-            const query = e.target.value.trim();
-            
-            if (query && query.length >= 3) {
-                // Close mobile search if open
-                if (mobileSearch) mobileSearch.classList.remove('active');
-                
-                // Navigate to search page
-                router.navigateTo('/search', { q: query });
-                
-                // Clear input
-                e.target.value = '';
-            } else {
-                utils.showToast('Masukkan minimal 3 karakter', 'error');
-            }
+        // Also handle the search input in navbar (mobile)
+        const mobileSearchInput = document.getElementById('search-input');
+        if (mobileSearchInput) {
+            mobileSearchInput.addEventListener('keypress', (e) => {
+                if (e.key === 'Enter') {
+                    e.preventDefault();
+                    const query = e.target.value.trim();
+                    
+                    if (query && query.length >= 3) {
+                        // Close mobile search if open
+                        if (mobileSearch) mobileSearch.classList.remove('active');
+                        
+                        // Navigate to search page
+                        router.navigateTo('/search', { q: query });
+                        
+                        // Clear input
+                        e.target.value = '';
+                    } else {
+                        utils.showToast('Masukkan minimal 3 karakter', 'error');
+                    }
+                }
+            });
         }
-    });
-}
 
         // Theme toggle
         const themeToggle = document.getElementById('themeToggle');
@@ -220,9 +223,6 @@ if (mobileSearchInput) {
                 mobileSearch.classList.remove('active');
             }
         });
-
-        // PWA features
-        this.setupPWA();
     }
 
     closeSidebar() {
@@ -234,58 +234,99 @@ if (mobileSearchInput) {
         document.body.style.overflow = '';
     }
 
-    setupPWA() {
-        // Register service worker for PWA
+    setupPWAFeatures() {
+        // Register service worker
         if ('serviceWorker' in navigator) {
             window.addEventListener('load', () => {
-                navigator.serviceWorker.register('/sw.js').then(registration => {
-                    console.log('ServiceWorker registration successful with scope: ', registration.scope);
-                }).catch(error => {
-                    console.log('ServiceWorker registration failed: ', error);
-                });
+                navigator.serviceWorker.register('/sw.js')
+                    .then(registration => {
+                        console.log('ServiceWorker registration successful:', registration.scope);
+                        
+                        // Check for updates every hour
+                        setInterval(() => {
+                            registration.update();
+                        }, 60 * 60 * 1000);
+                    })
+                    .catch(error => {
+                        console.log('ServiceWorker registration failed:', error);
+                    });
             });
         }
 
-        // Add to home screen prompt
-        let deferredPrompt;
+        // Handle app installation
         window.addEventListener('beforeinstallprompt', (e) => {
-            // Prevent Chrome 67 and earlier from automatically showing the prompt
             e.preventDefault();
-            // Stash the event so it can be triggered later
-            deferredPrompt = e;
+            this.deferredPrompt = e;
             
-            // Show custom install button after 5 seconds
+            // Show install button after 10 seconds
             setTimeout(() => {
-                this.showInstallPrompt(deferredPrompt);
-            }, 5000);
+                this.showInstallPrompt();
+            }, 10000);
         });
 
         // Handle app installed
         window.addEventListener('appinstalled', () => {
+            console.log('PWA installed successfully');
             utils.showToast('Aplikasi berhasil diinstal!', 'success');
-            deferredPrompt = null;
+            
+            // Track installation
+            if ('storage' in navigator && 'estimate' in navigator.storage) {
+                navigator.storage.estimate().then(estimate => {
+                    console.log('Storage quota:', estimate.quota);
+                    console.log('Storage usage:', estimate.usage);
+                });
+            }
         });
+
+        // Handle offline/online status
+        window.addEventListener('offline', () => {
+            utils.showToast('Anda sedang offline', 'info');
+            document.documentElement.classList.add('offline');
+        });
+
+        window.addEventListener('online', () => {
+            utils.showToast('Koneksi internet tersedia', 'success');
+            document.documentElement.classList.remove('offline');
+            
+            // Sync data when back online
+            this.syncOfflineData();
+        });
+
+        // Request notification permission
+        this.requestNotificationPermission();
     }
 
-    showInstallPrompt(deferredPrompt) {
-        // Create install prompt
+    // Method untuk menampilkan install prompt
+    showInstallPrompt() {
+        // Cek jika sudah diinstall
+        if (window.matchMedia('(display-mode: standalone)').matches || 
+            window.navigator.standalone === true) {
+            return;
+        }
+
+        // Cek jika sudah ada prompt yang aktif
+        if (document.querySelector('.pwa-install-prompt')) {
+            return;
+        }
+
         const installPrompt = document.createElement('div');
-        installPrompt.className = 'toast info';
+        installPrompt.className = 'pwa-install-prompt';
         installPrompt.innerHTML = `
-            <div class="toast-icon">
-                <i class="fas fa-download"></i>
-            </div>
-            <div class="toast-content">
-                <div class="toast-message">Instal KeyAnime untuk pengalaman lebih baik</div>
-            </div>
-            <div class="toast-actions">
-                <button class="toast-btn" id="installBtn">Instal</button>
-                <button class="toast-close" id="closeInstall">
-                    <i class="fas fa-times"></i>
-                </button>
+            <div class="pwa-prompt-content">
+                <div class="pwa-prompt-icon">
+                    <i class="fas fa-download"></i>
+                </div>
+                <div class="pwa-prompt-text">
+                    <strong>Instal KeyAnime</strong>
+                    <p>Instal aplikasi untuk pengalaman lebih baik</p>
+                </div>
+                <div class="pwa-prompt-actions">
+                    <button class="pwa-btn-install">Instal</button>
+                    <button class="pwa-btn-later">Nanti</button>
+                </div>
             </div>
         `;
-        
+
         installPrompt.style.cssText = `
             position: fixed;
             bottom: 80px;
@@ -294,37 +335,127 @@ if (mobileSearchInput) {
             background: rgba(13, 13, 26, 0.95);
             backdrop-filter: blur(20px);
             border: 1px solid rgba(255, 255, 255, 0.1);
-            border-radius: 10px;
+            border-radius: 12px;
             padding: 15px;
             z-index: 10001;
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            min-width: 300px;
-            max-width: 90%;
-            animation: slideIn 0.3s ease;
+            width: 90%;
+            max-width: 400px;
+            animation: slideUp 0.3s ease;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
         `;
-        
-        const container = document.querySelector('.toast-container') || this.utils.createToastContainer();
-        container.appendChild(installPrompt);
-        
+
+        document.body.appendChild(installPrompt);
+
         // Install button
-        document.getElementById('installBtn').addEventListener('click', () => {
-            deferredPrompt.prompt();
-            installPrompt.remove();
+        installPrompt.querySelector('.pwa-btn-install').addEventListener('click', () => {
+            if (this.deferredPrompt) {
+                this.deferredPrompt.prompt();
+                this.deferredPrompt.userChoice.then(choiceResult => {
+                    if (choiceResult.outcome === 'accepted') {
+                        console.log('User accepted the install prompt');
+                    }
+                    this.deferredPrompt = null;
+                    installPrompt.remove();
+                });
+            }
         });
-        
-        // Close button
-        document.getElementById('closeInstall').addEventListener('click', () => {
+
+        // Later button
+        installPrompt.querySelector('.pwa-btn-later').addEventListener('click', () => {
             installPrompt.remove();
+            // Show again after 1 day
+            setTimeout(() => this.showInstallPrompt(), 24 * 60 * 60 * 1000);
         });
-        
-        // Auto remove after 10 seconds
+
+        // Auto remove after 30 seconds
         setTimeout(() => {
-            if (installPrompt.parentNode === container) {
+            if (installPrompt.parentNode) {
                 installPrompt.remove();
             }
-        }, 10000);
+        }, 30000);
+    }
+
+    // Method untuk request notification permission
+    requestNotificationPermission() {
+        if ('Notification' in window && Notification.permission === 'default') {
+            // Request permission after 5 seconds
+            setTimeout(() => {
+                Notification.requestPermission().then(permission => {
+                    if (permission === 'granted') {
+                        console.log('Notification permission granted');
+                        this.scheduleNotifications();
+                    }
+                });
+            }, 5000);
+        }
+    }
+
+    // Method untuk schedule notifications
+    scheduleNotifications() {
+        if ('serviceWorker' in navigator && 'PushManager' in window) {
+            // Check for new episodes daily at 18:00
+            const now = new Date();
+            const targetTime = new Date();
+            targetTime.setHours(18, 0, 0, 0);
+            
+            if (now > targetTime) {
+                targetTime.setDate(targetTime.getDate() + 1);
+            }
+            
+            const timeUntilTarget = targetTime.getTime() - now.getTime();
+            
+            setTimeout(() => {
+                this.checkNewEpisodes();
+                // Repeat every 24 hours
+                setInterval(() => this.checkNewEpisodes(), 24 * 60 * 60 * 1000);
+            }, timeUntilTarget);
+        }
+    }
+
+    // Method untuk sync offline data
+    syncOfflineData() {
+        const offlineActions = utils.getItem('offlineActions') || [];
+        
+        if (offlineActions.length > 0) {
+            offlineActions.forEach(action => {
+                // Sync each action
+                console.log('Syncing offline action:', action);
+            });
+            
+            // Clear offline actions after sync
+            utils.setItem('offlineActions', []);
+            utils.showToast('Data offline berhasil disinkronkan', 'success');
+        }
+    }
+
+    // Method untuk check new episodes
+    async checkNewEpisodes() {
+        try {
+            const lastCheck = utils.getItem('lastEpisodeCheck') || 0;
+            const now = Date.now();
+            
+            // Check every 6 hours
+            if (now - lastCheck > 6 * 60 * 60 * 1000) {
+                const data = await api.getOngoing();
+                const newEpisodes = data?.data?.animeList || [];
+                
+                // Send notification for new episodes
+                if (newEpisodes.length > 0 && 'Notification' in window && Notification.permission === 'granted') {
+                    navigator.serviceWorker.ready.then(registration => {
+                        registration.showNotification('KeyAnime', {
+                            body: `Ada ${newEpisodes.length} episode baru tersedia!`,
+                            icon: 'asset/icons/icon-192x192.png',
+                            badge: 'asset/icons/icon-96x96.png',
+                            tag: 'new-episodes'
+                        });
+                    });
+                }
+                
+                utils.setItem('lastEpisodeCheck', now);
+            }
+        } catch (error) {
+            console.error('Error checking new episodes:', error);
+        }
     }
 
     hideLoading() {

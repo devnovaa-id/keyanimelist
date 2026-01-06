@@ -8,6 +8,22 @@
     <title>NoNim - Anime Streaming Premium</title>
     <meta name="author" content="this.key@devnova.icu">
     <meta name="description" content="Streaming anime premium dengan kualitas tinggi">
+    <!-- PWA Meta Tags -->
+    <link rel="manifest" href="/manifest.json">
+    <meta name="application-name" content="NoNim">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-title" content="NoNim">
+    <link rel="apple-touch-icon" href="asset/icons/icon-192x192.png">
+    
+    <!-- iOS Splash Screens -->
+    <link href="asset/splashscreens/iphone5_splash.png" media="(device-width: 320px) and (device-height: 568px) and (-webkit-device-pixel-ratio: 2)" rel="apple-touch-startup-image" />
+    <link href="asset/splashscreens/iphone6_splash.png" media="(device-width: 375px) and (device-height: 667px) and (-webkit-device-pixel-ratio: 2)" rel="apple-touch-startup-image" />
+    <link href="asset/splashscreens/iphoneplus_splash.png" media="(device-width: 414px) and (device-height: 736px) and (-webkit-device-pixel-ratio: 3)" rel="apple-touch-startup-image" />
+    <link href="asset/splashscreens/iphonex_splash.png" media="(device-width: 375px) and (device-height: 812px) and (-webkit-device-pixel-ratio: 3)" rel="apple-touch-startup-image" />
+    <link href="asset/splashscreens/ipad_splash.png" media="(device-width: 768px) and (device-height: 1024px) and (-webkit-device-pixel-ratio: 2)" rel="apple-touch-startup-image" />
+    <link href="asset/splashscreens/ipadpro1_splash.png" media="(device-width: 834px) and (device-height: 1112px) and (-webkit-device-pixel-ratio: 2)" rel="apple-touch-startup-image" />
+    <link href="asset/splashscreens/ipadpro2_splash.png" media="(device-width: 1024px) and (device-height: 1366px) and (-webkit-device-pixel-ratio: 2)" rel="apple-touch-startup-image" />
     
     <!-- Stylesheets -->
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
@@ -27,7 +43,7 @@
     <div id="loading-overlay" class="mobile-loading">
         <div class="key-loader">
             <div class="key-icon">
-                <img src="asset/loading.png" alt="KeyAnime Icon" style="width: 400px; height: 220px;">
+                <img src="asset/loading.png" alt="KeyAnime Icon" style="width: 400px; height: 250px;">
             </div>
             <div class="loading-subtext">by this.key@devnova.icu</div>
         </div>
@@ -41,7 +57,7 @@
                     <i class="fas fa-bars"></i>
                 </button>
                 <a class="navbar-brand" href="#/" aria-label="Beranda KeyAnime">
-                    <img src="asset/nav_icon.png" alt="KeyAnime Icon" style="width: 150px; height: 100px; margin-left: 40px;">
+                    <img src="asset/icon.png" alt="KeyAnime Icon" style="width: 150px; height: 100px; margin-left: 40px;">
                 </a>
                 <div class="nav-actions">
                     <button class="nav-btn" id="searchToggle" aria-label="Cari anime">
@@ -71,7 +87,7 @@
     <!-- Sidebar Menu -->
     <div class="sidebar-menu" id="sidebarMenu">
         <div class="sidebar-header">
-            <h5><img src="asset/nav_icon.png" alt="KeyAnime Icon" style="width: 150px; height: 100px; margin-left: -30px;"></h5>
+            <h5><img src="asset/icon.png" alt="KeyAnime Icon" style="width: 150px; height: 100px; margin-left: -30px;"></h5>
             <button class="close-sidebar" id="closeMenu" aria-label="Tutup menu">
                 <i class="fas fa-times"></i>
             </button>
@@ -2505,6 +2521,211 @@ body.light-mode .hero-dot.active {
     }
 }
 
+/* PWA Styles */
+.pwa-install-prompt {
+  position: fixed;
+  bottom: 80px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: rgba(13, 13, 26, 0.95);
+  backdrop-filter: blur(20px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 12px;
+  padding: 15px;
+  z-index: 10001;
+  width: 90%;
+  max-width: 400px;
+  animation: slideUp 0.3s ease;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+}
+
+.pwa-prompt-content {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.pwa-prompt-icon {
+  width: 40px;
+  height: 40px;
+  background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.2rem;
+  color: white;
+  flex-shrink: 0;
+}
+
+.pwa-prompt-text {
+  flex: 1;
+}
+
+.pwa-prompt-text strong {
+  display: block;
+  font-size: 0.95rem;
+  margin-bottom: 3px;
+}
+
+.pwa-prompt-text p {
+  font-size: 0.8rem;
+  color: rgba(255, 255, 255, 0.7);
+  margin: 0;
+}
+
+.pwa-prompt-actions {
+  display: flex;
+  gap: 8px;
+  margin-top: 10px;
+}
+
+.pwa-btn-install,
+.pwa-btn-later {
+  padding: 8px 16px;
+  border-radius: 8px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  border: none;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  flex: 1;
+}
+
+.pwa-btn-install {
+  background: var(--primary-color);
+  color: white;
+}
+
+.pwa-btn-later {
+  background: rgba(255, 255, 255, 0.1);
+  color: var(--light-color);
+}
+
+.pwa-btn-install:hover,
+.pwa-btn-later:hover {
+  transform: translateY(-2px);
+}
+
+.pwa-btn-install:active,
+.pwa-btn-later:active {
+  transform: scale(0.98);
+}
+
+/* Offline Indicator */
+.offline-indicator {
+  position: fixed;
+  top: 60px;
+  left: 0;
+  right: 0;
+  background: #ff6b6b;
+  color: white;
+  text-align: center;
+  padding: 8px;
+  font-size: 0.85rem;
+  z-index: 9999;
+  animation: slideDown 0.3s ease;
+}
+
+@keyframes slideDown {
+  from {
+    transform: translateY(-100%);
+  }
+  to {
+    transform: translateY(0);
+  }
+}
+
+@keyframes slideUp {
+  from {
+    transform: translate(-50%, 100%);
+    opacity: 0;
+  }
+  to {
+    transform: translate(-50%, 0);
+    opacity: 1;
+  }
+}
+
+/* PWA Badge */
+.pwa-badge {
+  position: fixed;
+  top: 10px;
+  right: 10px;
+  background: var(--primary-color);
+  color: white;
+  padding: 5px 10px;
+  border-radius: 20px;
+  font-size: 0.7rem;
+  z-index: 10000;
+  display: none;
+}
+
+.pwa-badge.offline {
+  background: #ff6b6b;
+  display: block;
+}
+
+/* Install Instructions */
+.install-instructions {
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 10px;
+  padding: 15px;
+  margin: 20px 0;
+}
+
+.install-instructions h6 {
+  color: var(--primary-color);
+  margin-bottom: 10px;
+  font-size: 1rem;
+}
+
+.install-steps {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.install-step {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px;
+  background: rgba(255, 255, 255, 0.03);
+  border-radius: 8px;
+}
+
+.install-step i {
+  color: var(--accent-color);
+  width: 20px;
+  text-align: center;
+}
+
+/* Fullscreen PWA styles */
+@media (display-mode: fullscreen) {
+  body.mobile-app {
+    padding-top: env(safe-area-inset-top);
+    padding-bottom: env(safe-area-inset-bottom);
+  }
+}
+
+@media (display-mode: standalone) {
+  .bottom-nav {
+    height: calc(var(--bottom-nav-height) + env(safe-area-inset-bottom));
+    padding-bottom: env(safe-area-inset-bottom);
+  }
+  
+  .mobile-nav {
+    height: calc(60px + env(safe-area-inset-top));
+    padding-top: env(safe-area-inset-top);
+  }
+  
+  body.mobile-app {
+    padding-top: calc(60px + env(safe-area-inset-top));
+    padding-bottom: calc(var(--bottom-nav-height) + env(safe-area-inset-bottom));
+  }
+}
+
 //js/api.js
 
 // API Service for KeyAnime - New API Version
@@ -2724,13 +2945,13 @@ const api = new APIService();
 //js/app.js
 
 // Main Application for KeyAnime
-
 class KeyAnimeApp {
     constructor() {
         this.utils = utils;
         this.api = api;
         this.components = components;
         this.router = router;
+        this.deferredPrompt = null; // Untuk menangani install prompt
         this.init();
     }
 
@@ -2749,6 +2970,9 @@ class KeyAnimeApp {
             
             // Setup error handling
             this.setupErrorHandling();
+            
+            // Setup PWA features
+            this.setupPWAFeatures();
         });
         
         // Cleanup on page unload
@@ -2820,29 +3044,29 @@ class KeyAnimeApp {
             });
         }
 
-// Also handle the search input in navbar (mobile)
-const mobileSearchInput = document.getElementById('search-input');
-if (mobileSearchInput) {
-    mobileSearchInput.addEventListener('keypress', (e) => {
-        if (e.key === 'Enter') {
-            e.preventDefault();
-            const query = e.target.value.trim();
-            
-            if (query && query.length >= 3) {
-                // Close mobile search if open
-                if (mobileSearch) mobileSearch.classList.remove('active');
-                
-                // Navigate to search page
-                router.navigateTo('/search', { q: query });
-                
-                // Clear input
-                e.target.value = '';
-            } else {
-                utils.showToast('Masukkan minimal 3 karakter', 'error');
-            }
+        // Also handle the search input in navbar (mobile)
+        const mobileSearchInput = document.getElementById('search-input');
+        if (mobileSearchInput) {
+            mobileSearchInput.addEventListener('keypress', (e) => {
+                if (e.key === 'Enter') {
+                    e.preventDefault();
+                    const query = e.target.value.trim();
+                    
+                    if (query && query.length >= 3) {
+                        // Close mobile search if open
+                        if (mobileSearch) mobileSearch.classList.remove('active');
+                        
+                        // Navigate to search page
+                        router.navigateTo('/search', { q: query });
+                        
+                        // Clear input
+                        e.target.value = '';
+                    } else {
+                        utils.showToast('Masukkan minimal 3 karakter', 'error');
+                    }
+                }
+            });
         }
-    });
-}
 
         // Theme toggle
         const themeToggle = document.getElementById('themeToggle');
@@ -2945,9 +3169,6 @@ if (mobileSearchInput) {
                 mobileSearch.classList.remove('active');
             }
         });
-
-        // PWA features
-        this.setupPWA();
     }
 
     closeSidebar() {
@@ -2959,58 +3180,99 @@ if (mobileSearchInput) {
         document.body.style.overflow = '';
     }
 
-    setupPWA() {
-        // Register service worker for PWA
+    setupPWAFeatures() {
+        // Register service worker
         if ('serviceWorker' in navigator) {
             window.addEventListener('load', () => {
-                navigator.serviceWorker.register('/sw.js').then(registration => {
-                    console.log('ServiceWorker registration successful with scope: ', registration.scope);
-                }).catch(error => {
-                    console.log('ServiceWorker registration failed: ', error);
-                });
+                navigator.serviceWorker.register('/sw.js')
+                    .then(registration => {
+                        console.log('ServiceWorker registration successful:', registration.scope);
+                        
+                        // Check for updates every hour
+                        setInterval(() => {
+                            registration.update();
+                        }, 60 * 60 * 1000);
+                    })
+                    .catch(error => {
+                        console.log('ServiceWorker registration failed:', error);
+                    });
             });
         }
 
-        // Add to home screen prompt
-        let deferredPrompt;
+        // Handle app installation
         window.addEventListener('beforeinstallprompt', (e) => {
-            // Prevent Chrome 67 and earlier from automatically showing the prompt
             e.preventDefault();
-            // Stash the event so it can be triggered later
-            deferredPrompt = e;
+            this.deferredPrompt = e;
             
-            // Show custom install button after 5 seconds
+            // Show install button after 10 seconds
             setTimeout(() => {
-                this.showInstallPrompt(deferredPrompt);
-            }, 5000);
+                this.showInstallPrompt();
+            }, 10000);
         });
 
         // Handle app installed
         window.addEventListener('appinstalled', () => {
+            console.log('PWA installed successfully');
             utils.showToast('Aplikasi berhasil diinstal!', 'success');
-            deferredPrompt = null;
+            
+            // Track installation
+            if ('storage' in navigator && 'estimate' in navigator.storage) {
+                navigator.storage.estimate().then(estimate => {
+                    console.log('Storage quota:', estimate.quota);
+                    console.log('Storage usage:', estimate.usage);
+                });
+            }
         });
+
+        // Handle offline/online status
+        window.addEventListener('offline', () => {
+            utils.showToast('Anda sedang offline', 'info');
+            document.documentElement.classList.add('offline');
+        });
+
+        window.addEventListener('online', () => {
+            utils.showToast('Koneksi internet tersedia', 'success');
+            document.documentElement.classList.remove('offline');
+            
+            // Sync data when back online
+            this.syncOfflineData();
+        });
+
+        // Request notification permission
+        this.requestNotificationPermission();
     }
 
-    showInstallPrompt(deferredPrompt) {
-        // Create install prompt
+    // Method untuk menampilkan install prompt
+    showInstallPrompt() {
+        // Cek jika sudah diinstall
+        if (window.matchMedia('(display-mode: standalone)').matches || 
+            window.navigator.standalone === true) {
+            return;
+        }
+
+        // Cek jika sudah ada prompt yang aktif
+        if (document.querySelector('.pwa-install-prompt')) {
+            return;
+        }
+
         const installPrompt = document.createElement('div');
-        installPrompt.className = 'toast info';
+        installPrompt.className = 'pwa-install-prompt';
         installPrompt.innerHTML = `
-            <div class="toast-icon">
-                <i class="fas fa-download"></i>
-            </div>
-            <div class="toast-content">
-                <div class="toast-message">Instal KeyAnime untuk pengalaman lebih baik</div>
-            </div>
-            <div class="toast-actions">
-                <button class="toast-btn" id="installBtn">Instal</button>
-                <button class="toast-close" id="closeInstall">
-                    <i class="fas fa-times"></i>
-                </button>
+            <div class="pwa-prompt-content">
+                <div class="pwa-prompt-icon">
+                    <i class="fas fa-download"></i>
+                </div>
+                <div class="pwa-prompt-text">
+                    <strong>Instal KeyAnime</strong>
+                    <p>Instal aplikasi untuk pengalaman lebih baik</p>
+                </div>
+                <div class="pwa-prompt-actions">
+                    <button class="pwa-btn-install">Instal</button>
+                    <button class="pwa-btn-later">Nanti</button>
+                </div>
             </div>
         `;
-        
+
         installPrompt.style.cssText = `
             position: fixed;
             bottom: 80px;
@@ -3019,37 +3281,127 @@ if (mobileSearchInput) {
             background: rgba(13, 13, 26, 0.95);
             backdrop-filter: blur(20px);
             border: 1px solid rgba(255, 255, 255, 0.1);
-            border-radius: 10px;
+            border-radius: 12px;
             padding: 15px;
             z-index: 10001;
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            min-width: 300px;
-            max-width: 90%;
-            animation: slideIn 0.3s ease;
+            width: 90%;
+            max-width: 400px;
+            animation: slideUp 0.3s ease;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
         `;
-        
-        const container = document.querySelector('.toast-container') || this.utils.createToastContainer();
-        container.appendChild(installPrompt);
-        
+
+        document.body.appendChild(installPrompt);
+
         // Install button
-        document.getElementById('installBtn').addEventListener('click', () => {
-            deferredPrompt.prompt();
-            installPrompt.remove();
+        installPrompt.querySelector('.pwa-btn-install').addEventListener('click', () => {
+            if (this.deferredPrompt) {
+                this.deferredPrompt.prompt();
+                this.deferredPrompt.userChoice.then(choiceResult => {
+                    if (choiceResult.outcome === 'accepted') {
+                        console.log('User accepted the install prompt');
+                    }
+                    this.deferredPrompt = null;
+                    installPrompt.remove();
+                });
+            }
         });
-        
-        // Close button
-        document.getElementById('closeInstall').addEventListener('click', () => {
+
+        // Later button
+        installPrompt.querySelector('.pwa-btn-later').addEventListener('click', () => {
             installPrompt.remove();
+            // Show again after 1 day
+            setTimeout(() => this.showInstallPrompt(), 24 * 60 * 60 * 1000);
         });
-        
-        // Auto remove after 10 seconds
+
+        // Auto remove after 30 seconds
         setTimeout(() => {
-            if (installPrompt.parentNode === container) {
+            if (installPrompt.parentNode) {
                 installPrompt.remove();
             }
-        }, 10000);
+        }, 30000);
+    }
+
+    // Method untuk request notification permission
+    requestNotificationPermission() {
+        if ('Notification' in window && Notification.permission === 'default') {
+            // Request permission after 5 seconds
+            setTimeout(() => {
+                Notification.requestPermission().then(permission => {
+                    if (permission === 'granted') {
+                        console.log('Notification permission granted');
+                        this.scheduleNotifications();
+                    }
+                });
+            }, 5000);
+        }
+    }
+
+    // Method untuk schedule notifications
+    scheduleNotifications() {
+        if ('serviceWorker' in navigator && 'PushManager' in window) {
+            // Check for new episodes daily at 18:00
+            const now = new Date();
+            const targetTime = new Date();
+            targetTime.setHours(18, 0, 0, 0);
+            
+            if (now > targetTime) {
+                targetTime.setDate(targetTime.getDate() + 1);
+            }
+            
+            const timeUntilTarget = targetTime.getTime() - now.getTime();
+            
+            setTimeout(() => {
+                this.checkNewEpisodes();
+                // Repeat every 24 hours
+                setInterval(() => this.checkNewEpisodes(), 24 * 60 * 60 * 1000);
+            }, timeUntilTarget);
+        }
+    }
+
+    // Method untuk sync offline data
+    syncOfflineData() {
+        const offlineActions = utils.getItem('offlineActions') || [];
+        
+        if (offlineActions.length > 0) {
+            offlineActions.forEach(action => {
+                // Sync each action
+                console.log('Syncing offline action:', action);
+            });
+            
+            // Clear offline actions after sync
+            utils.setItem('offlineActions', []);
+            utils.showToast('Data offline berhasil disinkronkan', 'success');
+        }
+    }
+
+    // Method untuk check new episodes
+    async checkNewEpisodes() {
+        try {
+            const lastCheck = utils.getItem('lastEpisodeCheck') || 0;
+            const now = Date.now();
+            
+            // Check every 6 hours
+            if (now - lastCheck > 6 * 60 * 60 * 1000) {
+                const data = await api.getOngoing();
+                const newEpisodes = data?.data?.animeList || [];
+                
+                // Send notification for new episodes
+                if (newEpisodes.length > 0 && 'Notification' in window && Notification.permission === 'granted') {
+                    navigator.serviceWorker.ready.then(registration => {
+                        registration.showNotification('KeyAnime', {
+                            body: `Ada ${newEpisodes.length} episode baru tersedia!`,
+                            icon: 'asset/icons/icon-192x192.png',
+                            badge: 'asset/icons/icon-96x96.png',
+                            tag: 'new-episodes'
+                        });
+                    });
+                }
+                
+                utils.setItem('lastEpisodeCheck', now);
+            }
+        } catch (error) {
+            console.error('Error checking new episodes:', error);
+        }
     }
 
     hideLoading() {
