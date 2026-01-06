@@ -1,8 +1,8 @@
-// API Service for KeyAnime
+// API Service for KeyAnime - New API Version
 
 class APIService {
     constructor() {
-        this.baseURL = 'https://anim-api.devnova.icu/otakudesu';
+        this.baseURL = 'https://api.devnova.icu/api/otakudesu/v2';
         this.cache = new Map();
         this.cacheDuration = 5 * 60 * 1000; // 5 minutes
     }
@@ -21,7 +21,7 @@ class APIService {
         try {
             utils.showLoading();
             const url = `${this.baseURL}${endpoint}`;
-            console.log('Fetching:', url);
+            console.log('Fetching from new API:', url);
             
             const response = await fetch(url, {
                 ...options,
@@ -35,7 +35,15 @@ class APIService {
                 throw new Error(`HTTP ${response.status}: ${response.statusText}`);
             }
             
-            const data = await response.json();
+            const result = await response.json();
+            
+            // New API structure: { success, data }
+            if (!result.success) {
+                throw new Error('API returned unsuccessful response');
+            }
+            
+            // Return the data part from new API structure
+            const data = result.data;
             
             // Cache the response
             this.cache.set(cacheKey, {
@@ -60,6 +68,7 @@ class APIService {
     clearCache() {
         this.cache.clear();
         console.log('Cache cleared');
+        utils.showToast('Cache dibersihkan', 'success');
         return true;
     }
 
@@ -85,38 +94,12 @@ class APIService {
 
     // Ongoing Anime
     async getOngoing(page = 1) {
-        const data = await this.fetch(`/ongoing?page=${page}`);
-        
-        // Ensure pagination data exists
-        if (data.data && !data.pagination) {
-            const itemsPerPage = 24;
-            data.pagination = {
-                currentPage: page,
-                hasNextPage: true,
-                totalPages: page + 1,
-                totalItems: (page + 1) * itemsPerPage
-            };
-        }
-        
-        return data;
+        return await this.fetch(`/ongoing?page=${page}`);
     }
 
     // Completed Anime
     async getCompleted(page = 1) {
-        const data = await this.fetch(`/completed?page=${page}`);
-        
-        // Ensure pagination data exists
-        if (data.data && !data.pagination) {
-            const itemsPerPage = 24;
-            data.pagination = {
-                currentPage: page,
-                hasNextPage: true,
-                totalPages: page + 1,
-                totalItems: (page + 1) * itemsPerPage
-            };
-        }
-        
-        return data;
+        return await this.fetch(`/completed?page=${page}`);
     }
 
     // Search Anime
@@ -142,14 +125,13 @@ class APIService {
 
     // Anime Detail
     async getAnimeDetail(animeId) {
+        console.log('Fetching anime detail for:', animeId);
         return await this.fetch(`/anime/${animeId}`);
     }
 
     // Episode Detail
     async getEpisodeDetail(episodeId) {
         console.log('Fetching episode detail for:', episodeId);
-        
-        // Coba decode jika diperlukan
         const decodedId = decodeURIComponent(episodeId);
         return await this.fetch(`/episode/${decodedId}`);
     }
@@ -167,13 +149,18 @@ class APIService {
     // Get video URL from episode data
     async getVideoUrl(episodeData, quality = '480p', serverIndex = 0) {
         try {
+            // New API structure: episodeData contains data property
+            const details = episodeData?.data?.details;
+            
             // If direct streaming URL is available
-            if (episodeData?.data?.details?.defaultStreamingUrl) {
-                return episodeData.data.details.defaultStreamingUrl;
+            if (details?.defaultStreamingUrl) {
+                console.log('Using direct streaming URL:', details.defaultStreamingUrl);
+                return details.defaultStreamingUrl;
             }
 
-            const qualityList = episodeData?.data?.details?.server?.qualityList;
+            const qualityList = details?.server?.qualityList;
             if (!qualityList || qualityList.length === 0) {
+                console.log('No quality list available');
                 return null;
             }
 
@@ -184,15 +171,21 @@ class APIService {
             
             // Fallback to first available quality
             const targetQuality = qualityData || qualityList[0];
+            console.log('Target quality:', targetQuality);
             
             if (targetQuality?.serverList?.length > 0) {
                 const server = targetQuality.serverList[serverIndex] || targetQuality.serverList[0];
+                console.log('Selected server:', server);
+                
                 if (server?.serverId) {
                     const serverData = await this.getServerVideo(server.serverId);
-                    return serverData?.data?.details?.url || null;
+                    const url = serverData?.data?.details?.url || null;
+                    console.log('Video URL found:', url);
+                    return url;
                 }
             }
             
+            console.log('No video URL found');
             return null;
         } catch (error) {
             console.error('Error getting video URL:', error);
@@ -200,14 +193,19 @@ class APIService {
         }
     }
 
-    // Get recommended anime
+    // Get recommendations (placeholder - if API has it)
     async getRecommendations(animeId) {
-        return await this.fetch(`/recommendations/${animeId}`);
-    }
-
-    // Get popular anime
-    async getPopular(page = 1) {
-        return await this.fetch(`/popular?page=${page}`);
+        try {
+            const data = await this.getAnimeDetail(animeId);
+            return {
+                data: {
+                    recommendedAnimeList: data?.data?.details?.recommendedAnimeList || []
+                }
+            };
+        } catch (error) {
+            console.error('Error getting recommendations:', error);
+            return { data: { recommendedAnimeList: [] } };
+        }
     }
 }
 

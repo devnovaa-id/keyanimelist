@@ -2507,11 +2507,11 @@ body.light-mode .hero-dot.active {
 
 //js/api.js
 
-// API Service for KeyAnime
+// API Service for KeyAnime - New API Version
 
 class APIService {
     constructor() {
-        this.baseURL = 'https://anim-api.devnova.icu/otakudesu';
+        this.baseURL = 'https://api.devnova.icu/api/otakudesu/v2';
         this.cache = new Map();
         this.cacheDuration = 5 * 60 * 1000; // 5 minutes
     }
@@ -2530,7 +2530,7 @@ class APIService {
         try {
             utils.showLoading();
             const url = `${this.baseURL}${endpoint}`;
-            console.log('Fetching:', url);
+            console.log('Fetching from new API:', url);
             
             const response = await fetch(url, {
                 ...options,
@@ -2544,7 +2544,15 @@ class APIService {
                 throw new Error(`HTTP ${response.status}: ${response.statusText}`);
             }
             
-            const data = await response.json();
+            const result = await response.json();
+            
+            // New API structure: { success, data }
+            if (!result.success) {
+                throw new Error('API returned unsuccessful response');
+            }
+            
+            // Return the data part from new API structure
+            const data = result.data;
             
             // Cache the response
             this.cache.set(cacheKey, {
@@ -2569,6 +2577,7 @@ class APIService {
     clearCache() {
         this.cache.clear();
         console.log('Cache cleared');
+        utils.showToast('Cache dibersihkan', 'success');
         return true;
     }
 
@@ -2594,38 +2603,12 @@ class APIService {
 
     // Ongoing Anime
     async getOngoing(page = 1) {
-        const data = await this.fetch(`/ongoing?page=${page}`);
-        
-        // Ensure pagination data exists
-        if (data.data && !data.pagination) {
-            const itemsPerPage = 24;
-            data.pagination = {
-                currentPage: page,
-                hasNextPage: true,
-                totalPages: page + 1,
-                totalItems: (page + 1) * itemsPerPage
-            };
-        }
-        
-        return data;
+        return await this.fetch(`/ongoing?page=${page}`);
     }
 
     // Completed Anime
     async getCompleted(page = 1) {
-        const data = await this.fetch(`/completed?page=${page}`);
-        
-        // Ensure pagination data exists
-        if (data.data && !data.pagination) {
-            const itemsPerPage = 24;
-            data.pagination = {
-                currentPage: page,
-                hasNextPage: true,
-                totalPages: page + 1,
-                totalItems: (page + 1) * itemsPerPage
-            };
-        }
-        
-        return data;
+        return await this.fetch(`/completed?page=${page}`);
     }
 
     // Search Anime
@@ -2651,14 +2634,13 @@ class APIService {
 
     // Anime Detail
     async getAnimeDetail(animeId) {
+        console.log('Fetching anime detail for:', animeId);
         return await this.fetch(`/anime/${animeId}`);
     }
 
     // Episode Detail
     async getEpisodeDetail(episodeId) {
         console.log('Fetching episode detail for:', episodeId);
-        
-        // Coba decode jika diperlukan
         const decodedId = decodeURIComponent(episodeId);
         return await this.fetch(`/episode/${decodedId}`);
     }
@@ -2676,13 +2658,18 @@ class APIService {
     // Get video URL from episode data
     async getVideoUrl(episodeData, quality = '480p', serverIndex = 0) {
         try {
+            // New API structure: episodeData contains data property
+            const details = episodeData?.data?.details;
+            
             // If direct streaming URL is available
-            if (episodeData?.data?.details?.defaultStreamingUrl) {
-                return episodeData.data.details.defaultStreamingUrl;
+            if (details?.defaultStreamingUrl) {
+                console.log('Using direct streaming URL:', details.defaultStreamingUrl);
+                return details.defaultStreamingUrl;
             }
 
-            const qualityList = episodeData?.data?.details?.server?.qualityList;
+            const qualityList = details?.server?.qualityList;
             if (!qualityList || qualityList.length === 0) {
+                console.log('No quality list available');
                 return null;
             }
 
@@ -2693,15 +2680,21 @@ class APIService {
             
             // Fallback to first available quality
             const targetQuality = qualityData || qualityList[0];
+            console.log('Target quality:', targetQuality);
             
             if (targetQuality?.serverList?.length > 0) {
                 const server = targetQuality.serverList[serverIndex] || targetQuality.serverList[0];
+                console.log('Selected server:', server);
+                
                 if (server?.serverId) {
                     const serverData = await this.getServerVideo(server.serverId);
-                    return serverData?.data?.details?.url || null;
+                    const url = serverData?.data?.details?.url || null;
+                    console.log('Video URL found:', url);
+                    return url;
                 }
             }
             
+            console.log('No video URL found');
             return null;
         } catch (error) {
             console.error('Error getting video URL:', error);
@@ -2709,14 +2702,19 @@ class APIService {
         }
     }
 
-    // Get recommended anime
+    // Get recommendations (placeholder - if API has it)
     async getRecommendations(animeId) {
-        return await this.fetch(`/recommendations/${animeId}`);
-    }
-
-    // Get popular anime
-    async getPopular(page = 1) {
-        return await this.fetch(`/popular?page=${page}`);
+        try {
+            const data = await this.getAnimeDetail(animeId);
+            return {
+                data: {
+                    recommendedAnimeList: data?.data?.details?.recommendedAnimeList || []
+                }
+            };
+        } catch (error) {
+            console.error('Error getting recommendations:', error);
+            return { data: { recommendedAnimeList: [] } };
+        }
     }
 }
 
@@ -3111,12 +3109,9 @@ class Components {
 
     // Create Anime Card
     createAnimeCard(anime, options = {}) {
-        // Gunakan slug jika animeId tidak ada
         const animeId = anime.animeId || anime.slug || anime.id;
-        console.log('Creating card for animeId:', animeId); // Debug
-        
         const isFavorite = this.utils.isFavorite(animeId);
-        const watchBtnText = 'Tonton Eps 1'; // SELALU TAMPILKAN KE EPISODE 1
+        const watchBtnText = 'Tonton Eps 1';
         const showType = options.showType !== false;
         const compact = options.compact || false;
         
@@ -3127,11 +3122,11 @@ class Components {
                          alt="${anime.title}"
                          loading="lazy"
                          onerror="this.src='data:image/svg+xml,%3Csvg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 300 450\"%3E%3Crect width=\"300\" height=\"450\" fill=\"%231a1a2e\"/%3E%3Ctext x=\"150\" y=\"200\" font-family=\"Arial\" font-size=\"16\" fill=\"%23ffffff\" text-anchor=\"middle\"%3EKeyAnime%3C/text%3E%3Ctext x=\"150\" y=\"230\" font-family=\"Arial\" font-size=\"12\" fill=\"%23FF4081\" text-anchor=\"middle\"%3ENo Image%3C/text%3E%3C/svg%3E'">
-                    ${anime.episodes ? `<div class="episode-badge">${anime.episodes}</div>` : ''}
+                    ${anime.episodes && anime.episodes !== 'Unknown' ? `<div class="episode-badge">${anime.episodes}</div>` : ''}
                     ${anime.score ? `
                         <div class="rating-badge">
                             <i class="fas fa-star"></i>
-                            <span>${anime.score}</span>
+                            <span>${typeof anime.score === 'string' ? anime.score.replace('Rating : ', '') : anime.score}</span>
                         </div>
                     ` : ''}
                 </div>
@@ -3171,6 +3166,8 @@ class Components {
     // Create Search Result Item
     createSearchResultItem(anime) {
         const isFavorite = this.utils.isFavorite(anime.animeId);
+        const score = typeof anime.score === 'string' ? anime.score.replace('Rating : ', '') : anime.score;
+        const status = typeof anime.status === 'string' ? anime.status.replace('Status : ', '') : anime.status;
         
         return `
             <a href="#/anime/${anime.animeId}" class="result-item">
@@ -3183,8 +3180,8 @@ class Components {
                 <div class="result-content">
                     <h3 class="result-title">${anime.title}</h3>
                     <div class="result-meta">
-                        ${anime.status ? `<span>${anime.status}</span>` : ''}
-                        ${anime.score ? `<span>⭐ ${anime.score}</span>` : ''}
+                        ${status ? `<span>${status}</span>` : ''}
+                        ${score ? `<span>⭐ ${score}</span>` : ''}
                         ${anime.type ? `<span>${anime.type}</span>` : ''}
                     </div>
                     <div class="result-genres" style="display: flex; flex-wrap: wrap; gap: 5px; margin: 10px 0;">
@@ -3210,11 +3207,12 @@ class Components {
 
     // Create Episode Card
     createEpisodeCard(episode, animeId) {
+        const episodeNumber = episode.title || episode.episodeNumber || '?';
         return `
             <a href="#/watch/${episode.episodeId}" class="episode-card" data-episode-id="${episode.episodeId}">
-                <div class="episode-number">${episode.episodeNumber || episode.title || '?'}</div>
+                <div class="episode-number">${episodeNumber}</div>
                 <div class="episode-info">
-                    <div class="episode-title">Episode ${episode.title || episode.episodeNumber || '?'}</div>
+                    <div class="episode-title">Episode ${episodeNumber}</div>
                     <div class="episode-date">${animeId}</div>
                 </div>
                 <div class="episode-play">
@@ -3283,10 +3281,7 @@ class Components {
 
     // Create Anime Detail Page
     createAnimeDetail(anime) {
-        // Gunakan slug jika animeId tidak ada
         const animeId = anime.animeId || anime.slug || anime.id;
-        console.log('Creating detail for animeId:', animeId); // Debug
-        
         const isFavorite = this.utils.isFavorite(animeId);
         
         // Urutkan episode berdasarkan nomor episode (ascending) dan ambil episode 1
@@ -3297,32 +3292,26 @@ class Components {
             // Urutkan episode berdasarkan nomor episode
             sortedEpisodes = [...anime.episodeList].sort((a, b) => {
                 const getEpisodeNumber = (ep) => {
-                    if (ep.episodeNumber) {
-                        return parseInt(ep.episodeNumber);
-                    }
-                    // Coba ekstrak angka dari title, misal "Episode 1"
-                    const match = ep.title?.match(/Episode\s*(\d+)/i);
-                    if (match) {
-                        return parseInt(match[1]);
-                    }
-                    // Coba ekstrak dari slug
-                    const slugMatch = ep.slug?.match(/episode-(\d+)/i);
-                    if (slugMatch) {
-                        return parseInt(slugMatch[1]);
-                    }
+                    // Coba ambil angka dari title
+                    const titleNum = parseInt(ep.title);
+                    if (!isNaN(titleNum)) return titleNum;
+                    
+                    // Coba ekstrak dari title string
+                    const match = ep.title?.match(/Episode\s*(\d+)/i) || ep.title?.match(/(\d+)/);
+                    if (match) return parseInt(match[1]);
+                    
+                    // Coba dari episodeId
+                    const idMatch = ep.episodeId?.match(/episode-(\d+)/i);
+                    if (idMatch) return parseInt(idMatch[1]);
+                    
                     return 0;
                 };
-                const numA = getEpisodeNumber(a);
-                const numB = getEpisodeNumber(b);
-                return numA - numB;
+                return getEpisodeNumber(a) - getEpisodeNumber(b);
             });
-            
-            console.log('Sorted episodes:', sortedEpisodes);
             
             // Ambil episode pertama setelah diurutkan (Episode 1)
             const firstEpisode = sortedEpisodes[0];
-            firstEpisodeId = firstEpisode.episodeId || firstEpisode.slug || `episode-1`;
-            console.log('First episode ID:', firstEpisodeId);
+            firstEpisodeId = firstEpisode.episodeId;
         }
         
         return `
@@ -3359,7 +3348,7 @@ class Components {
                         
                         <div class="detail-meta">
                             ${anime.type ? `<span><i class="fas fa-tv"></i> ${anime.type}</span>` : ''}
-                            ${anime.episodes ? `<span><i class="fas fa-list-ol"></i> ${anime.episodes} Episode</span>` : ''}
+                            ${anime.episodes && anime.episodes !== 'Unknown' ? `<span><i class="fas fa-list-ol"></i> ${anime.episodes} Episode</span>` : ''}
                             ${anime.duration ? `<span><i class="fas fa-clock"></i> ${anime.duration}</span>` : ''}
                             ${anime.status ? `<span><i class="fas fa-circle" style="color: ${anime.status === 'Ongoing' ? '#00ff00' : '#ff4081'};"></i> ${anime.status}</span>` : ''}
                         </div>
@@ -3403,12 +3392,8 @@ class Components {
                                 <h5>Daftar Episode (${sortedEpisodes.length})</h5>
                             </div>
                             <div class="episodes-grid">
-                                ${sortedEpisodes.map(ep => {
-                                    const episodeId = ep.episodeId || ep.slug || `episode-${ep.episodeNumber || 1}`;
-                                    return this.createEpisodeCard(ep, animeId);
-                                }).join('')}
+                                ${sortedEpisodes.map(ep => this.createEpisodeCard(ep, animeId)).join('')}
                             </div>
-                            <!-- TOMBOL LIHAT SEMUA EPISODE DIHAPUS -->
                         </div>
                     ` : ''}
                 </div>
@@ -3509,65 +3494,24 @@ class Components {
         
         // Build pagination HTML
         return `
-            <div class="pagination-container" style="
-                display: flex;
-                justify-content: center;
-                align-items: center;
-                gap: 8px;
-                margin: 30px 0;
-                flex-wrap: wrap;
-            ">
+            <div class="pagination-container">
                 <!-- Previous Button -->
                 ${currentPage > 1 ? `
-                    <a href="${baseRoute}?page=${currentPage - 1}" class="pagination-btn prev" style="
-                        padding: 10px 15px;
-                        background: var(--card-bg);
-                        border-radius: 8px;
-                        color: var(--light-color);
-                        text-decoration: none;
-                        border: 1px solid var(--card-border);
-                        display: flex;
-                        align-items: center;
-                        gap: 5px;
-                        font-size: 0.9rem;
-                        transition: all 0.3s ease;
-                    ">
+                    <a href="${baseRoute}?page=${currentPage - 1}" class="pagination-btn prev">
                         <i class="fas fa-chevron-left"></i> Sebelumnya
                     </a>
                 ` : ''}
                 
                 <!-- First Page -->
                 ${startPage > 1 ? `
-                    <a href="${baseRoute}?page=1" class="pagination-btn" style="
-                        padding: 10px 15px;
-                        background: var(--card-bg);
-                        border-radius: 8px;
-                        color: var(--light-color);
-                        text-decoration: none;
-                        border: 1px solid var(--card-border);
-                        font-size: 0.9rem;
-                        transition: all 0.3s ease;
-                    ">1</a>
+                    <a href="${baseRoute}?page=1" class="pagination-btn">1</a>
                     ${startPage > 2 ? '<span style="color: var(--light-color); opacity: 0.5; padding: 0 5px;">...</span>' : ''}
                 ` : ''}
                 
                 <!-- Page Numbers -->
                 ${Array.from({ length: endPage - startPage + 1 }, (_, i) => startPage + i).map(page => `
                     <a href="${baseRoute}?page=${page}" 
-                       class="pagination-btn ${page === currentPage ? 'active' : ''}" 
-                       style="
-                        padding: 10px 15px;
-                        background: ${page === currentPage ? 'var(--primary-color)' : 'var(--card-bg)'};
-                        border-radius: 8px;
-                        color: ${page === currentPage ? 'white' : 'var(--light-color)'};
-                        text-decoration: none;
-                        border: 1px solid ${page === currentPage ? 'var(--primary-color)' : 'var(--card-border)'};
-                        font-size: 0.9rem;
-                        font-weight: ${page === currentPage ? 'bold' : 'normal'};
-                        transition: all 0.3s ease;
-                        min-width: 40px;
-                        text-align: center;
-                    ">
+                       class="pagination-btn ${page === currentPage ? 'active' : ''}">
                         ${page}
                     </a>
                 `).join('')}
@@ -3575,33 +3519,12 @@ class Components {
                 <!-- Last Page -->
                 ${endPage < totalPages ? `
                     ${endPage < totalPages - 1 ? '<span style="color: var(--light-color); opacity: 0.5; padding: 0 5px;">...</span>' : ''}
-                    <a href="${baseRoute}?page=${totalPages}" class="pagination-btn" style="
-                        padding: 10px 15px;
-                        background: var(--card-bg);
-                        border-radius: 8px;
-                        color: var(--light-color);
-                        text-decoration: none;
-                        border: 1px solid var(--card-border);
-                        font-size: 0.9rem;
-                        transition: all 0.3s ease;
-                    ">${totalPages}</a>
+                    <a href="${baseRoute}?page=${totalPages}" class="pagination-btn">${totalPages}</a>
                 ` : ''}
                 
                 <!-- Next Button -->
                 ${currentPage < totalPages ? `
-                    <a href="${baseRoute}?page=${currentPage + 1}" class="pagination-btn next" style="
-                        padding: 10px 15px;
-                        background: var(--card-bg);
-                        border-radius: 8px;
-                        color: var(--light-color);
-                        text-decoration: none;
-                        border: 1px solid var(--card-border);
-                        display: flex;
-                        align-items: center;
-                        gap: 5px;
-                        font-size: 0.9rem;
-                        transition: all 0.3s ease;
-                    ">
+                    <a href="${baseRoute}?page=${currentPage + 1}" class="pagination-btn next">
                         Selanjutnya <i class="fas fa-chevron-right"></i>
                     </a>
                 ` : ''}
@@ -3895,11 +3818,14 @@ class Router {
                 return;
             }
 
+            // New API structure: data.data contains ongoing and completed
+            const homeData = data.data;
+            
             let html = '';
             
             // Hero slider with ongoing anime
-            if (data.data?.ongoing?.animeList) {
-                const heroSlides = data.data.ongoing.animeList.slice(0, 5);
+            if (homeData?.ongoing?.animeList) {
+                const heroSlides = homeData.ongoing.animeList.slice(0, 5);
                 html += components.createHeroSlider(heroSlides);
             }
 
@@ -3910,7 +3836,7 @@ class Router {
                     <a href="#/ongoing" class="see-all">Lihat Semua</a>
                 </div>
                 <div class="mobile-grid" id="ongoingList">
-                    ${data.data?.ongoing?.animeList?.slice(0, 12).map(anime => 
+                    ${homeData?.ongoing?.animeList?.slice(0, 12).map(anime => 
                         components.createAnimeCard(anime)
                     ).join('') || ''}
                 </div>
@@ -3923,7 +3849,7 @@ class Router {
                     <a href="#/complete" class="see-all">Lihat Semua</a>
                 </div>
                 <div class="mobile-grid" id="completedList">
-                    ${data.data?.completed?.animeList?.slice(0, 12).map(anime => 
+                    ${homeData?.completed?.animeList?.slice(0, 12).map(anime => 
                         components.createAnimeCard({ ...anime, episodes: anime.episodes || '?' })
                     ).join('') || ''}
                 </div>
@@ -3963,7 +3889,10 @@ class Router {
                 return;
             }
 
-            if (!data.data?.animeList?.length) {
+            // New API structure: data.data contains animeList
+            const animeData = data.data;
+            
+            if (!animeData?.animeList?.length) {
                 content.innerHTML = components.createEmptyState('Tidak ada anime ongoing', 'fas fa-fire');
                 return;
             }
@@ -3978,7 +3907,7 @@ class Router {
                     </div>
                 </div>
                 <div class="mobile-grid" id="ongoingList">
-                    ${data.data.animeList.map(anime => 
+                    ${animeData.animeList.map(anime => 
                         components.createAnimeCard(anime)
                     ).join('')}
                 </div>
@@ -4015,7 +3944,10 @@ class Router {
                 return;
             }
 
-            if (!data.data?.animeList?.length) {
+            // New API structure: data.data contains animeList
+            const animeData = data.data;
+            
+            if (!animeData?.animeList?.length) {
                 content.innerHTML = components.createEmptyState('Tidak ada anime selesai', 'fas fa-check-circle');
                 return;
             }
@@ -4030,7 +3962,7 @@ class Router {
                     </div>
                 </div>
                 <div class="mobile-grid" id="completedList">
-                    ${data.data.animeList.map(anime => 
+                    ${animeData.animeList.map(anime => 
                         components.createAnimeCard({ ...anime, episodes: anime.episodes || '?' })
                     ).join('')}
                 </div>
@@ -4070,7 +4002,10 @@ class Router {
                 return;
             }
 
-            if (!data.data?.genreList?.length) {
+            // New API structure: data.data contains genreList
+            const genreData = data.data;
+            
+            if (!genreData?.genreList?.length) {
                 content.innerHTML = components.createEmptyState('Tidak ada genre', 'fas fa-tags');
                 return;
             }
@@ -4080,7 +4015,7 @@ class Router {
                     <h4><i class="fas fa-tags"></i> Semua Genre</h4>
                 </div>
                 <div class="category-chips" style="justify-content: flex-start; flex-wrap: wrap;">
-                    ${data.data.genreList.map(genre => 
+                    ${genreData.genreList.map(genre => 
                         components.createGenreChip(genre)
                     ).join('')}
                 </div>
@@ -4114,7 +4049,10 @@ class Router {
                 return;
             }
 
-            if (!data.data?.animeList?.length) {
+            // New API structure: data.data contains animeList
+            const animeData = data.data;
+            
+            if (!animeData?.animeList?.length) {
                 content.innerHTML = components.createEmptyState(
                     'Tidak ada anime untuk genre ini',
                     'fas fa-tag',
@@ -4137,7 +4075,7 @@ class Router {
                     </div>
                 </div>
                 <div class="mobile-grid" id="genreList">
-                    ${data.data.animeList.map(anime => 
+                    ${animeData.animeList.map(anime => 
                         components.createAnimeCard(anime)
                     ).join('')}
                 </div>
@@ -4175,7 +4113,10 @@ class Router {
                 return;
             }
 
-            if (!data.data?.scheduleList?.length) {
+            // New API structure: data.data contains scheduleList
+            const scheduleData = data.data;
+            
+            if (!scheduleData?.scheduleList?.length) {
                 content.innerHTML = components.createEmptyState('Tidak ada jadwal', 'fas fa-calendar-alt');
                 return;
             }
@@ -4184,7 +4125,7 @@ class Router {
                 <div class="page-header">
                     <h4><i class="fas fa-calendar-alt"></i> Jadwal Tayang</h4>
                 </div>
-                ${data.data.scheduleList.map(day => 
+                ${scheduleData.scheduleList.map(day => 
                     components.createScheduleDay(day)
                 ).join('')}
             `;
@@ -4337,7 +4278,10 @@ class Router {
                 return;
             }
     
-            if (!data.data?.animeList?.length) {
+            // New API structure: data.data contains animeList
+            const searchData = data.data;
+            
+            if (!searchData?.animeList?.length) {
                 resultsContainer.innerHTML = components.createEmptyState(
                     `Tidak ditemukan hasil untuk "${searchQuery}"`,
                     'fas fa-search',
@@ -4348,10 +4292,10 @@ class Router {
     
             resultsContainer.innerHTML = `
                 <div style="margin-bottom: 10px; color: rgba(255,255,255,0.7);">
-                    <i class="fas fa-info-circle"></i> Ditemukan ${data.data.animeList.length} hasil untuk "${searchQuery}"
+                    <i class="fas fa-info-circle"></i> Ditemukan ${searchData.animeList.length} hasil untuk "${searchQuery}"
                 </div>
                 <div class="search-results">
-                    ${data.data.animeList.map(anime => 
+                    ${searchData.animeList.map(anime => 
                         components.createSearchResultItem(anime)
                     ).join('')}
                 </div>
@@ -4481,46 +4425,38 @@ class Router {
 
     async renderAnimeDetail(params) {
         const { id } = params;
-        console.log('Detail params:', params, 'ID:', id); // Debug
         
         this.currentPage = { type: 'anime-detail', id, data: null };
         
         const content = document.getElementById('app-content');
         content.innerHTML = components.utils.generateSkeletonCards(1);
-    
+
         try {
-            // Decode URL jika diperlukan
             const animeId = decodeURIComponent(id);
-            console.log('Fetching detail for:', animeId);
-            
             const data = await api.getAnimeDetail(animeId);
             
             if (data.error) {
                 content.innerHTML = components.createErrorPage('Gagal memuat detail anime', 'window.history.back()');
                 return;
             }
-    
-            if (!data.data?.details) {
+
+            // New API structure: data.data contains details
+            const details = data.data?.details;
+            
+            if (!details) {
                 content.innerHTML = components.createErrorPage('Anime tidak ditemukan', 'window.history.back()');
                 return;
             }
-    
-            const detail = data.data.details;
-            
-            // Debug: Log detail untuk memastikan struktur data
-            console.log('Anime Detail:', detail);
-            
-            // Pastikan animeId tersedia dalam detail
-            if (!detail.animeId && detail.slug) {
-                detail.animeId = detail.slug;
-            } else if (!detail.animeId) {
-                detail.animeId = animeId;
+
+            // Ensure animeId is available
+            if (!details.animeId) {
+                details.animeId = animeId;
             }
             
-            content.innerHTML = components.createAnimeDetail(detail);
+            content.innerHTML = components.createAnimeDetail(details);
             
             // Add to history
-            utils.addToHistory(detail);
+            utils.addToHistory(details);
             
             this.attachCardEventListeners();
         } catch (error) {
@@ -4544,12 +4480,14 @@ class Router {
                 return;
             }
 
-            if (!data.data?.details) {
+            // New API structure: data.data contains details
+            const episode = data.data?.details;
+            
+            if (!episode) {
                 content.innerHTML = components.createErrorPage('Episode tidak ditemukan', 'window.history.back()');
                 return;
             }
 
-            const episode = data.data.details;
             content.innerHTML = components.createWatchPage(data);
             
             // Load video
@@ -4798,7 +4736,7 @@ class Router {
 
     // Attach event listeners to cards
     attachCardEventListeners() {
-        // Watch buttons - SELALU AMBIL EPISODE 1
+        // Watch buttons - ALWAYS TAKE EPISODE 1
         document.querySelectorAll('[data-action="watch"], [data-action="play-first"]').forEach(btn => {
             btn.addEventListener('click', async (e) => {
                 e.preventDefault();
@@ -4809,13 +4747,13 @@ class Router {
                 
                 console.log('Watch button clicked, animeId:', animeId, 'firstEpisodeId:', firstEpisodeId);
                 
-                // Jika tombol memiliki firstEpisodeId, langsung gunakan
+                // If button has firstEpisodeId, use it directly
                 if (firstEpisodeId) {
                     this.navigateTo(`/watch/${firstEpisodeId}`);
                     return;
                 }
                 
-                // Jika tidak, fetch anime detail dan ambil episode pertama
+                // If not, fetch anime detail and take first episode
                 if (!animeId || animeId === 'undefined') {
                     utils.showToast('ID anime tidak valid', 'error');
                     return;
@@ -4829,21 +4767,22 @@ class Router {
                     const data = await api.getAnimeDetail(animeId);
                     console.log('Anime data for first episode:', data);
                     
-                    if (data.data?.details?.episodeList?.length > 0) {
-                        // Urutkan episode untuk mendapatkan episode 1
-                        const sortedEpisodes = [...data.data.details.episodeList].sort((a, b) => {
+                    // New API structure: data.data contains details
+                    const details = data.data?.details;
+                    
+                    if (details?.episodeList?.length > 0) {
+                        // Sort episodes to get episode 1
+                        const sortedEpisodes = [...details.episodeList].sort((a, b) => {
                             const getEpisodeNumber = (ep) => {
-                                if (ep.episodeNumber) {
-                                    return parseInt(ep.episodeNumber);
-                                }
-                                const match = ep.title?.match(/Episode\s*(\d+)/i);
-                                if (match) {
-                                    return parseInt(match[1]);
-                                }
-                                const slugMatch = ep.slug?.match(/episode-(\d+)/i);
-                                if (slugMatch) {
-                                    return parseInt(slugMatch[1]);
-                                }
+                                const titleNum = parseInt(ep.title);
+                                if (!isNaN(titleNum)) return titleNum;
+                                
+                                const match = ep.title?.match(/Episode\s*(\d+)/i) || ep.title?.match(/(\d+)/);
+                                if (match) return parseInt(match[1]);
+                                
+                                const idMatch = ep.episodeId?.match(/episode-(\d+)/i);
+                                if (idMatch) return parseInt(idMatch[1]);
+                                
                                 return 0;
                             };
                             return getEpisodeNumber(a) - getEpisodeNumber(b);
@@ -4852,11 +4791,11 @@ class Router {
                         const firstEpisode = sortedEpisodes[0];
                         console.log('First episode after sorting:', firstEpisode);
                         
-                        // Pastikan episodeId ada
+                        // Ensure episodeId exists
                         if (firstEpisode.episodeId) {
                             this.navigateTo(`/watch/${firstEpisode.episodeId}`);
                         } else {
-                            // Fallback: gunakan slug atau ID lain
+                            // Fallback: use slug or other ID
                             const episodeSlug = firstEpisode.slug || `episode-1`;
                             this.navigateTo(`/watch/${episodeSlug}`);
                         }
@@ -4943,21 +4882,22 @@ class Router {
                 utils.showLoading();
                 try {
                     const data = await api.getAnimeDetail(animeId);
-                    if (data.data?.details?.episodeList?.length > 0) {
-                        // Urutkan episode untuk mendapatkan episode 1
-                        const sortedEpisodes = [...data.data.details.episodeList].sort((a, b) => {
+                    // New API structure: data.data contains details
+                    const details = data.data?.details;
+                    
+                    if (details?.episodeList?.length > 0) {
+                        // Sort episodes to get episode 1
+                        const sortedEpisodes = [...details.episodeList].sort((a, b) => {
                             const getEpisodeNumber = (ep) => {
-                                if (ep.episodeNumber) {
-                                    return parseInt(ep.episodeNumber);
-                                }
-                                const match = ep.title?.match(/Episode\s*(\d+)/i);
-                                if (match) {
-                                    return parseInt(match[1]);
-                                }
-                                const slugMatch = ep.slug?.match(/episode-(\d+)/i);
-                                if (slugMatch) {
-                                    return parseInt(slugMatch[1]);
-                                }
+                                const titleNum = parseInt(ep.title);
+                                if (!isNaN(titleNum)) return titleNum;
+                                
+                                const match = ep.title?.match(/Episode\s*(\d+)/i) || ep.title?.match(/(\d+)/);
+                                if (match) return parseInt(match[1]);
+                                
+                                const idMatch = ep.episodeId?.match(/episode-(\d+)/i);
+                                if (idMatch) return parseInt(idMatch[1]);
+                                
                                 return 0;
                             };
                             return getEpisodeNumber(a) - getEpisodeNumber(b);
@@ -4987,7 +4927,6 @@ const router = new Router();
 
 class Utils {
     constructor() {
-        this.baseURL = 'https://anim-api.devnova.icu/otakudesu';
         this.currentPage = 1;
         this.itemsPerPage = 20;
         this.theme = localStorage.getItem('theme') || 'dark';
@@ -5194,7 +5133,11 @@ class Utils {
         if (url.startsWith('http')) {
             return url;
         }
-        return `${this.baseURL}${url.startsWith('/') ? '' : '/'}${url}`;
+        // Handle relative URLs from new API
+        if (url.startsWith('/')) {
+            return `https://otakudesu.best${url}`;
+        }
+        return url;
     }
 
     // Format Date

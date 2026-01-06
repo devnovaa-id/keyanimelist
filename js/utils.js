@@ -2,7 +2,6 @@
 
 class Utils {
     constructor() {
-        this.baseURL = 'https://anim-api.devnova.icu/otakudesu';
         this.currentPage = 1;
         this.itemsPerPage = 20;
         this.theme = localStorage.getItem('theme') || 'dark';
@@ -209,7 +208,11 @@ class Utils {
         if (url.startsWith('http')) {
             return url;
         }
-        return `${this.baseURL}${url.startsWith('/') ? '' : '/'}${url}`;
+        // Handle relative URLs from new API
+        if (url.startsWith('/')) {
+            return `https://otakudesu.best${url}`;
+        }
+        return url;
     }
 
     // Format Date

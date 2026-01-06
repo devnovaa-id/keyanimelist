@@ -8,12 +8,9 @@ class Components {
 
     // Create Anime Card
     createAnimeCard(anime, options = {}) {
-        // Gunakan slug jika animeId tidak ada
         const animeId = anime.animeId || anime.slug || anime.id;
-        console.log('Creating card for animeId:', animeId); // Debug
-        
         const isFavorite = this.utils.isFavorite(animeId);
-        const watchBtnText = 'Tonton Eps 1'; // SELALU TAMPILKAN KE EPISODE 1
+        const watchBtnText = 'Tonton Eps 1';
         const showType = options.showType !== false;
         const compact = options.compact || false;
         
@@ -24,11 +21,11 @@ class Components {
                          alt="${anime.title}"
                          loading="lazy"
                          onerror="this.src='data:image/svg+xml,%3Csvg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 300 450\"%3E%3Crect width=\"300\" height=\"450\" fill=\"%231a1a2e\"/%3E%3Ctext x=\"150\" y=\"200\" font-family=\"Arial\" font-size=\"16\" fill=\"%23ffffff\" text-anchor=\"middle\"%3EKeyAnime%3C/text%3E%3Ctext x=\"150\" y=\"230\" font-family=\"Arial\" font-size=\"12\" fill=\"%23FF4081\" text-anchor=\"middle\"%3ENo Image%3C/text%3E%3C/svg%3E'">
-                    ${anime.episodes ? `<div class="episode-badge">${anime.episodes}</div>` : ''}
+                    ${anime.episodes && anime.episodes !== 'Unknown' ? `<div class="episode-badge">${anime.episodes}</div>` : ''}
                     ${anime.score ? `
                         <div class="rating-badge">
                             <i class="fas fa-star"></i>
-                            <span>${anime.score}</span>
+                            <span>${typeof anime.score === 'string' ? anime.score.replace('Rating : ', '') : anime.score}</span>
                         </div>
                     ` : ''}
                 </div>
@@ -68,6 +65,8 @@ class Components {
     // Create Search Result Item
     createSearchResultItem(anime) {
         const isFavorite = this.utils.isFavorite(anime.animeId);
+        const score = typeof anime.score === 'string' ? anime.score.replace('Rating : ', '') : anime.score;
+        const status = typeof anime.status === 'string' ? anime.status.replace('Status : ', '') : anime.status;
         
         return `
             <a href="#/anime/${anime.animeId}" class="result-item">
@@ -80,8 +79,8 @@ class Components {
                 <div class="result-content">
                     <h3 class="result-title">${anime.title}</h3>
                     <div class="result-meta">
-                        ${anime.status ? `<span>${anime.status}</span>` : ''}
-                        ${anime.score ? `<span>⭐ ${anime.score}</span>` : ''}
+                        ${status ? `<span>${status}</span>` : ''}
+                        ${score ? `<span>⭐ ${score}</span>` : ''}
                         ${anime.type ? `<span>${anime.type}</span>` : ''}
                     </div>
                     <div class="result-genres" style="display: flex; flex-wrap: wrap; gap: 5px; margin: 10px 0;">
@@ -107,11 +106,12 @@ class Components {
 
     // Create Episode Card
     createEpisodeCard(episode, animeId) {
+        const episodeNumber = episode.title || episode.episodeNumber || '?';
         return `
             <a href="#/watch/${episode.episodeId}" class="episode-card" data-episode-id="${episode.episodeId}">
-                <div class="episode-number">${episode.episodeNumber || episode.title || '?'}</div>
+                <div class="episode-number">${episodeNumber}</div>
                 <div class="episode-info">
-                    <div class="episode-title">Episode ${episode.title || episode.episodeNumber || '?'}</div>
+                    <div class="episode-title">Episode ${episodeNumber}</div>
                     <div class="episode-date">${animeId}</div>
                 </div>
                 <div class="episode-play">
@@ -180,10 +180,7 @@ class Components {
 
     // Create Anime Detail Page
     createAnimeDetail(anime) {
-        // Gunakan slug jika animeId tidak ada
         const animeId = anime.animeId || anime.slug || anime.id;
-        console.log('Creating detail for animeId:', animeId); // Debug
-        
         const isFavorite = this.utils.isFavorite(animeId);
         
         // Urutkan episode berdasarkan nomor episode (ascending) dan ambil episode 1
@@ -194,32 +191,26 @@ class Components {
             // Urutkan episode berdasarkan nomor episode
             sortedEpisodes = [...anime.episodeList].sort((a, b) => {
                 const getEpisodeNumber = (ep) => {
-                    if (ep.episodeNumber) {
-                        return parseInt(ep.episodeNumber);
-                    }
-                    // Coba ekstrak angka dari title, misal "Episode 1"
-                    const match = ep.title?.match(/Episode\s*(\d+)/i);
-                    if (match) {
-                        return parseInt(match[1]);
-                    }
-                    // Coba ekstrak dari slug
-                    const slugMatch = ep.slug?.match(/episode-(\d+)/i);
-                    if (slugMatch) {
-                        return parseInt(slugMatch[1]);
-                    }
+                    // Coba ambil angka dari title
+                    const titleNum = parseInt(ep.title);
+                    if (!isNaN(titleNum)) return titleNum;
+                    
+                    // Coba ekstrak dari title string
+                    const match = ep.title?.match(/Episode\s*(\d+)/i) || ep.title?.match(/(\d+)/);
+                    if (match) return parseInt(match[1]);
+                    
+                    // Coba dari episodeId
+                    const idMatch = ep.episodeId?.match(/episode-(\d+)/i);
+                    if (idMatch) return parseInt(idMatch[1]);
+                    
                     return 0;
                 };
-                const numA = getEpisodeNumber(a);
-                const numB = getEpisodeNumber(b);
-                return numA - numB;
+                return getEpisodeNumber(a) - getEpisodeNumber(b);
             });
-            
-            console.log('Sorted episodes:', sortedEpisodes);
             
             // Ambil episode pertama setelah diurutkan (Episode 1)
             const firstEpisode = sortedEpisodes[0];
-            firstEpisodeId = firstEpisode.episodeId || firstEpisode.slug || `episode-1`;
-            console.log('First episode ID:', firstEpisodeId);
+            firstEpisodeId = firstEpisode.episodeId;
         }
         
         return `
@@ -256,7 +247,7 @@ class Components {
                         
                         <div class="detail-meta">
                             ${anime.type ? `<span><i class="fas fa-tv"></i> ${anime.type}</span>` : ''}
-                            ${anime.episodes ? `<span><i class="fas fa-list-ol"></i> ${anime.episodes} Episode</span>` : ''}
+                            ${anime.episodes && anime.episodes !== 'Unknown' ? `<span><i class="fas fa-list-ol"></i> ${anime.episodes} Episode</span>` : ''}
                             ${anime.duration ? `<span><i class="fas fa-clock"></i> ${anime.duration}</span>` : ''}
                             ${anime.status ? `<span><i class="fas fa-circle" style="color: ${anime.status === 'Ongoing' ? '#00ff00' : '#ff4081'};"></i> ${anime.status}</span>` : ''}
                         </div>
@@ -300,12 +291,8 @@ class Components {
                                 <h5>Daftar Episode (${sortedEpisodes.length})</h5>
                             </div>
                             <div class="episodes-grid">
-                                ${sortedEpisodes.map(ep => {
-                                    const episodeId = ep.episodeId || ep.slug || `episode-${ep.episodeNumber || 1}`;
-                                    return this.createEpisodeCard(ep, animeId);
-                                }).join('')}
+                                ${sortedEpisodes.map(ep => this.createEpisodeCard(ep, animeId)).join('')}
                             </div>
-                            <!-- TOMBOL LIHAT SEMUA EPISODE DIHAPUS -->
                         </div>
                     ` : ''}
                 </div>
@@ -406,65 +393,24 @@ class Components {
         
         // Build pagination HTML
         return `
-            <div class="pagination-container" style="
-                display: flex;
-                justify-content: center;
-                align-items: center;
-                gap: 8px;
-                margin: 30px 0;
-                flex-wrap: wrap;
-            ">
+            <div class="pagination-container">
                 <!-- Previous Button -->
                 ${currentPage > 1 ? `
-                    <a href="${baseRoute}?page=${currentPage - 1}" class="pagination-btn prev" style="
-                        padding: 10px 15px;
-                        background: var(--card-bg);
-                        border-radius: 8px;
-                        color: var(--light-color);
-                        text-decoration: none;
-                        border: 1px solid var(--card-border);
-                        display: flex;
-                        align-items: center;
-                        gap: 5px;
-                        font-size: 0.9rem;
-                        transition: all 0.3s ease;
-                    ">
+                    <a href="${baseRoute}?page=${currentPage - 1}" class="pagination-btn prev">
                         <i class="fas fa-chevron-left"></i> Sebelumnya
                     </a>
                 ` : ''}
                 
                 <!-- First Page -->
                 ${startPage > 1 ? `
-                    <a href="${baseRoute}?page=1" class="pagination-btn" style="
-                        padding: 10px 15px;
-                        background: var(--card-bg);
-                        border-radius: 8px;
-                        color: var(--light-color);
-                        text-decoration: none;
-                        border: 1px solid var(--card-border);
-                        font-size: 0.9rem;
-                        transition: all 0.3s ease;
-                    ">1</a>
+                    <a href="${baseRoute}?page=1" class="pagination-btn">1</a>
                     ${startPage > 2 ? '<span style="color: var(--light-color); opacity: 0.5; padding: 0 5px;">...</span>' : ''}
                 ` : ''}
                 
                 <!-- Page Numbers -->
                 ${Array.from({ length: endPage - startPage + 1 }, (_, i) => startPage + i).map(page => `
                     <a href="${baseRoute}?page=${page}" 
-                       class="pagination-btn ${page === currentPage ? 'active' : ''}" 
-                       style="
-                        padding: 10px 15px;
-                        background: ${page === currentPage ? 'var(--primary-color)' : 'var(--card-bg)'};
-                        border-radius: 8px;
-                        color: ${page === currentPage ? 'white' : 'var(--light-color)'};
-                        text-decoration: none;
-                        border: 1px solid ${page === currentPage ? 'var(--primary-color)' : 'var(--card-border)'};
-                        font-size: 0.9rem;
-                        font-weight: ${page === currentPage ? 'bold' : 'normal'};
-                        transition: all 0.3s ease;
-                        min-width: 40px;
-                        text-align: center;
-                    ">
+                       class="pagination-btn ${page === currentPage ? 'active' : ''}">
                         ${page}
                     </a>
                 `).join('')}
@@ -472,33 +418,12 @@ class Components {
                 <!-- Last Page -->
                 ${endPage < totalPages ? `
                     ${endPage < totalPages - 1 ? '<span style="color: var(--light-color); opacity: 0.5; padding: 0 5px;">...</span>' : ''}
-                    <a href="${baseRoute}?page=${totalPages}" class="pagination-btn" style="
-                        padding: 10px 15px;
-                        background: var(--card-bg);
-                        border-radius: 8px;
-                        color: var(--light-color);
-                        text-decoration: none;
-                        border: 1px solid var(--card-border);
-                        font-size: 0.9rem;
-                        transition: all 0.3s ease;
-                    ">${totalPages}</a>
+                    <a href="${baseRoute}?page=${totalPages}" class="pagination-btn">${totalPages}</a>
                 ` : ''}
                 
                 <!-- Next Button -->
                 ${currentPage < totalPages ? `
-                    <a href="${baseRoute}?page=${currentPage + 1}" class="pagination-btn next" style="
-                        padding: 10px 15px;
-                        background: var(--card-bg);
-                        border-radius: 8px;
-                        color: var(--light-color);
-                        text-decoration: none;
-                        border: 1px solid var(--card-border);
-                        display: flex;
-                        align-items: center;
-                        gap: 5px;
-                        font-size: 0.9rem;
-                        transition: all 0.3s ease;
-                    ">
+                    <a href="${baseRoute}?page=${currentPage + 1}" class="pagination-btn next">
                         Selanjutnya <i class="fas fa-chevron-right"></i>
                     </a>
                 ` : ''}
