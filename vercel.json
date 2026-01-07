@@ -1,39 +1,7 @@
 {
   "version": 2,
-  "name": "nonim-anime-streaming",
-
-  "routes": [
-    {
-      "handle": "filesystem"
-    },
-
-    {
-      "src": "^/service-worker\\.js$",
-      "dest": "/sw.js"
-    },
-
-    {
-      "src": "^/api/otakudesu/v2/(.*)",
-      "dest": "https://api.devnova.icu/api/otakudesu/v2/$1"
-    },
-
-    {
-      "src": ".*",
-      "dest": "/index.html"
-    }
-  ],
-
-  "headers": [
-    {
-      "source": "/(css|js|asset)/(.*)",
-      "headers": [
-        {
-          "key": "Cache-Control",
-          "value": "public, max-age=3600"
-        }
-      ]
-    }
-  ],
-
-  "regions": ["sin1"]
+  "rewrites": [
+    { "source": "/api/otakudesu/v2/:path*", "destination": "https://api.devnova.icu/api/otakudesu/v2/:path*" },
+    { "source": "/(.*)", "destination": "/index.html" }
+  ]
 }
