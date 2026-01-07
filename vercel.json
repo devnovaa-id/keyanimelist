@@ -1,7 +1,0 @@
-{
-  "version": 2,
-  "rewrites": [
-    { "source": "/api/otakudesu/v2/:path*", "destination": "https://api.devnova.icu/api/otakudesu/v2/:path*" },
-    { "source": "/(.*)", "destination": "/index.html" }
-  ]
-}
