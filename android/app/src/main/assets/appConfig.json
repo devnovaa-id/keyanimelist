@@ -1,23 +1,27 @@
 {
   "general": {
-    "initialUrl": "https://nonim.devnova.icu",
-    "appName": "NoNim",
-    "userAgentAdd": "",
-    "publicKey": "pwwjbzx",
-    "deviceRegKey": "q38a81z2um6egj7385cf3w5kcm",
-    "forceUserAgent": "",
-    "enableWindowOpen": true,
     "userAgentRegexes": [],
     "replaceStrings": [],
+    "publicKey": "pwwjbzx",
+    "deviceRegKey": "q38a81z2um6egj7385cf3w5kcm",
+    "appName": "NoNim",
+    "initialUrl": "https://nonim.devnova.icu",
+    "keepScreenOn": false,
+    "iosFullScreenWebview": true,
+    "androidFullScreen": true,
     "screenOrientation": {
       "iphone": null,
-      "ipad": null,
+      "ipad": "portrait",
       "androidPhone": null,
-      "androidTablet": null
+      "androidTablet": "portrait"
     },
-    "nativeBridgeUrls": [
-      ""
-    ],
+    "enableWindowOpen": true,
+    "userAgentAdd": "",
+    "forceUserAgent": "",
+    "iosUserAgentAdd": "median",
+    "iosForceUserAgent": null,
+    "androidUserAgentAdd": "",
+    "androidForceUserAgent": null,
     "languages": [
       "ar",
       "ca",
@@ -43,113 +47,26 @@
       "ru",
       "uk"
     ],
-    "androidPackageName": "co.median.android.pwwjbzx",
+    "nativeBridgeUrls": [],
     "iosBundleId": "co.median.ios.pwwjbzx",
-    "keepScreenOn": true,
-    "iosUserAgentAdd": "median",
-    "iosForceUserAgent": null,
-    "androidUserAgentAdd": "",
-    "androidForceUserAgent": null,
+    "androidPackageName": "co.median.android.pwwjbzx",
     "androidSigningKey": "release",
     "injectMedianJS": true,
     "forceSessionCookieExpiry": 0,
-    "iosFullScreenWebview": true,
-    "androidFullScreen": true,
+    "androidVersionName": "1.0.1-beta",
     "iosCustomHeaders": {},
     "androidCustomHeaders": {},
-    "version": 6
+    "version": 15
   },
   "navigation": {
-    "androidPullToRefresh": true,
+    "ignorePageFinishedRegexes": [],
+    "redirects": [],
+    "iosSettings": {},
     "iosPullToRefresh": true,
-    "androidShowOfflinePage": true,
-    "iosShowOfflinePage": true,
-    "iosConnectionOfflineTime": 10,
-    "androidConnectionOfflineTime": 10,
-    "toolbarNavigation": {
-      "enabled": false,
-      "visibilityByPages": "allPages",
-      "visibilityByBackButton": "backButtonActive",
-      "regexes": [
-        {
-          "enabled": true,
-          "regex": ".*"
-        }
-      ],
-      "items": [
-        {
-          "system": "back",
-          "titleType": "defaultText",
-          "visibility": "allPages",
-          "urlRegex": [
-            {
-              "enabled": true,
-              "regex": ".*"
-            }
-          ]
-        },
-        {
-          "system": "refresh",
-          "enabled": false,
-          "visibility": "allPages",
-          "urlRegex": [
-            {
-              "enabled": true,
-              "regex": ".*"
-            }
-          ]
-        },
-        {
-          "system": "forward",
-          "enabled": false,
-          "titleType": "defaultText",
-          "visibility": "allPages",
-          "urlRegex": [
-            {
-              "enabled": true,
-              "regex": ".*"
-            }
-          ]
-        }
-      ]
-    },
-    "actionConfig": {
-      "actions": [],
-      "actionSelection": [],
-      "active": true
-    },
-    "deepLinkDomains": {
-      "domains": [
-        "nonim.devnova.icu"
-      ],
-      "enableAndroidApplinks": true
-    },
-    "androidShowRefreshButton": false,
-    "iosShowRefreshButton": false,
-    "tabNavigation": {
-      "tabSelectionConfig": [],
-      "tabMenus": [],
-      "active": false
-    },
-    "sidebarNavigation": {
-      "menuSelectionConfig": {
-        "redirectLocations": [
-          {
-            "regex": ".*",
-            "menuName": "default",
-            "loggedIn": true
-          }
-        ]
-      },
-      "menus": [
-        {
-          "active": false,
-          "name": "default",
-          "items": []
-        }
-      ]
-    },
+    "androidPullToRefresh": true,
+    "swipeGestures": null,
     "regexInternalExternal": {
+      "active": true,
       "rules": [
         {
           "regex": "^(?!https?://).*",
@@ -211,21 +128,101 @@
           "label": "All Other Links",
           "pagesToTrigger": "all"
         }
-      ],
-      "active": true
+      ]
     },
-    "navigationLevels": {
-      "active": true,
-      "levels": []
+    "deepLinkDomains": {
+      "enableAndroidApplinks": true,
+      "domains": [
+        "nonim.devnova.icu"
+      ]
     },
     "navigationTitles": {
       "active": true,
       "titles": []
     },
-    "redirects": [],
-    "ignorePageFinishedRegexes": [],
-    "iosSettings": {},
-    "swipeGestures": null,
+    "iosShowRefreshButton": false,
+    "androidShowRefreshButton": false,
+    "actionConfig": {
+      "active": true,
+      "actions": [],
+      "actionSelection": []
+    },
+    "navigationLevels": {
+      "active": true,
+      "levels": []
+    },
+    "sidebarNavigation": {
+      "menuSelectionConfig": {
+        "redirectLocations": [
+          {
+            "regex": ".*",
+            "menuName": "default",
+            "loggedIn": true
+          }
+        ]
+      },
+      "menus": [
+        {
+          "active": false,
+          "name": "default",
+          "items": []
+        }
+      ]
+    },
+    "tabNavigation": {
+      "active": false,
+      "tabMenus": [],
+      "tabSelectionConfig": []
+    },
+    "androidShowOfflinePage": false,
+    "iosShowOfflinePage": false,
+    "toolbarNavigation": {
+      "enabled": false,
+      "visibilityByPages": "allPages",
+      "visibilityByBackButton": "backButtonActive",
+      "regexes": [
+        {
+          "enabled": true,
+          "regex": ".*"
+        }
+      ],
+      "items": [
+        {
+          "system": "back",
+          "titleType": "defaultText",
+          "visibility": "allPages",
+          "urlRegex": [
+            {
+              "enabled": true,
+              "regex": ".*"
+            }
+          ]
+        },
+        {
+          "system": "refresh",
+          "enabled": false,
+          "visibility": "allPages",
+          "urlRegex": [
+            {
+              "enabled": true,
+              "regex": ".*"
+            }
+          ]
+        },
+        {
+          "system": "forward",
+          "enabled": false,
+          "titleType": "defaultText",
+          "visibility": "allPages",
+          "urlRegex": [
+            {
+              "enabled": true,
+              "regex": ".*"
+            }
+          ]
+        }
+      ]
+    },
     "maxWindows": {
       "enabled": false,
       "numWindows": 5,
@@ -233,97 +230,22 @@
     }
   },
   "styling": {
-    "icon": "https://s3.amazonaws.com/gonativeio/app_files/pwwjbzx/app_icon_ios.png",
-    "navigationTitleImage": false,
-    "transitionInteractiveDelayMax": 0.2,
-    "menuAnimationDuration": 0.15,
-    "showNavigationBar": false,
-    "iosDarkMode": "auto",
-    "iosTintColor": "#0E0D08",
-    "iosTintColorDark": "#ffffff",
-    "iosTitleColor": "#0E0D08",
-    "iosTitleColorDark": "#ffffff",
-    "iosStatusBarBackgroundColor": "#ffffffff",
-    "iosStatusBarBackgroundColorDark": "#000000",
-    "iosEnableBlurInStatusBar": false,
-    "iosSidebarFont": "Default",
-    "iosSidebarTextColor": "#0E0D08",
-    "iosSidebarTextColorDark": "#ffffff",
-    "iosSidebarBackgroundColor": "#f8f8f8",
-    "iosSidebarBackgroundColorDark": "#202020",
-    "iosNavigationBarTintColor": "#f8f8f8",
-    "iosNavigationBarTintColorDark": "#202020",
-    "iosTabBarTintColor": "#f8f8f8",
-    "iosTabBarTintColorDark": "#000000",
-    "iosTabBarInactiveColor": "#A1A1A1",
-    "iosTabBarInactiveColorDark": "#818181",
-    "iosHeaderImage": "https://s3.amazonaws.com/gonativeio/app_files/pwwjbzx/app_icon_ios.png",
-    "iosTheme": "default",
-    "showActionBar": false,
-    "androidBackgroundColor": "#FFFFFF",
-    "androidBackgroundColorDark": "#333333",
-    "androidSidebarBackgroundColor": "#FFFFFF",
-    "androidSidebarBackgroundColorDark": "#333333",
-    "androidSidebarForegroundColor": "#1A100B",
-    "androidSidebarForegroundColorDark": "#FFFFFF",
-    "androidSidebarSeparatorColor": "#CCCCCC",
-    "androidSidebarSeparatorColorDark": "#666666",
-    "androidSidebarHighlightColor": "#1A100B",
-    "androidSidebarHighlightColorDark": "#FFFFFF",
-    "androidShowLogoInSideBar": true,
-    "androidShowAppNameInSideBar": true,
-    "androidStatusBarBackgroundColor": "#5C5C5C",
-    "androidStatusBarBackgroundColorDark": "#333333",
-    "androidActionBarBackgroundColor": "#FFFFFF",
-    "androidActionBarBackgroundColorDark": "#333333",
-    "androidActionBarForegroundColor": "#1A100B",
-    "androidActionBarForegroundColorDark": "#FFFFFF",
-    "androidAccentColor": "#000000",
-    "androidAccentColorDark": "#f9f6f6",
-    "androidSystemNavBarColor": "#FFFFFF",
-    "androidSystemNavBarColorDark": "#000000",
-    "androidTheme": "auto",
-    "androidHideTitleInActionBar": false,
-    "androidPullToRefreshColor": "#f9f6f6",
-    "androidPullToRefreshColorDark": "#FFFFFF",
-    "disableAnimations": false,
-    "androidTabBarTextColor": "#949494",
-    "androidTabBarTextColorDark": "#FFFFFF",
-    "androidTabBarBackgroundColor": "#FFFFFF",
-    "androidTabBarBackgroundColorDark": "#333333",
-    "androidTabBarIndicatorColor": "#1A100B",
-    "androidTabBarIndicatorColorDark": "#666666",
-    "androidTabPressedBackgroundColor": "#CCCCCC",
-    "androidTabPressedBackgroundColorDark": "#999999",
-    "androidSwipeNavigationBackgroundColor": "#FFFFFF",
-    "androidSwipeNavigationBackgroundColorDark": "#333333",
-    "androidSwipeNavigationActiveColor": "#000000",
-    "androidSwipeNavigationActiveColorDark": "#FFFFFF",
-    "androidSwipeNavigationInactiveColor": "#666666",
-    "androidSwipeNavigationInactiveColorDark": "#666666",
-    "androidWebviewTextZoom": null,
-    "hideWebviewAlpha": 0.5,
     "splashScreen": {
       "ios": {
-        "backgroundColor": "#FFFFFF",
-        "backgroundColorDark": "#0E0D08",
         "backgroundImage": "https://gonativeio.s3.amazonaws.com/app_files/pwwjbzx/1767761731101_bpgh89pbmx6kp_FFFFFF_1_2x2.png",
         "backgroundImageDark": "https://gonativeio.s3.amazonaws.com/app_files/pwwjbzx/1767761731112_9qmqwp3qfvdg6_0E0D08_1_2x2.png",
-        "animated": false,
-        "animationLoop": "once",
+        "backgroundColor": "#FFFFFF",
+        "backgroundColorDark": "#0E0D08",
         "centerImage": "https://s3.amazonaws.com/gonativeio/app_files/pwwjbzx/app_icon_ios.png",
         "centerImageDark": "https://s3.amazonaws.com/gonativeio/app_files/pwwjbzx/app_icon_ios.png",
         "animation": null,
         "animationDark": null,
         "animationFrame": null,
-        "animationFrameDark": null
+        "animationFrameDark": null,
+        "animationLoop": "once",
+        "animated": false
       },
       "android": {
-        "backgroundColor": "#FFFFFF",
-        "backgroundColorDark": "#0E0D08",
-        "showSplash": true,
-        "animated": false,
-        "animationLoop": "once",
         "launchImages": {
           "mdpi": "https://gonativeio.s3.amazonaws.com/app_files/pwwjbzx/1767761731250_78zhrd23v25wa_180x180.png",
           "hdpi": "https://gonativeio.s3.amazonaws.com/app_files/pwwjbzx/1767761731261_k1fefw7g2vxc4_270x270.png",
@@ -338,45 +260,133 @@
           "xxhdpi": "https://gonativeio.s3.amazonaws.com/app_files/pwwjbzx/1767761731351_z61m2pnehhhj4_540x540.png",
           "xxxhdpi": "https://gonativeio.s3.amazonaws.com/app_files/pwwjbzx/1767761731373_8bt3nh19mgx8y_720x720.png"
         },
+        "showSplash": true,
+        "backgroundColor": "#FFFFFF",
+        "backgroundColorDark": "#0E0D08",
         "animation": null,
         "animationDark": null,
         "animationFrame": null,
-        "animationFrameDark": null
+        "animationFrameDark": null,
+        "animationLoop": "once",
+        "animated": false
       }
     },
-    "iosInitialZoom": 1,
-    "androidInitialZoom": 1,
+    "transitionInteractiveDelayMax": 0.2,
+    "menuAnimationDuration": 0.15,
+    "iosTheme": "default",
+    "androidTabPressedBackgroundColor": "#CCCCCC",
+    "androidTabPressedBackgroundColorDark": "#999999",
+    "androidBackgroundColor": "#FFFFFF",
+    "androidBackgroundColorDark": "#333333",
+    "icon": "https://s3.amazonaws.com/gonativeio/app_files/pwwjbzx/app_icon_ios.png",
     "iosIcon": "https://s3.amazonaws.com/gonativeio/app_files/pwwjbzx/app_icon_ios.png",
     "customIcons": {},
+    "iosDarkMode": "auto",
+    "iosEnableBlurInStatusBar": false,
     "iosStatusBarStyle": "dark",
     "iosEnableOverlayInStatusBar": false,
+    "iosStatusBarBackgroundColor": "#ffffffff",
+    "iosStatusBarBackgroundColorDark": "#000000",
     "androidStatusBarStyle": "dark",
     "androidEnableOverlayInStatusBar": false,
+    "androidStatusBarBackgroundColor": "#5C5C5C",
+    "androidStatusBarBackgroundColorDark": "#333333",
+    "iosTintColor": "#0E0D08",
+    "iosTintColorDark": "#ffffff",
     "androidIcon": "https://s3.amazonaws.com/gonativeio/app_files/pwwjbzx/app_icon_ios.png",
+    "androidTheme": "auto",
+    "androidAccentColor": "#000000",
+    "androidAccentColorDark": "#f9f6f6",
+    "androidSystemNavBarColor": "#FFFFFF",
+    "androidSystemNavBarColorDark": "#000000",
+    "androidPullToRefreshColor": "#f9f6f6",
+    "androidPullToRefreshColorDark": "#FFFFFF",
     "iosActivityIndicatorColor": "#808080",
     "iosActivityIndicatorColorDark": "#808080",
     "androidActivityIndicatorColor": "#808080",
     "androidActivityIndicatorColorDark": "#808080",
+    "androidWebviewTextZoom": null,
+    "hideWebviewAlpha": 0.5,
     "forceViewportWidth": null,
+    "iosInitialZoom": 1,
+    "androidInitialZoom": 1,
     "pinchToZoom": null,
     "iosDynamicType": true,
+    "androidSwipeNavigationBackgroundColor": "#FFFFFF",
+    "androidSwipeNavigationBackgroundColorDark": "#333333",
+    "androidSwipeNavigationActiveColor": "#000000",
+    "androidSwipeNavigationActiveColorDark": "#FFFFFF",
+    "androidSwipeNavigationInactiveColor": "#666666",
+    "androidSwipeNavigationInactiveColorDark": "#666666",
     "navigationTitleImageLocation": "https://s3.amazonaws.com/gonativeio/app_files/pwwjbzx/app_icon_ios.png",
     "navigationTitleImageLocationDark": "https://s3.amazonaws.com/gonativeio/app_files/pwwjbzx/app_icon_ios.png",
+    "iosTitleColor": "#0E0D08",
+    "iosTitleColorDark": "#ffffff",
+    "iosNavigationBarTintColor": "#f8f8f8",
+    "iosNavigationBarTintColorDark": "#202020",
+    "androidActionBarBackgroundColor": "#FFFFFF",
+    "androidActionBarBackgroundColorDark": "#333333",
     "androidHeaderImage": "https://s3.amazonaws.com/gonativeio/app_files/pwwjbzx/app_icon_ios.png",
     "androidHeaderImageDark": "https://s3.amazonaws.com/gonativeio/app_files/pwwjbzx/app_icon_ios.png",
-    "iosHeaderImageDark": "https://s3.amazonaws.com/gonativeio/app_files/pwwjbzx/app_icon_ios.png"
+    "androidActionBarForegroundColor": "#1A100B",
+    "androidActionBarForegroundColorDark": "#FFFFFF",
+    "iosSidebarBackgroundColor": "#f8f8f8",
+    "iosSidebarBackgroundColorDark": "#202020",
+    "iosSidebarFont": "Default",
+    "iosHeaderImage": "https://s3.amazonaws.com/gonativeio/app_files/pwwjbzx/app_icon_ios.png",
+    "iosHeaderImageDark": "https://s3.amazonaws.com/gonativeio/app_files/pwwjbzx/app_icon_ios.png",
+    "iosSidebarTextColor": "#0E0D08",
+    "iosSidebarTextColorDark": "#ffffff",
+    "androidSidebarBackgroundColor": "#FFFFFF",
+    "androidSidebarBackgroundColorDark": "#333333",
+    "androidSidebarForegroundColor": "#1A100B",
+    "androidSidebarForegroundColorDark": "#FFFFFF",
+    "androidSidebarSeparatorColor": "#CCCCCC",
+    "androidSidebarSeparatorColorDark": "#666666",
+    "androidSidebarHighlightColor": "#1A100B",
+    "androidSidebarHighlightColorDark": "#FFFFFF",
+    "androidShowLogoInSideBar": true,
+    "androidShowAppNameInSideBar": true,
+    "androidTabBarBackgroundColor": "#FFFFFF",
+    "androidTabBarBackgroundColorDark": "#333333",
+    "androidTabBarTextColor": "#949494",
+    "androidTabBarTextColorDark": "#FFFFFF",
+    "androidTabBarIndicatorColor": "#1A100B",
+    "androidTabBarIndicatorColorDark": "#666666",
+    "iosTabBarTintColor": "#f8f8f8",
+    "iosTabBarTintColorDark": "#000000",
+    "iosTabBarInactiveColor": "#A1A1A1",
+    "iosTabBarInactiveColorDark": "#818181",
+    "disableAnimations": false,
+    "navigationTitleImage": false,
+    "androidHideTitleInActionBar": false,
+    "showNavigationBar": false,
+    "showActionBar": false
+  },
+  "allowZoom": null,
+  "contextMenu": {
+    "enabled": false,
+    "linkActions": [
+      "copyLink",
+      "openExternal"
+    ]
+  },
+  "security": {
+    "network": {
+      "allowInsecure": null
+    }
   },
   "permissions": {
-    "usesGeolocation": true,
-    "androidDownloadToPublicStorage": true,
-    "enableWebRTCamera": true,
-    "enableWebRTCMicrophone": true,
+    "iosBackgroundAudio": true,
+    "usesGeolocation": false,
     "iosLocationUsageDescription": "",
     "iosCameraUsageDescription": "",
     "iosMicrophoneUsageDescription": "",
+    "enableWebRTCamera": false,
+    "enableWebRTCMicrophone": false,
+    "androidDownloadToPublicStorage": true,
     "iOSATTUserTrackingDescription": "",
-    "iOSRequestATTConsentOnLoad": false,
-    "iosBackgroundAudio": true
+    "iOSRequestATTConsentOnLoad": false
   },
   "developmentTools": {
     "enableWebConsoleLogs": false
@@ -384,19 +394,35 @@
   "services": {
     "oneSignalV5": {
       "active": false
-    }
-  },
-  "contextMenu": {
-    "linkActions": [
-      "copyLink",
-      "openExternal"
-    ],
-    "enabled": false
-  },
-  "allowZoom": null,
-  "security": {
-    "network": {
-      "allowInsecure": null
+    },
+    "androidGoogleServicesJson": {
+      "project_info": {
+        "project_number": "166915781732",
+        "project_id": "nonim-6db7c",
+        "storage_bucket": "nonim-6db7c.firebasestorage.app"
+      },
+      "client": [
+        {
+          "client_info": {
+            "mobilesdk_app_id": "1:166915781732:android:244c216f9d72613e8f9b71",
+            "android_client_info": {
+              "package_name": "co.median.android.pwwjbzx"
+            }
+          },
+          "oauth_client": [],
+          "api_key": [
+            {
+              "current_key": "AIzaSyCmKtCUNv_NbFild6gqwfOkZEPxk4YHm98"
+            }
+          ],
+          "services": {
+            "appinvite_service": {
+              "other_platform_oauth_client": []
+            }
+          }
+        }
+      ],
+      "configuration_version": "1"
     }
   }
 }

@@ -2,7 +2,7 @@ import groovy.json.JsonSlurper
 
 apply plugin: 'com.android.application'
 apply plugin: 'kotlin-android'
-//[enabled by builder] apply plugin: 'com.google.gms.google-services'
+apply plugin: 'com.google.gms.google-services'
 //[enabled by builder] apply plugin: 'com.google.firebase.crashlytics'
 
 ext {
@@ -94,7 +94,7 @@ android {
         minSdkVersion 23
         targetSdkVersion 36
         applicationId "co.median.android.pwwjbzx"
-        versionCode 3
+        versionCode 6
         multiDexEnabled true
         vectorDrawables.useSupportLibrary = true
 
